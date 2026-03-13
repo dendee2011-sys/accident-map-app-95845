@@ -307,7 +307,7 @@
                     </div>
 
                     <button type="submit" id="submit-btn" class="w-full bg-slate-900 hover:bg-black text-white font-black py-4 rounded-3xl shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 uppercase tracking-widest">
-                        <i class="fas fa-save text-red-500"></i> บันทึกข้อมูลอุบัติเหตุ
+                        <i class="fas fa-save mr-3 text-red-500"></i> บันทึกข้อมูลอุบัติเหตุ
                     </button>
                     <div class="h-10"></div>
                 </form>
@@ -342,15 +342,16 @@
                 </div>
             </div>
 
-            <!-- VIEW 3: Dashboard -->
+            <!-- VIEW 3: Dashboard (Epidemiological Analysis) -->
             <div id="view-report" class="absolute inset-0 overflow-y-auto custom-scrollbar bg-slate-100 hidden">
-                <div class="max-w-6xl mx-auto p-5 md:p-10 space-y-10 pb-24 text-slate-700">
+                <div class="max-w-6xl mx-auto p-5 md:p-10 space-y-8 pb-24 text-slate-700">
+                    
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-5 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
                         <div>
                             <h2 class="text-2xl font-black text-slate-800 tracking-tight flex items-center uppercase leading-none">
-                                <i class="fas fa-chart-pie text-red-600 mr-3"></i>สถิติอุบัติเหตุทางถนน
+                                <i class="fas fa-chart-pie text-red-600 mr-3"></i>สถิติระบาดวิทยาอุบัติเหตุ
                             </h2>
-                            <p class="text-xs text-slate-500 mt-2 font-medium italic">วิเคราะห์รายตำบล อ.เมืองศรีสะเกษ</p>
+                            <p class="text-xs text-slate-500 mt-2 font-medium italic">EPIDEMIOLOGY ANALYSIS • อำเภอเมืองศรีสะเกษ</p>
                         </div>
                         <button onclick="window.print()" class="bg-slate-50 border border-slate-200 text-slate-600 px-5 py-2.5 rounded-2xl text-sm font-black hover:bg-slate-100 transition shadow-sm flex items-center">
                             <i class="fas fa-print mr-2"></i> พิมพ์รายงาน
@@ -371,33 +372,42 @@
                             </div>
                         </div>
                         <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 h-32 flex flex-col justify-between">
-                            <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">กลุ่มอายุหลัก</div>
+                            <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">กลุ่มอายุเสี่ยง (บุคคล)</div>
                             <div class="text-xl font-black text-orange-500 leading-none" id="kpi-age">--</div>
                         </div>
                         <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 h-32 flex flex-col justify-between">
-                            <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Peak Hour</div>
+                            <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">ชั่วโมงอันตราย (เวลา)</div>
                             <div class="text-xl font-black text-amber-500 leading-none" id="kpi-time">--</div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 h-[400px] flex flex-col">
-                            <h3 class="text-sm font-black text-slate-800 mb-6 uppercase flex items-center gap-2"><i class="fas fa-map-marked-alt text-blue-500 mr-2"></i>วิเคราะห์รายตำบล (Place)</h3>
-                            <div class="chart-container flex-1"><canvas id="areaBarChart"></canvas></div>
+                    <!-- Row 1: Place & Time -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 h-[350px] flex flex-col">
+                            <h3 class="text-sm font-black text-slate-800 mb-4 uppercase flex items-center gap-2"><i class="fas fa-map-marked-alt text-blue-500"></i>สถานที่ (Place)</h3>
+                            <div class="chart-container flex-1 relative"><canvas id="areaBarChart"></canvas></div>
                         </div>
-                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 h-[400px] flex flex-col">
-                            <h3 class="text-sm font-black text-slate-800 mb-6 uppercase flex items-center gap-2"><i class="far fa-clock text-amber-500 mr-2"></i>ช่วงเวลาความเสี่ยง (Time)</h3>
-                            <div class="chart-container flex-1"><canvas id="timeLineChart"></canvas></div>
+                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 h-[350px] flex flex-col">
+                            <h3 class="text-sm font-black text-slate-800 mb-4 uppercase flex items-center gap-2"><i class="far fa-clock text-amber-500"></i>เวลา (Time)</h3>
+                            <div class="chart-container flex-1 relative"><canvas id="timeLineChart"></canvas></div>
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
-                        <h3 class="text-sm font-black text-slate-800 mb-10 flex items-center uppercase tracking-widest leading-none"><i class="fas fa-users text-orange-500 mr-2"></i>สถิติผู้ได้รับผลกระทบทั้งหมด (Person Analysis)</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-12 items-center">
-                            <div class="md:col-span-1"><div class="chart-container"><canvas id="genderPieChart"></canvas></div></div>
-                            <div class="md:col-span-2"><div class="chart-container"><canvas id="ageBarChart"></canvas></div></div>
+                    <!-- Row 2: Person & Agent -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 lg:col-span-2 flex flex-col">
+                            <h3 class="text-sm font-black text-slate-800 mb-4 uppercase flex items-center gap-2"><i class="fas fa-users text-orange-500"></i>บุคคล (Person)</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+                                <div class="chart-container relative"><canvas id="ageBarChart"></canvas></div>
+                                <div class="chart-container relative"><canvas id="genderPieChart"></canvas></div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 lg:col-span-1 flex flex-col">
+                            <h3 class="text-sm font-black text-slate-800 mb-4 uppercase flex items-center gap-2"><i class="fas fa-motorcycle text-purple-500"></i>พาหนะ (Agent)</h3>
+                            <div class="chart-container flex-1 relative"><canvas id="vehiclePieChart"></canvas></div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -816,42 +826,111 @@
         };
 
         function renderAnalytics() {
-            if (allData.length === 0) return;
-            let severeDeadPeopleCount = 0, tStats = Array(24).fill(0), ageGrp = { '<20': 0, '20-39': 0, '40-59': 0, '60+': 0 }, genStats = { 'ชาย': 0, 'หญิง': 0, 'ไม่ระบุ': 0 }, areaStats = {};
+            // เคลียร์กราฟเก่าก่อนเสมอ
+            if (charts.area) Object.values(charts).forEach(c => { if(c) c.destroy(); });
+
+            if (allData.length === 0) {
+                document.getElementById('kpi-total').innerText = '0';
+                document.getElementById('kpi-severe').innerText = '0';
+                document.getElementById('kpi-age').innerText = '--';
+                document.getElementById('kpi-time').innerText = '--';
+                return;
+            }
             
+            let severeDeadPeopleCount = 0, 
+                tStats = Array(24).fill(0), 
+                ageGrp = { '<20': 0, '20-39': 0, '40-59': 0, '60+': 0 }, 
+                genStats = { 'ชาย': 0, 'หญิง': 0, 'ไม่ระบุ': 0 }, 
+                areaStats = {}, 
+                typeStats = {};
+
             allData.forEach(item => {
-                const vList = item.victims || [{ name: item.victimName, age: item.victimAge, gender: item.victimGender, role: item.victimRole || 'ผู้ขับขี่', severity: item.severity }];
+                const vList = item.victims && item.victims.length > 0 ? item.victims : [{ name: item.victimName, age: item.victimAge, gender: item.victimGender, role: item.victimRole || 'ผู้ขับขี่', severity: item.severity }];
                 const overallSeverity = getHighestSeverity(vList);
                 
-                const hr = item.accidentTime ? parseInt(item.accidentTime.split(':')[0]) : -1; if (hr >= 0) tStats[hr]++;
-                
-                const area = item.address?.tambon || 'ไม่ระบุ'; if (!areaStats[area]) areaStats[area] = { name: area, count: 0, severe: 0 };
-                areaStats[area].count++; // นับจำนวนครั้งที่เกิดอุบัติเหตุในตำบล
+                // วิเคราะห์พื้นที่ (Place)
+                const area = item.address?.tambon || 'ไม่ระบุ'; 
+                if (!areaStats[area]) areaStats[area] = { name: area, count: 0, severe: 0 };
+                areaStats[area].count++; // นับจำนวนอุบัติเหตุในตำบล
                 if (['สาหัส', 'เสียชีวิต'].includes(overallSeverity)) areaStats[area].severe++;
+
+                // วิเคราะห์พาหนะ (Agent)
+                const vType = item.type || 'ไม่ระบุ';
+                typeStats[vType] = (typeStats[vType] || 0) + 1;
                 
-                // Process each victim for demographic chart
+                // วิเคราะห์บุคคล (Person) จากผู้บาดเจ็บทุกคน
                 vList.forEach(v => {
                     if (['สาหัส', 'เสียชีวิต'].includes(v.severity)) severeDeadPeopleCount++;
-                    const age = parseInt(v.age) || 0; if (age < 20) ageGrp['<20']++; else if (age < 40) ageGrp['20-39']++; else if (age < 60) ageGrp['40-59']++; else ageGrp['60+']++;
-                    genStats[v.gender || 'ไม่ระบุ']++;
+                    const age = parseInt(v.age) || 0; 
+                    if (age < 20) ageGrp['<20']++; 
+                    else if (age < 40) ageGrp['20-39']++; 
+                    else if (age < 60) ageGrp['40-59']++; 
+                    else ageGrp['60+']++;
+                    
+                    genStats[v.gender || 'ไม่ระบุ'] = (genStats[v.gender || 'ไม่ระบุ'] || 0) + 1;
                 });
+
+                // วิเคราะห์เวลา (Time)
+                if (item.accidentTime) {
+                    const hr = parseInt(item.accidentTime.split(':')[0]);
+                    if (hr >= 0 && hr < 24) tStats[hr]++;
+                }
             });
 
+            // อัปเดตตัวเลข KPI
             document.getElementById('kpi-total').innerText = allData.length;
             document.getElementById('kpi-severe').innerText = severeDeadPeopleCount;
-            // % calculated against total victims
-            const totalVictims = Object.values(genStats).reduce((a, b) => a + b, 0);
-            document.getElementById('kpi-severe-pct').innerText = totalVictims > 0 ? ((severeDeadPeopleCount/totalVictims)*100).toFixed(0) + '%' : '0%';
-            
             document.getElementById('kpi-age').innerText = Object.keys(ageGrp).reduce((a, b) => ageGrp[a] > ageGrp[b] ? a : b);
-            let maxH = 0; tStats.forEach((v, i) => { if (v > tStats[maxH]) maxH = i; }); document.getElementById('kpi-time').innerText = `${maxH}:00 น.`;
+            
+            // หาช่วงเวลาที่เกิดเหตุบ่อยที่สุด
+            let topRange = '--';
+            let maxCount = -1;
+            tStats.forEach((count, hr) => {
+                if (count > maxCount) {
+                    maxCount = count;
+                    topRange = `${hr}:00 น.`;
+                }
+            });
+            document.getElementById('kpi-time').innerText = maxCount > 0 ? topRange : '--';
 
-            Object.values(charts).forEach(c => c?.destroy());
+            // เตรียมข้อมูลวาดกราฟ
             const sArea = Object.values(areaStats).sort((a,b) => b.count - a.count);
-            charts.area = new Chart(document.getElementById('areaBarChart'), { type: 'bar', data: { labels: sArea.map(a => a.name), datasets: [{ label: 'สาหัส/ตาย', data: sArea.map(a => a.severe), backgroundColor: '#ef4444' }, { label: 'ทั่วไป', data: sArea.map(a => a.count - a.severe), backgroundColor: '#e2e8f0' }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } });
-            charts.time = new Chart(document.getElementById('timeLineChart'), { type: 'line', data: { labels: tStats.map((_, i) => `${i}:00`), datasets: [{ data: tStats, borderColor: '#f59e0b', backgroundColor: '#f59e0b20', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
-            charts.gender = new Chart(document.getElementById('genderPieChart'), { type: 'pie', data: { labels: Object.keys(genStats), datasets: [{ data: Object.values(genStats), backgroundColor: ['#3b82f6', '#ec4899', '#94a3b8'] }] }, options: { responsive: true, maintainAspectRatio: false } });
-            charts.age = new Chart(document.getElementById('ageBarChart'), { type: 'bar', data: { labels: Object.keys(ageGrp), datasets: [{ data: Object.values(ageGrp), backgroundColor: '#6366f1', borderRadius: 8 }] }, options: { responsive: true, maintainAspectRatio: false } });
+            const areaLabels = sArea.length > 0 ? sArea.map(a => a.name) : ['ไม่มีข้อมูล'];
+            const areaSevere = sArea.length > 0 ? sArea.map(a => a.severe) : [0];
+            const areaTotal = sArea.length > 0 ? sArea.map(a => a.count - a.severe) : [0];
+
+            // วาดกราฟใหม่
+            charts.area = new Chart(document.getElementById('areaBarChart'), { 
+                type: 'bar', 
+                data: { labels: areaLabels, datasets: [{ label: 'สาหัส/ตาย', data: areaSevere, backgroundColor: '#ef4444' }, { label: 'ทั่วไป', data: areaTotal, backgroundColor: '#cbd5e1' }] }, 
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } 
+            });
+
+            charts.time = new Chart(document.getElementById('timeLineChart'), { 
+                type: 'line', 
+                data: { labels: tStats.map((_, i) => `${i}:00`), datasets: [{ label: 'จำนวนเคส', data: tStats, borderColor: '#f59e0b', backgroundColor: '#f59e0b20', fill: true, tension: 0.4 }] }, 
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } 
+            });
+
+            const vehicleLabels = Object.keys(typeStats).length > 0 ? Object.keys(typeStats) : ['ไม่มีข้อมูล'];
+            const vehicleData = Object.keys(typeStats).length > 0 ? Object.values(typeStats) : [1];
+            charts.vehicle = new Chart(document.getElementById('vehiclePieChart'), { 
+                type: 'doughnut', 
+                data: { labels: vehicleLabels, datasets: [{ data: vehicleData, backgroundColor: ['#8b5cf6', '#10b981', '#f43f5e', '#06b6d4', '#f59e0b', '#cbd5e1'] }] }, 
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: {size: 10} } } } } 
+            });
+
+            charts.gender = new Chart(document.getElementById('genderPieChart'), { 
+                type: 'pie', 
+                data: { labels: Object.keys(genStats), datasets: [{ data: Object.values(genStats), backgroundColor: ['#3b82f6', '#ec4899', '#94a3b8'] }] }, 
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } 
+            });
+            
+            charts.age = new Chart(document.getElementById('ageBarChart'), { 
+                type: 'bar', 
+                data: { labels: Object.keys(ageGrp), datasets: [{ label: 'จำนวน', data: Object.values(ageGrp), backgroundColor: '#6366f1', borderRadius: 4 }] }, 
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } 
+            });
         }
 
         document.getElementById('accident-form').onsubmit = async (e) => {
