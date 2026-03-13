@@ -443,7 +443,7 @@
         let currentVictims = [];
         
         function initNewVictim() {
-            return { id: Date.now() + Math.random(), name: '', age: '', gender: 'ชาย', severity: '' };
+            return { id: Date.now() + Math.random(), name: '', age: '', gender: 'ชาย', role: 'ผู้ขับขี่', severity: '' };
         }
 
         function renderVictimsForm() {
@@ -467,7 +467,7 @@
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">ชื่อ-นามสกุล</label>
                                 <input type="text" onchange="window.updateVictim(${uid}, 'name', this.value)" value="${v.name}" placeholder="ระบุชื่อหรือ 'ไม่ทราบชื่อ'" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none" required>
                             </div>
-                            <div class="grid grid-cols-2 gap-3">
+                            <div class="grid grid-cols-3 gap-2">
                                 <div>
                                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">อายุ (ปี)</label>
                                     <input type="number" onchange="window.updateVictim(${uid}, 'age', this.value)" value="${v.age}" min="0" placeholder="0" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none">
@@ -478,6 +478,14 @@
                                         <option value="ชาย" ${v.gender === 'ชาย' ? 'selected' : ''}>ชาย</option>
                                         <option value="หญิง" ${v.gender === 'หญิง' ? 'selected' : ''}>หญิง</option>
                                         <option value="ไม่ระบุ" ${v.gender === 'ไม่ระบุ' ? 'selected' : ''}>ไม่ระบุ</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">สถานะ</label>
+                                    <select onchange="window.updateVictim(${uid}, 'role', this.value)" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none font-bold text-blue-600">
+                                        <option value="ผู้ขับขี่" ${v.role === 'ผู้ขับขี่' ? 'selected' : ''}>ผู้ขับขี่</option>
+                                        <option value="ผู้โดยสาร" ${v.role === 'ผู้โดยสาร' ? 'selected' : ''}>ผู้โดยสาร</option>
+                                        <option value="คนเดินเท้า" ${v.role === 'คนเดินเท้า' ? 'selected' : ''}>คนเดินเท้า</option>
                                     </select>
                                 </div>
                             </div>
@@ -673,13 +681,13 @@
                 }
                 
                 // Fallback support for old data without 'victims' array
-                const victimsList = item.victims ? item.victims : [{ name: item.victimName, age: item.victimAge, gender: item.victimGender, severity: item.severity }];
+                const victimsList = item.victims ? item.victims : [{ name: item.victimName, age: item.victimAge, gender: item.victimGender, role: item.victimRole || 'ผู้ขับขี่', severity: item.severity }];
                 const overallSeverity = getHighestSeverity(victimsList);
                 const color = overallSeverity === 'สาหัส' ? 'red' : overallSeverity === 'เล็กน้อย' ? 'emerald' : overallSeverity === 'ปานกลาง' ? 'amber' : overallSeverity === 'เสียชีวิต' ? 'slate' : 'blue';
                 
                 let victimsHtml = victimsList.map(v => `
                     <p class="text-xs text-slate-600 font-medium mb-1 pl-2 border-l-2 border-slate-200">
-                        <i class="fas fa-user-injured text-slate-300 mr-1.5"></i> ${v.name} (${v.age || '-'} ปี) 
+                        <i class="fas fa-user-injured text-slate-300 mr-1.5"></i> ${v.name} (${v.age || '-'} ปี) - <span class="text-blue-500 font-bold">${v.role || 'ผู้ขับขี่'}</span>
                         <span class="text-[9px] font-black uppercase text-${v.severity === 'สาหัส'?'red':v.severity==='เสียชีวิต'?'slate':v.severity==='ปานกลาง'?'amber':'emerald'}-500 ml-1">[${v.severity}]</span>
                     </p>
                 `).join('');
@@ -780,11 +788,12 @@
             document.getElementById('accidentDate').value = item.accidentDate; document.getElementById('accidentTime').value = item.accidentTime;
             document.getElementById('customIncidentType').value = item.customIncidentType; document.getElementById('vehicleType').value = item.type;
             
-            // Load Victims into dynamic form
+            // Load Victims into dynamic form and add default role if missing
             if (item.victims && item.victims.length > 0) {
                 currentVictims = JSON.parse(JSON.stringify(item.victims));
+                currentVictims.forEach(v => { if(!v.role) v.role = 'ผู้ขับขี่'; });
             } else {
-                currentVictims = [{ id: Date.now(), name: item.victimName, age: item.victimAge, gender: item.victimGender, severity: item.severity }];
+                currentVictims = [{ id: Date.now(), name: item.victimName, age: item.victimAge, gender: item.victimGender, role: item.victimRole || 'ผู้ขับขี่', severity: item.severity }];
             }
             renderVictimsForm();
 
@@ -811,7 +820,7 @@
             let severeDeadPeopleCount = 0, tStats = Array(24).fill(0), ageGrp = { '<20': 0, '20-39': 0, '40-59': 0, '60+': 0 }, genStats = { 'ชาย': 0, 'หญิง': 0, 'ไม่ระบุ': 0 }, areaStats = {};
             
             allData.forEach(item => {
-                const vList = item.victims || [{ name: item.victimName, age: item.victimAge, gender: item.victimGender, severity: item.severity }];
+                const vList = item.victims || [{ name: item.victimName, age: item.victimAge, gender: item.victimGender, role: item.victimRole || 'ผู้ขับขี่', severity: item.severity }];
                 const overallSeverity = getHighestSeverity(vList);
                 
                 const hr = item.accidentTime ? parseInt(item.accidentTime.split(':')[0]) : -1; if (hr >= 0) tStats[hr]++;
@@ -867,7 +876,7 @@
                     customIncidentType: document.getElementById('customIncidentType').value,
                     type: document.getElementById('vehicleType').value, 
                     // Maintain old fields for backward compatibility
-                    victimName: currentVictims[0].name, victimAge: currentVictims[0].age, victimGender: currentVictims[0].gender, severity: overallSeverity,
+                    victimName: currentVictims[0].name, victimAge: currentVictims[0].age, victimGender: currentVictims[0].gender, victimRole: currentVictims[0].role, severity: overallSeverity,
                     // New Array field
                     victims: currentVictims,
                     address: addr, userId: currentUser.uid, lastUpdated: serverTimestamp()
