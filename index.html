@@ -266,16 +266,17 @@
                             <input type="text" id="customIncidentType" required placeholder="เช่น รถกระบะชนท้ายรถเก๋ง" class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-red-500 font-bold outline-none bg-slate-50">
                         </div>
 
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">พาหนะหลักที่ประสบเหตุ</label>
-                            <select id="vehicleType" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none bg-slate-50">
-                                <option value="รถจักรยานยนต์" selected>รถจักรยานยนต์</option>
-                                <option value="รถยนต์/รถกระบะ">รถยนต์ / รถกระบะ</option>
-                                <option value="รถบรรทุก/รถขนาดใหญ่">รถบรรทุก / รถขนาดใหญ่</option>
-                                <option value="รถจักรยาน">รถจักรยาน</option>
-                                <option value="คนเดินเท้า">คนเดินเท้า (ถูกชน)</option>
-                                <option value="อื่นๆ">อื่นๆ</option>
-                            </select>
+                        <div class="border-t border-slate-50 pt-3 mt-1">
+                            <div class="flex justify-between items-center mb-3">
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase">พาหนะที่เกี่ยวข้อง</label>
+                                <button type="button" id="add-vehicle-btn" class="text-[10px] bg-red-50 text-red-600 px-2 py-1 rounded-lg font-bold hover:bg-red-100 transition shadow-sm">
+                                    <i class="fas fa-plus mr-1"></i> เพิ่มพาหนะ
+                                </button>
+                            </div>
+                            <!-- Dynamic Container for Vehicles -->
+                            <div id="vehicles-container" class="space-y-2">
+                                <!-- Populated by Javascript -->
+                            </div>
                         </div>
                     </div>
 
@@ -364,11 +365,18 @@
                             <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">เหตุการณ์สะสม</div>
                             <div class="text-4xl font-black text-slate-900 leading-none" id="kpi-total">0</div>
                         </div>
-                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 border-l-4 border-l-red-500 h-32 flex flex-col justify-between">
-                            <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-red-600 leading-none">เจ็บสาหัส/เสียชีวิตรวม</div>
-                            <div class="flex items-baseline gap-2">
-                                <div class="text-4xl font-black text-red-600 leading-none" id="kpi-severe">0</div>
-                                <div class="text-[10px] font-black text-slate-400">คน</div>
+                        <!-- CHANGED: Now separates Total Injured and Dead explicitly -->
+                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 border-l-4 border-l-orange-500 h-32 flex flex-col justify-between">
+                            <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">บาดเจ็บรวม / เสียชีวิต</div>
+                            <div class="flex items-baseline gap-4">
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-4xl font-black text-orange-500 leading-none" id="kpi-injured">0</span>
+                                    <span class="text-[10px] font-black text-slate-400">เจ็บ</span>
+                                </div>
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-2xl font-black text-slate-900 leading-none" id="kpi-dead">0</span>
+                                    <span class="text-[10px] font-black text-slate-400">ตาย</span>
+                                </div>
                             </div>
                         </div>
                         <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 h-32 flex flex-col justify-between">
@@ -383,13 +391,17 @@
 
                     <!-- Row 1: Place & Time -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 h-[350px] flex flex-col">
+                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 flex flex-col">
                             <h3 class="text-sm font-black text-slate-800 mb-4 uppercase flex items-center gap-2"><i class="fas fa-map-marked-alt text-blue-500"></i>สถานที่ (Place)</h3>
-                            <div class="chart-container flex-1 relative"><canvas id="areaBarChart"></canvas></div>
+                            <div class="chart-container flex-1 relative" style="height: 250px;"><canvas id="areaBarChart"></canvas></div>
                         </div>
-                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 h-[350px] flex flex-col">
+                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 flex flex-col">
                             <h3 class="text-sm font-black text-slate-800 mb-4 uppercase flex items-center gap-2"><i class="far fa-clock text-amber-500"></i>เวลา (Time)</h3>
-                            <div class="chart-container flex-1 relative"><canvas id="timeLineChart"></canvas></div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
+                                <div class="chart-container relative" style="height: 250px;"><canvas id="monthChart"></canvas></div>
+                                <div class="chart-container relative" style="height: 250px;"><canvas id="dayChart"></canvas></div>
+                                <div class="chart-container relative" style="height: 250px;"><canvas id="timeRangeChart"></canvas></div>
+                            </div>
                         </div>
                     </div>
 
@@ -448,6 +460,58 @@
         const appId = 'accident-map-app-95845';
         
         let currentUser = null, allData = [], charts = {}, editingId = null, deletingId = null;
+
+        // --- NEW: Multiple Vehicles Logic ---
+        let currentVehicles = [];
+
+        function initNewVehicle() {
+            return { id: Date.now() + Math.random(), type: 'รถจักรยานยนต์' };
+        }
+
+        function renderVehiclesForm() {
+            const container = document.getElementById('vehicles-container');
+            container.innerHTML = '';
+            
+            if (currentVehicles.length === 0) {
+                currentVehicles.push(initNewVehicle());
+            }
+
+            currentVehicles.forEach((v, index) => {
+                const uid = v.id;
+                const html = `
+                    <div class="flex items-center gap-2 p-3 border border-slate-100 rounded-xl bg-slate-50">
+                        <span class="text-[10px] font-black text-slate-400 w-12">คันที่ ${index + 1}</span>
+                        <select onchange="window.updateVehicle(${uid}, 'type', this.value)" class="flex-1 border border-slate-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-red-500 outline-none font-bold">
+                            <option value="รถจักรยานยนต์" ${v.type === 'รถจักรยานยนต์' ? 'selected' : ''}>รถจักรยานยนต์</option>
+                            <option value="รถยนต์/รถกระบะ" ${v.type === 'รถยนต์/รถกระบะ' ? 'selected' : ''}>รถยนต์ / รถกระบะ</option>
+                            <option value="รถบรรทุก/รถขนาดใหญ่" ${v.type === 'รถบรรทุก/รถขนาดใหญ่' ? 'selected' : ''}>รถบรรทุก / รถขนาดใหญ่</option>
+                            <option value="รถโดยสารสาธารณะ" ${v.type === 'รถโดยสารสาธารณะ' ? 'selected' : ''}>รถโดยสารสาธารณะ</option>
+                            <option value="รถจักรยาน" ${v.type === 'รถจักรยาน' ? 'selected' : ''}>รถจักรยาน</option>
+                            <option value="คนเดินเท้า" ${v.type === 'คนเดินเท้า' ? 'selected' : ''}>คนเดินเท้า (ถูกชน)</option>
+                            <option value="อื่นๆ" ${v.type === 'อื่นๆ' ? 'selected' : ''}>อื่นๆ</option>
+                        </select>
+                        ${index > 0 ? `<button type="button" onclick="window.removeVehicle(${uid})" class="w-8 h-8 bg-white border border-slate-200 text-red-500 rounded-lg flex items-center justify-center hover:bg-red-50 transition"><i class="fas fa-trash-alt"></i></button>` : '<div class="w-8"></div>'}
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        window.updateVehicle = (id, field, value) => {
+            const idx = currentVehicles.findIndex(v => v.id === id);
+            if (idx !== -1) currentVehicles[idx][field] = value;
+        };
+
+        window.removeVehicle = (id) => {
+            currentVehicles = currentVehicles.filter(v => v.id !== id);
+            renderVehiclesForm();
+        };
+
+        document.getElementById('add-vehicle-btn').addEventListener('click', () => {
+            currentVehicles.push(initNewVehicle());
+            renderVehiclesForm();
+        });
+
 
         // --- NEW: Multiple Victims Logic ---
         let currentVictims = [];
@@ -702,6 +766,9 @@
                     </p>
                 `).join('');
 
+                // Display multiple vehicles if present
+                const vVehiclesList = item.vehicles && item.vehicles.length > 0 ? item.vehicles.map(v => v.type).join(', ') : (item.type || 'ไม่ระบุ');
+
                 cont.insertAdjacentHTML('beforeend', `
                     <div class="bg-white border-l-4 border-${color}-500 rounded-2xl shadow-sm p-4 hover:shadow-md transition relative group overflow-hidden mb-3">
                         <div class="flex justify-between items-start mb-1 pr-16" onclick="focusMap(${item.lat}, ${item.lng})">
@@ -713,7 +780,7 @@
                             <button onclick="window.deleteAccident('${item.id}')" class="w-7 h-7 bg-red-50 text-red-600 rounded-lg flex items-center justify-center text-xs hover:bg-red-600 hover:text-white transition shadow-sm"><i class="fas fa-trash-alt"></i></button>
                         </div>
                         <div onclick="focusMap(${item.lat}, ${item.lng})">
-                            <p class="text-[11px] font-bold text-slate-500 mb-2">พาหนะ: ${item.type || 'ไม่ระบุ'}</p>
+                            <p class="text-[11px] font-bold text-slate-500 mb-2">พาหนะ: ${vVehiclesList}</p>
                             <div class="mb-3">
                                 <div class="text-[10px] font-bold text-slate-400 mb-1">ผู้บาดเจ็บในเหตุการณ์ (${victimsList.length}):</div>
                                 ${victimsHtml}
@@ -745,12 +812,13 @@
                     else if(overallSeverity === "เสียชีวิต") pinClass = "pin-black";
 
                     // Vehicle Icon mapping
+                    let primaryVehicle = item.vehicles && item.vehicles.length > 0 ? item.vehicles[0].type : (item.type || 'ไม่ระบุ');
                     let iconClass = "fa-car-burst";
-                    if(item.type === "รถจักรยานยนต์") iconClass = "fa-motorcycle";
-                    else if(item.type === "รถยนต์/รถกระบะ") iconClass = "fa-car";
-                    else if(item.type === "รถบรรทุก/รถขนาดใหญ่") iconClass = "fa-truck";
-                    else if(item.type === "คนเดินเท้า") iconClass = "fa-walking";
-                    else if(item.type === "รถจักรยาน") iconClass = "fa-bicycle";
+                    if(primaryVehicle === "รถจักรยานยนต์") iconClass = "fa-motorcycle";
+                    else if(primaryVehicle === "รถยนต์/รถกระบะ") iconClass = "fa-car";
+                    else if(primaryVehicle === "รถบรรทุก/รถขนาดใหญ่") iconClass = "fa-truck";
+                    else if(primaryVehicle === "คนเดินเท้า") iconClass = "fa-walking";
+                    else if(primaryVehicle === "รถจักรยาน") iconClass = "fa-bicycle";
 
                     const isSevere = overallSeverity === "สาหัส" || overallSeverity === "เสียชีวิต";
                     
@@ -796,7 +864,15 @@
             document.getElementById('lat').value = item.lat; document.getElementById('lng').value = item.lng;
             document.getElementById('input-tambon').value = item.address?.tambon || '';
             document.getElementById('accidentDate').value = item.accidentDate; document.getElementById('accidentTime').value = item.accidentTime;
-            document.getElementById('customIncidentType').value = item.customIncidentType; document.getElementById('vehicleType').value = item.type;
+            document.getElementById('customIncidentType').value = item.customIncidentType; 
+            
+            // Load Vehicles
+            if (item.vehicles && item.vehicles.length > 0) {
+                currentVehicles = JSON.parse(JSON.stringify(item.vehicles));
+            } else {
+                currentVehicles = [{ id: Date.now(), type: item.type || 'รถจักรยานยนต์' }];
+            }
+            renderVehiclesForm();
             
             // Load Victims into dynamic form and add default role if missing
             if (item.victims && item.victims.length > 0) {
@@ -814,6 +890,7 @@
             editingId = null; document.getElementById('editing-indicator').classList.add('hidden');
             document.getElementById('accident-form').reset(); document.getElementById('submit-btn').innerHTML = '<i class="fas fa-save mr-2 text-red-500"></i> บันทึกข้อมูลอุบัติเหตุ';
             currentVictims = []; renderVictimsForm(); // Reset victims
+            currentVehicles = []; renderVehiclesForm(); // Reset vehicles
             initDateTime(); if (activeMarker) { map.removeLayer(activeMarker); activeMarker = null; }
         };
 
@@ -826,23 +903,31 @@
         };
 
         function renderAnalytics() {
-            // เคลียร์กราฟเก่าก่อนเสมอ
-            if (charts.area) Object.values(charts).forEach(c => { if(c) c.destroy(); });
-
-            if (allData.length === 0) {
-                document.getElementById('kpi-total').innerText = '0';
-                document.getElementById('kpi-severe').innerText = '0';
-                document.getElementById('kpi-age').innerText = '--';
-                document.getElementById('kpi-time').innerText = '--';
-                return;
+            // เช็คและเคลียร์กราฟเก่า ป้องกันการวาดทับและ error
+            if (charts.area) {
+                Object.values(charts).forEach(c => { if (c) c.destroy(); });
             }
-            
-            let severeDeadPeopleCount = 0, 
+
+            // ถ้าไม่มีข้อมูล ให้รีเซ็ตตัวเลข KPI และตั้งค่าให้กราฟวาดแกนเปล่าๆ รอไว้
+            if (allData.length === 0) {
+                if(document.getElementById('kpi-total')) document.getElementById('kpi-total').innerText = '0';
+                if(document.getElementById('kpi-injured')) document.getElementById('kpi-injured').innerText = '0';
+                if(document.getElementById('kpi-dead')) document.getElementById('kpi-dead').innerText = '0';
+                if(document.getElementById('kpi-age')) document.getElementById('kpi-age').innerText = '--';
+                if(document.getElementById('kpi-time')) document.getElementById('kpi-time').innerText = '--';
+            }
+
+            let totalInjuredCount = 0, 
+                totalDeadCount = 0, 
                 tStats = Array(24).fill(0), 
                 ageGrp = { '<20': 0, '20-39': 0, '40-59': 0, '60+': 0 }, 
                 genStats = { 'ชาย': 0, 'หญิง': 0, 'ไม่ระบุ': 0 }, 
                 areaStats = {}, 
                 typeStats = {};
+            
+            let monthStats = { 'ม.ค.':0, 'ก.พ.':0, 'มี.ค.':0, 'เม.ย.':0, 'พ.ค.':0, 'มิ.ย.':0, 'ก.ค.':0, 'ส.ค.':0, 'ก.ย.':0, 'ต.ค.':0, 'พ.ย.':0, 'ธ.ค.':0 };
+            let dayStats = { 'อาทิตย์':0, 'จันทร์':0, 'อังคาร':0, 'พุธ':0, 'พฤหัสบดี':0, 'ศุกร์':0, 'เสาร์':0 };
+            let timeRangeStats = { '00:00-05:59':0, '06:00-11:59':0, '12:00-17:59':0, '18:00-23:59':0 };
 
             allData.forEach(item => {
                 const vList = item.victims && item.victims.length > 0 ? item.victims : [{ name: item.victimName, age: item.victimAge, gender: item.victimGender, role: item.victimRole || 'ผู้ขับขี่', severity: item.severity }];
@@ -851,86 +936,151 @@
                 // วิเคราะห์พื้นที่ (Place)
                 const area = item.address?.tambon || 'ไม่ระบุ'; 
                 if (!areaStats[area]) areaStats[area] = { name: area, count: 0, severe: 0 };
-                areaStats[area].count++; // นับจำนวนอุบัติเหตุในตำบล
+                areaStats[area].count++;
                 if (['สาหัส', 'เสียชีวิต'].includes(overallSeverity)) areaStats[area].severe++;
 
                 // วิเคราะห์พาหนะ (Agent)
-                const vType = item.type || 'ไม่ระบุ';
-                typeStats[vType] = (typeStats[vType] || 0) + 1;
+                const vVehicles = item.vehicles && item.vehicles.length > 0 ? item.vehicles : [{ type: item.type || 'ไม่ระบุ' }];
+                vVehicles.forEach(v => {
+                    const vType = v.type || 'ไม่ระบุ';
+                    typeStats[vType] = (typeStats[vType] || 0) + 1;
+                });
                 
-                // วิเคราะห์บุคคล (Person) จากผู้บาดเจ็บทุกคน
+                // วิเคราะห์บุคคล (Person)
                 vList.forEach(v => {
-                    if (['สาหัส', 'เสียชีวิต'].includes(v.severity)) severeDeadPeopleCount++;
+                    // แยกนับจำนวน บาดเจ็บ และ เสียชีวิต ของทุกคน
+                    if (v.severity === 'เสียชีวิต') {
+                        totalDeadCount++;
+                    } else if (v.severity !== 'ไม่ระบุ') {
+                        totalInjuredCount++; // เล็กน้อย, ปานกลาง, สาหัส ถือเป็นบาดเจ็บ
+                    }
+
                     const age = parseInt(v.age) || 0; 
                     if (age < 20) ageGrp['<20']++; 
                     else if (age < 40) ageGrp['20-39']++; 
                     else if (age < 60) ageGrp['40-59']++; 
                     else ageGrp['60+']++;
-                    
                     genStats[v.gender || 'ไม่ระบุ'] = (genStats[v.gender || 'ไม่ระบุ'] || 0) + 1;
                 });
 
                 // วิเคราะห์เวลา (Time)
+                if (item.accidentDate) {
+                    const d = new Date(item.accidentDate);
+                    if (!isNaN(d.getTime())) {
+                        const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+                        const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+                        monthStats[months[d.getMonth()]]++;
+                        dayStats[days[d.getDay()]]++;
+                    }
+                }
                 if (item.accidentTime) {
                     const hr = parseInt(item.accidentTime.split(':')[0]);
-                    if (hr >= 0 && hr < 24) tStats[hr]++;
+                    if (hr >= 0 && hr < 24) {
+                        tStats[hr]++;
+                        if (hr >= 0 && hr < 6) timeRangeStats['00:00-05:59']++;
+                        else if (hr >= 6 && hr < 12) timeRangeStats['06:00-11:59']++;
+                        else if (hr >= 12 && hr < 18) timeRangeStats['12:00-17:59']++;
+                        else if (hr >= 18 && hr <= 23) timeRangeStats['18:00-23:59']++;
+                    }
                 }
             });
 
-            // อัปเดตตัวเลข KPI
-            document.getElementById('kpi-total').innerText = allData.length;
-            document.getElementById('kpi-severe').innerText = severeDeadPeopleCount;
-            document.getElementById('kpi-age').innerText = Object.keys(ageGrp).reduce((a, b) => ageGrp[a] > ageGrp[b] ? a : b);
-            
-            // หาช่วงเวลาที่เกิดเหตุบ่อยที่สุด
-            let topRange = '--';
-            let maxCount = -1;
-            tStats.forEach((count, hr) => {
-                if (count > maxCount) {
-                    maxCount = count;
-                    topRange = `${hr}:00 น.`;
+            // อัปเดตตัวเลข KPI ป้องกัน Error ด้วยการเช็ค if(element)
+            if (allData.length > 0) {
+                if(document.getElementById('kpi-total')) document.getElementById('kpi-total').innerText = allData.length;
+                if(document.getElementById('kpi-injured')) document.getElementById('kpi-injured').innerText = totalInjuredCount;
+                if(document.getElementById('kpi-dead')) document.getElementById('kpi-dead').innerText = totalDeadCount;
+                
+                if(document.getElementById('kpi-age')) document.getElementById('kpi-age').innerText = Object.keys(ageGrp).reduce((a, b) => ageGrp[a] > ageGrp[b] ? a : b);
+                
+                let topRange = '--';
+                let maxCount = -1;
+                for(let key in timeRangeStats) {
+                    if(timeRangeStats[key] > maxCount) {
+                        maxCount = timeRangeStats[key];
+                        topRange = key;
+                    }
                 }
-            });
-            document.getElementById('kpi-time').innerText = maxCount > 0 ? topRange : '--';
+                if(document.getElementById('kpi-time')) document.getElementById('kpi-time').innerText = maxCount > 0 ? topRange : '--';
+            }
 
-            // เตรียมข้อมูลวาดกราฟ
+            // เตรียมข้อมูลวาดกราฟ (รับรองว่าถึงข้อมูลเป็น 0 ກราฟก็จะไม่พัง)
             const sArea = Object.values(areaStats).sort((a,b) => b.count - a.count);
-            const areaLabels = sArea.length > 0 ? sArea.map(a => a.name) : ['ไม่มีข้อมูล'];
+            const areaLabels = sArea.length > 0 ? sArea.map(a => a.name) : ['ยังไม่มีข้อมูล'];
             const areaSevere = sArea.length > 0 ? sArea.map(a => a.severe) : [0];
             const areaTotal = sArea.length > 0 ? sArea.map(a => a.count - a.severe) : [0];
 
-            // วาดกราฟใหม่
-            charts.area = new Chart(document.getElementById('areaBarChart'), { 
-                type: 'bar', 
-                data: { labels: areaLabels, datasets: [{ label: 'สาหัส/ตาย', data: areaSevere, backgroundColor: '#ef4444' }, { label: 'ทั่วไป', data: areaTotal, backgroundColor: '#cbd5e1' }] }, 
-                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } 
-            });
+            // 1. กราฟพื้นที่ (Area)
+            const ctxArea = document.getElementById('areaBarChart');
+            if (ctxArea) {
+                charts.area = new Chart(ctxArea, { 
+                    type: 'bar', 
+                    data: { labels: areaLabels, datasets: [{ label: 'สาหัส/ตาย', data: areaSevere, backgroundColor: '#ef4444', borderRadius: 4 }, { label: 'บาดเจ็บทั่วไป', data: areaTotal, backgroundColor: '#cbd5e1', borderRadius: 4 }] }, 
+                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } 
+                });
+            }
 
-            charts.time = new Chart(document.getElementById('timeLineChart'), { 
-                type: 'line', 
-                data: { labels: tStats.map((_, i) => `${i}:00`), datasets: [{ label: 'จำนวนเคส', data: tStats, borderColor: '#f59e0b', backgroundColor: '#f59e0b20', fill: true, tension: 0.4 }] }, 
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } 
-            });
+            // 2. กราฟเดือน (Month)
+            const ctxMonth = document.getElementById('monthChart');
+            if (ctxMonth) {
+                charts.month = new Chart(ctxMonth, { 
+                    type: 'bar', 
+                    data: { labels: Object.keys(monthStats), datasets: [{ label: 'จำนวนเคส', data: Object.values(monthStats), backgroundColor: '#3b82f6', borderRadius: 4 }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'แยกตามเดือน' } } } 
+                });
+            }
 
-            const vehicleLabels = Object.keys(typeStats).length > 0 ? Object.keys(typeStats) : ['ไม่มีข้อมูล'];
-            const vehicleData = Object.keys(typeStats).length > 0 ? Object.values(typeStats) : [1];
-            charts.vehicle = new Chart(document.getElementById('vehiclePieChart'), { 
-                type: 'doughnut', 
-                data: { labels: vehicleLabels, datasets: [{ data: vehicleData, backgroundColor: ['#8b5cf6', '#10b981', '#f43f5e', '#06b6d4', '#f59e0b', '#cbd5e1'] }] }, 
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: {size: 10} } } } } 
-            });
+            // 3. กราฟวัน (Day)
+            const ctxDay = document.getElementById('dayChart');
+            if (ctxDay) {
+                charts.day = new Chart(ctxDay, { 
+                    type: 'bar', 
+                    data: { labels: Object.keys(dayStats), datasets: [{ label: 'จำนวนเคส', data: Object.values(dayStats), backgroundColor: '#10b981', borderRadius: 4 }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'แยกตามวันในสัปดาห์' } } } 
+                });
+            }
 
-            charts.gender = new Chart(document.getElementById('genderPieChart'), { 
-                type: 'pie', 
-                data: { labels: Object.keys(genStats), datasets: [{ data: Object.values(genStats), backgroundColor: ['#3b82f6', '#ec4899', '#94a3b8'] }] }, 
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } 
-            });
+            // 4. กราฟช่วงเวลา (Time Range)
+            const ctxTimeRange = document.getElementById('timeRangeChart');
+            if (ctxTimeRange) {
+                charts.timeRange = new Chart(ctxTimeRange, { 
+                    type: 'bar', 
+                    data: { labels: Object.keys(timeRangeStats), datasets: [{ label: 'จำนวนเคส', data: Object.values(timeRangeStats), backgroundColor: '#f59e0b', borderRadius: 4 }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'แยกตามช่วงเวลา' } } } 
+                });
+            }
+
+            // 5. กราฟพาหนะ (Vehicle)
+            const ctxVehicle = document.getElementById('vehiclePieChart');
+            if (ctxVehicle) {
+                const vehicleLabels = Object.keys(typeStats).length > 0 ? Object.keys(typeStats) : ['ไม่มีข้อมูล'];
+                const vehicleData = Object.keys(typeStats).length > 0 ? Object.values(typeStats) : [1];
+                charts.vehicle = new Chart(ctxVehicle, { 
+                    type: 'doughnut', 
+                    data: { labels: vehicleLabels, datasets: [{ data: vehicleData, backgroundColor: ['#8b5cf6', '#10b981', '#f43f5e', '#06b6d4', '#f59e0b', '#cbd5e1'] }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: {size: 10} } } } } 
+                });
+            }
+
+            // 6. กราฟเพศ (Gender)
+            const ctxGender = document.getElementById('genderPieChart');
+            if (ctxGender) {
+                charts.gender = new Chart(ctxGender, { 
+                    type: 'pie', 
+                    data: { labels: Object.keys(genStats), datasets: [{ data: Object.values(genStats), backgroundColor: ['#3b82f6', '#ec4899', '#94a3b8'] }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, title: { display: true, text: 'สัดส่วนเพศผู้บาดเจ็บ' } } } 
+                });
+            }
             
-            charts.age = new Chart(document.getElementById('ageBarChart'), { 
-                type: 'bar', 
-                data: { labels: Object.keys(ageGrp), datasets: [{ label: 'จำนวน', data: Object.values(ageGrp), backgroundColor: '#6366f1', borderRadius: 4 }] }, 
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } 
-            });
+            // 7. กราฟอายุ (Age)
+            const ctxAge = document.getElementById('ageBarChart');
+            if (ctxAge) {
+                charts.age = new Chart(ctxAge, { 
+                    type: 'bar', 
+                    data: { labels: Object.keys(ageGrp), datasets: [{ label: 'จำนวนคนเจ็บ', data: Object.values(ageGrp), backgroundColor: '#6366f1', borderRadius: 4 }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'กลุ่มอายุผู้บาดเจ็บ' } } } 
+                });
+            }
         }
 
         document.getElementById('accident-form').onsubmit = async (e) => {
@@ -953,11 +1103,12 @@
                     lat: parseFloat(document.getElementById('lat').value), lng: parseFloat(document.getElementById('lng').value),
                     accidentDate: document.getElementById('accidentDate').value, accidentTime: document.getElementById('accidentTime').value,
                     customIncidentType: document.getElementById('customIncidentType').value,
-                    type: document.getElementById('vehicleType').value, 
+                    type: currentVehicles.length > 0 ? currentVehicles[0].type : 'ไม่ระบุ', 
                     // Maintain old fields for backward compatibility
                     victimName: currentVictims[0].name, victimAge: currentVictims[0].age, victimGender: currentVictims[0].gender, victimRole: currentVictims[0].role, severity: overallSeverity,
                     // New Array field
                     victims: currentVictims,
+                    vehicles: currentVehicles,
                     address: addr, userId: currentUser.uid, lastUpdated: serverTimestamp()
                 };
 
@@ -971,6 +1122,7 @@
                 
                 document.getElementById('accident-form').reset(); 
                 currentVictims = []; renderVictimsForm(); // reset array
+                currentVehicles = []; renderVehiclesForm(); // reset array
                 if (activeMarker) { map.removeLayer(activeMarker); activeMarker = null; }
                 initDateTime(); switchTab('list'); showAlert('บันทึกสำเร็จ', 'success');
             } catch (err) { showAlert(err.message, 'error'); }
@@ -984,6 +1136,7 @@
         }
 
         window.onload = async () => {
+            renderVehiclesForm(); // Initialize first vehicle row
             renderVictimsForm(); // Initialize first victim row
             const initAuth = async () => {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
