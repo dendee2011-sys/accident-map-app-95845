@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบรายงานและวิเคราะห์พิกัดอุบัติเหตุ (Accident Map & Analytics)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet CSS for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts: Sarabun -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f8fafc;
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        #map { z-index: 10; }
+        .sidebar { z-index: 20; transition: width 0.3s ease-in-out; }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Map Popup Customization */
+        .leaflet-popup-content-wrapper {
+            border-radius: 0.75rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .leaflet-popup-content { margin: 1rem; font-family: 'Sarabun', sans-serif; }
+
+        /* Tab Styles */
+        .tab-active { border-bottom-width: 3px; border-color: #ef4444; color: #ef4444; font-weight: 700; }
+        .tab-inactive { color: #64748b; font-weight: 500; }
+
+        /* Mobile Adaptations */
+        .h-dvh { height: 100vh; height: 100dvh; }
+        
+        @media screen and (max-width: 768px) {
+            input, select, textarea { font-size: 16px !important; }
+        }
+
+        /* Chart Containers for Dashboard */
+        .chart-container { position: relative; width: 100%; height: 260px; }
+        .chart-container-tall { position: relative; width: 100%; height: 320px; }
+        @media (min-width: 768px) {
+            .chart-container { height: 300px; }
+            .chart-container-tall { height: 400px; }
+        }
+
+        /* Leaflet Control Adjustment */
+        .leaflet-control-layers {
+            border-radius: 12px !important;
+            border: none !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+            padding: 8px !important;
+        }
+
+        /* Triage Card Styling */
+        .triage-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .triage-input:checked + .triage-card {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="h-dvh w-full flex flex-col md:flex-row text-slate-800">
+
+    <!-- Section 1: Interactive Map -->
+    <div id="map-panel" class="w-full md:w-2/3 h-[30%] md:h-full relative order-1 md:order-1 flex-shrink-0 transition-all duration-500 border-b md:border-b-0 md:border-r border-slate-200">
+        <div id="map" class="w-full h-full bg-slate-100"></div>
+        
+        <!-- Overlay Prompt -->
+        <div class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-xl z-[400] flex items-center space-x-2 text-[11px] sm:text-xs font-bold border border-slate-200 pointer-events-none whitespace-nowrap">
+            <i class="fas fa-location-dot text-red-500"></i>
+            <span>ปักหมุดอุบัติเหตุในพื้นที่ อ.เมืองศรีสะเกษ</span>
+        </div>
+
+        <!-- Float Buttons -->
+        <div class="absolute bottom-6 right-4 z-[400] flex flex-col gap-2">
+            <!-- GeoJSON Loader Button -->
+            <button id="map-geojson-btn" class="bg-white p-3.5 rounded-2xl shadow-2xl text-slate-700 hover:bg-blue-50 focus:outline-none transition-all border border-slate-100 flex items-center justify-center w-12 h-12 md:w-14 md:h-14" title="โหลดขอบเขตพื้นที่ (GeoJSON)">
+                <i class="fas fa-layer-group text-lg md:text-xl text-blue-500"></i>
+            </button>
+            <input type="file" id="geojson-input" accept=".geojson,application/json" class="hidden">
+            
+            <button id="map-gps-btn" class="bg-white p-3.5 rounded-2xl shadow-2xl text-blue-600 hover:bg-blue-50 focus:outline-none transition-all border border-slate-100 flex items-center justify-center w-12 h-12 md:w-14 md:h-14" title="ระบุพิกัดปัจจุบัน">
+                <i class="fas fa-location-crosshairs text-xl md:text-2xl"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Section 2: Sidebar (Forms, List, Dashboard) -->
+    <div id="sidebar-panel" class="w-full md:w-1/3 h-[70%] md:h-full bg-white shadow-[-10px_0_30px_rgba(0,0,0,0.05)] flex flex-col order-2 md:order-2 sidebar relative">
+        
+        <!-- Header (Desktop Only) -->
+        <div class="p-5 bg-slate-900 text-white shadow-lg z-10 hidden md:block">
+            <h1 class="text-xl font-black tracking-tight flex items-center">
+                <i class="fas fa-ambulance mr-3 text-red-500 text-2xl"></i> ศูนย์รับแจ้งเหตุ อ.เมือง
+            </h1>
+            <p class="text-[10px] text-slate-400 mt-1 uppercase font-bold tracking-widest opacity-80">Mueang Si Sa Ket Analysis Center</p>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex border-b border-slate-100 z-10 bg-white shadow-sm flex-shrink-0">
+            <button id="tab-form" class="flex-1 py-4 text-xs md:text-sm text-center tab-active focus:outline-none transition-all">
+                <i class="fas fa-edit mb-1 block md:inline md:mr-1"></i> แจ้งเหตุ
+            </button>
+            <button id="tab-list" class="flex-1 py-4 text-xs md:text-sm text-center tab-inactive focus:outline-none transition-all">
+                <i class="fas fa-list-ul mb-1 block md:inline md:mr-1"></i> รายการ (<span id="count-badge">0</span>)
+            </button>
+            <button id="tab-report" class="flex-1 py-4 text-xs md:text-sm text-center tab-inactive focus:outline-none transition-all">
+                <i class="fas fa-microscope mb-1 block md:inline md:mr-1"></i> สถิติ
+            </button>
+        </div>
+
+        <!-- Dynamic Content Area -->
+        <div class="flex-1 overflow-hidden relative">
+            
+            <!-- VIEW 1: Form Reporting -->
+            <div id="view-form" class="absolute inset-0 overflow-y-auto custom-scrollbar p-5 bg-slate-50">
+                <div id="alert-message" class="hidden mb-4 p-4 rounded-xl text-sm flex items-start border animate-pulse">
+                    <i class="fas fa-info-circle mt-0.5 mr-2"></i><span id="alert-text"></span>
+                </div>
+
+                <form id="accident-form" class="space-y-4">
+                    <!-- Location Selection & Smart Preview -->
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">พิกัดและสถานที่เกิดเหตุ</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="location-search" placeholder="ค้นหาจุดเกิดเหตุในพื้นที่..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" autocomplete="off">
+                            <button type="button" id="btn-search" class="bg-slate-800 text-white px-4 rounded-xl hover:bg-slate-900 transition flex-shrink-0"><i class="fas fa-search"></i></button>
+                        </div>
+                        <ul id="search-results" class="absolute w-[calc(100%-2.5rem)] bg-white border border-slate-200 rounded-xl shadow-2xl mt-1 hidden z-50 max-h-48 overflow-y-auto text-xs divide-y"></ul>
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                <div class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Latitude</div>
+                                <input type="text" id="lat" readonly class="w-full bg-transparent text-xs border-0 p-0 font-mono text-slate-600 outline-none" required>
+                            </div>
+                            <div class="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                <div class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Longitude</div>
+                                <input type="text" id="lng" readonly class="w-full bg-transparent text-xs border-0 p-0 font-mono text-slate-600 outline-none" required>
+                            </div>
+                        </div>
+
+                        <!-- Editable Area Details -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 font-black text-blue-600">ตำบล/แขวง</label>
+                                <input type="text" id="input-tambon" placeholder="ระบุตำบล" class="w-full bg-blue-50 border border-blue-100 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-blue-400 outline-none transition-all font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 font-black text-blue-600">อำเภอ/เขต</label>
+                                <input type="text" id="input-amphoe" value="อำเภอเมืองศรีสะเกษ" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl p-2.5 text-xs outline-none cursor-not-allowed font-bold text-slate-500">
+                            </div>
+                        </div>
+
+                        <!-- Smart Address Preview (Free Mode) -->
+                        <div id="address-preview-box" class="p-3 bg-slate-50 border border-slate-100 rounded-xl hidden animate-in slide-in-from-top-2">
+                            <div class="flex items-start gap-2">
+                                <i class="fas fa-map-location-dot text-slate-400 mt-1"></i>
+                                <div class="overflow-hidden">
+                                    <div class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">ที่อยู่ตรวจพบ:</div>
+                                    <div id="address-preview-text" class="text-[10px] text-slate-500 font-normal leading-tight truncate">กำลังตรวจสอบพื้นที่...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" id="form-gps-btn" class="w-full bg-white text-blue-600 border border-blue-100 py-3 rounded-xl text-xs font-black hover:bg-blue-50 transition shadow-sm flex items-center justify-center">
+                            <i class="fas fa-location-arrow mr-2"></i> ดึงตำแหน่งปัจจุบัน (GPS)
+                        </button>
+                    </div>
+
+                    <!-- Event Meta -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h3 class="text-sm font-black text-slate-800 border-b border-slate-50 pb-2 flex items-center">
+                            <i class="fas fa-car-crash mr-2 text-red-500"></i>ข้อมูลการอุบัติเหตุ
+                        </h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">วันที่</label>
+                                <input type="date" id="accidentDate" required class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-red-500 bg-slate-50 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">เวลา</label>
+                                <input type="time" id="accidentTime" required class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-red-500 bg-slate-50 outline-none">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">ประเภทพาหนะที่เกิดเหตุ</label>
+                            <select id="type" required class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-red-500 outline-none bg-slate-50">
+                                <option value="" disabled selected>กรุณาเลือก...</option>
+                                <option value="รถจักรยานยนต์">รถจักรยานยนต์</option>
+                                <option value="รถยนต์/รถกระบะ">รถยนต์ / รถกระบะ</option>
+                                <option value="รถบรรทุก/รถขนาดใหญ่">รถบรรทุก / รถขนาดใหญ่</option>
+                                <option value="คนเดินเท้า">คนเดินเท้าถูกชน</option>
+                                <option value="อื่นๆ">อื่นๆ</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Victim Meta -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h3 class="text-sm font-black text-slate-800 border-b border-slate-50 pb-2 flex items-center">
+                            <i class="fas fa-user-injured mr-2 text-orange-500"></i>ข้อมูลผู้บาดเจ็บ
+                        </h3>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">ชื่อ-นามสกุล</label>
+                            <input type="text" id="victimName" required placeholder="ไม่ทราบชื่อให้ระบุ 'ไม่ทราบชื่อ'" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">อายุ (ปี)</label>
+                                <input type="number" id="victimAge" min="0" placeholder="ระบุอายุ" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">เพศ</label>
+                                <select id="victimGender" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                                    <option value="ชาย">ชาย</option>
+                                    <option value="หญิง">หญิง</option>
+                                    <option value="ไม่ระบุ">ไม่ระบุ</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- BEAUTIFIED TRIAGE SELECTION -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest leading-none">ระดับความรุนแรง (Medical Triage)</label>
+                            <div class="grid grid-cols-2 gap-3 mt-2">
+                                <!-- Green: Minor -->
+                                <label class="relative cursor-pointer group">
+                                    <input type="radio" name="severity" value="เล็กน้อย" class="triage-input peer hidden" required>
+                                    <div class="triage-card p-3 border-2 border-slate-100 rounded-2xl flex flex-col items-center gap-1 transition-all hover:bg-slate-50 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:shadow-sm">
+                                        <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mb-1 group-hover:scale-110 transition-transform">
+                                            <i class="fas fa-check-circle"></i>
+                                        </div>
+                                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-tighter peer-checked:text-emerald-700">เล็กน้อย</span>
+                                        <div class="text-[8px] text-slate-400 font-bold uppercase">Non-Urgent</div>
+                                    </div>
+                                </label>
+                                <!-- Yellow: Moderate -->
+                                <label class="relative cursor-pointer group">
+                                    <input type="radio" name="severity" value="ปานกลาง" class="triage-input peer hidden">
+                                    <div class="triage-card p-3 border-2 border-slate-100 rounded-2xl flex flex-col items-center gap-1 transition-all hover:bg-slate-50 peer-checked:border-amber-500 peer-checked:bg-amber-50 peer-checked:shadow-sm">
+                                        <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mb-1 group-hover:scale-110 transition-transform">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                        </div>
+                                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-tighter peer-checked:text-amber-700">ปานกลาง</span>
+                                        <div class="text-[8px] text-slate-400 font-bold uppercase">Urgent</div>
+                                    </div>
+                                </label>
+                                <!-- Red: Severe -->
+                                <label class="relative cursor-pointer group">
+                                    <input type="radio" name="severity" value="สาหัส" class="triage-input peer hidden">
+                                    <div class="triage-card p-3 border-2 border-slate-100 rounded-2xl flex flex-col items-center gap-1 transition-all hover:bg-slate-50 peer-checked:border-red-500 peer-checked:bg-red-50 peer-checked:shadow-sm">
+                                        <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-1 group-hover:scale-110 transition-transform">
+                                            <i class="fas fa-heartbeat"></i>
+                                        </div>
+                                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-tighter peer-checked:text-red-700">สาหัส</span>
+                                        <div class="text-[8px] text-slate-400 font-bold uppercase">Emergency</div>
+                                    </div>
+                                </label>
+                                <!-- Black: Fatal -->
+                                <label class="relative cursor-pointer group">
+                                    <input type="radio" name="severity" value="เสียชีวิต" class="triage-input peer hidden">
+                                    <div class="triage-card p-3 border-2 border-slate-100 rounded-2xl flex flex-col items-center gap-1 transition-all hover:bg-slate-50 peer-checked:border-slate-900 peer-checked:bg-slate-900 peer-checked:shadow-sm">
+                                        <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-800 mb-1 group-hover:scale-110 transition-transform peer-checked:bg-slate-800 peer-checked:text-white">
+                                            <i class="fas fa-skull"></i>
+                                        </div>
+                                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-tighter peer-checked:text-white">เสียชีวิต</span>
+                                        <div class="text-[8px] text-slate-400 font-bold uppercase peer-checked:text-slate-500">Deceased</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">รูปถ่ายที่เกิดเหตุ (สูงสุด 2 รูป)</label>
+                            <input type="file" id="photo-upload" accept="image/*" multiple class="hidden">
+                            <button type="button" id="photo-upload-btn" class="w-full bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center text-slate-400 hover:bg-slate-100 transition">
+                                <i class="fas fa-camera text-3xl mb-2 opacity-30"></i><br>
+                                <span class="text-[10px] font-bold uppercase tracking-widest">แตะเพื่อถ่ายรูปหรือเลือกไฟล์</span>
+                            </button>
+                            <div id="photo-preview-container" class="flex gap-2 mt-3 hidden"></div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submit-btn" class="w-full bg-slate-900 hover:bg-black text-white font-black py-4 rounded-2xl shadow-2xl transition-all flex items-center justify-center text-sm tracking-widest uppercase">
+                        <i class="fas fa-paper-plane mr-3 text-red-500"></i> บันทึกรายงานอุบัติเหตุ
+                    </button>
+                    <div class="h-10"></div>
+                </form>
+            </div>
+
+            <!-- VIEW 2: Recent List -->
+            <div id="view-list" class="absolute inset-0 overflow-y-auto custom-scrollbar p-5 bg-slate-50 hidden">
+                <div class="flex justify-between items-center mb-6 px-1">
+                    <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest">รายงานเหตุการณ์ล่าสุด</h2>
+                    <div class="flex items-center text-[10px] font-black text-emerald-500 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
+                        <div class="w-2 h-2 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></div> REAL-TIME
+                    </div>
+                </div>
+                <div id="loading-list" class="text-center py-20 text-slate-300">
+                    <i class="fas fa-spinner fa-spin text-3xl mb-3"></i>
+                    <p class="text-xs font-bold uppercase tracking-widest">กำลังซิงค์ฐานข้อมูล...</p>
+                </div>
+                <div id="accidents-container" class="space-y-4 pb-12"></div>
+                <div id="empty-list" class="hidden text-center py-24 text-slate-300">
+                    <i class="fas fa-clipboard-check text-6xl mb-4 opacity-10"></i>
+                    <p class="text-sm font-medium italic">ยังไม่พบรายงานในพื้นที่</p>
+                </div>
+            </div>
+
+            <!-- VIEW 3: Epidemiology Dashboard -->
+            <div id="view-report" class="absolute inset-0 overflow-y-auto custom-scrollbar bg-slate-100 hidden">
+                <div class="max-w-6xl mx-auto p-5 md:p-10 space-y-10 pb-24 text-slate-700">
+                    
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-5 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                        <div>
+                            <h2 class="text-2xl font-black text-slate-800 tracking-tight flex items-center uppercase">
+                                <i class="fas fa-chart-pie text-red-600 mr-3"></i>สถิติอุบัติเหตุ อ.เมืองศรีสะเกษ
+                            </h2>
+                            <p class="text-xs text-slate-500 mt-1 font-medium italic">ข้อมูลระบาดวิทยาเชิงลึกจากระบบรายงาน (Place, Time, Person)</p>
+                        </div>
+                        <button onclick="window.print()" class="bg-slate-50 border border-slate-200 text-slate-600 px-5 py-2.5 rounded-2xl text-sm font-black hover:bg-slate-100 transition shadow-sm flex items-center">
+                            <i class="fas fa-print mr-2"></i> พิมพ์สรุปผล
+                        </button>
+                    </div>
+
+                    <!-- Macro KPIs -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-5">
+                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 h-32 flex flex-col justify-between">
+                            <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">รายงานรวม</div>
+                            <div class="text-4xl font-black text-slate-900" id="kpi-total">0</div>
+                        </div>
+                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 border-l-4 border-l-red-500 h-32 flex flex-col justify-between">
+                            <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-red-600">หนัก/เสียชีวิต</div>
+                            <div class="flex items-baseline gap-2">
+                                <div class="text-4xl font-black text-red-600" id="kpi-severe">0</div>
+                                <div class="text-xs font-black text-red-400" id="kpi-severe-pct">0%</div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 h-32 flex flex-col justify-between">
+                            <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">กลุ่มอายุหลัก</div>
+                            <div class="text-xl font-black text-orange-500" id="kpi-age">--</div>
+                        </div>
+                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 h-32 flex flex-col justify-between">
+                            <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Peak Time</div>
+                            <div class="text-2xl font-black text-amber-500" id="kpi-time">--</div>
+                        </div>
+                    </div>
+
+                    <!-- Thematic Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 flex flex-col h-[450px]">
+                            <h3 class="text-sm font-black text-slate-800 mb-8 flex items-center uppercase"><i class="fas fa-map-marked-alt text-blue-500 mr-2"></i>วิเคราะห์รายตำบล (Place)</h3>
+                            <div class="chart-container flex-1"><canvas id="areaBarChart"></canvas></div>
+                        </div>
+                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 flex flex-col h-[450px]">
+                            <h3 class="text-sm font-black text-slate-800 mb-8 flex items-center uppercase"><i class="far fa-clock text-amber-500 mr-2"></i>ช่วงเวลาความเสี่ยง (Time)</h3>
+                            <div class="chart-container flex-1"><canvas id="timeLineChart"></canvas></div>
+                        </div>
+                    </div>
+
+                    <!-- Person Charts -->
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
+                        <h3 class="text-sm font-black text-slate-800 mb-10 flex items-center uppercase"><i class="fas fa-user-tag text-orange-500 mr-2"></i>ประชากรผู้ได้รับบาดเจ็บ (Person)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-12 items-center">
+                            <div class="md:col-span-1"><div class="chart-container"><canvas id="genderPieChart"></canvas></div></div>
+                            <div class="md:col-span-2"><div class="chart-container"><canvas id="ageBarChart"></canvas></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ==========================================
+        // 1. Initial Configuration & Firebase
+        // ==========================================
+        const appId = 'accident-map-app-95845';
+        const firebaseConfig = {
+            apiKey: "AIzaSyCW-nGAuGGP-3c-I6gd52AOu_8zVlQrHPc",
+            authDomain: "accident-map-app-95845.firebaseapp.com",
+            projectId: "accident-map-app-95845",
+            storageBucket: "accident-map-app-95845.firebasestorage.app",
+            messagingSenderId: "911206558980",
+            appId: "1:911206558980:web:2370189ed17644dccf3451"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        let currentUser = null;
+        let allData = [];
+        let charts = {};
+
+        // ==========================================
+        // 2. UI Control & Tab Navigation
+        // ==========================================
+        const views = { form: document.getElementById('view-form'), list: document.getElementById('view-list'), report: document.getElementById('view-report') };
+        const tabs = { form: document.getElementById('tab-form'), list: document.getElementById('tab-list'), report: document.getElementById('tab-report') };
+
+        function switchTab(id) {
+            Object.keys(views).forEach(k => {
+                views[k].classList.add('hidden');
+                tabs[k].className = "flex-1 py-4 text-xs md:text-sm text-center tab-inactive outline-none";
+            });
+            views[id].classList.remove('hidden');
+            tabs[id].className = "flex-1 py-4 text-xs md:text-sm text-center tab-active outline-none";
+
+            const mapPanel = document.getElementById('map-panel');
+            const sidebar = document.getElementById('sidebar-panel');
+            
+            if (id === 'report') {
+                mapPanel.classList.add('hidden');
+                sidebar.classList.replace('md:w-1/3', 'w-full');
+                setTimeout(renderAnalytics, 100);
+            } else {
+                mapPanel.classList.remove('hidden');
+                sidebar.classList.replace('w-full', 'md:w-1/3');
+                setTimeout(() => map.invalidateSize(), 200);
+            }
+        }
+
+        Object.keys(tabs).forEach(id => tabs[id].onclick = () => switchTab(id));
+
+        function showAlert(msg, type = 'info') {
+            const box = document.getElementById('alert-message');
+            document.getElementById('alert-text').innerText = msg;
+            box.className = `mb-4 p-4 rounded-xl text-xs font-bold flex items-start border ${type === 'error' ? 'bg-red-50 text-red-700 border-red-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'}`;
+            box.classList.remove('hidden');
+            if (type !== 'error') setTimeout(() => box.classList.add('hidden'), 5000);
+        }
+
+        // ==========================================
+        // 3. Map Initialization (Multiple Free Map Styles)
+        // ==========================================
+        const mskLat = 15.1186, mskLng = 104.3220;
+
+        const map = L.map('map', { 
+            zoomControl: false,
+            fadeAnimation: true,
+            zoomAnimation: true
+        }).setView([mskLat, mskLng], 13);
+
+        L.control.zoom({ position: 'bottomleft' }).addTo(map);
+
+        // --- FREE MAP PROVIDERS (TILE LAYERS) ---
+        const googleHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+            attribution: '&copy; Google Maps'
+        }).addTo(map);
+
+        const googleStreets = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            attribution: '&copy; Google Maps'
+        });
+
+        const voyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+        });
+
+        const lightMode = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+        });
+
+        const osmStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        });
+
+        const baseMaps = {
+            "ภาพดาวเทียม (Hybrid)": googleHybrid,
+            "แผนที่ถนน (Google)": googleStreets,
+            "สีนวล (Voyager)": voyager,
+            "ขาวสว่าง (Light)": lightMode,
+            "มาตรฐาน (OSM)": osmStandard
+        };
+        L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
+
+        // --- GeoJSON Loading Feature ---
+        const geojsonInput = document.getElementById('geojson-input');
+        const geojsonBtn = document.getElementById('map-geojson-btn');
+        let customBoundaryLayer = null;
+
+        geojsonBtn.onclick = () => geojsonInput.click();
+        geojsonInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const geojson = JSON.parse(event.target.result);
+                    if (customBoundaryLayer) map.removeLayer(customBoundaryLayer);
+                    customBoundaryLayer = L.geoJSON(geojson, {
+                        style: { color: '#3b82f6', weight: 2, opacity: 0.8, fillOpacity: 0.1 }
+                    }).addTo(map);
+                    map.fitBounds(customBoundaryLayer.getBounds());
+                    showAlert('โหลดขอบเขตพื้นที่สำเร็จ', 'success');
+                } catch (err) { showAlert('ไฟล์ GeoJSON ไม่ถูกต้อง', 'error'); }
+            };
+            reader.readAsText(file);
+        };
+
+        // --- BOUNDARY LOGIC ---
+        async function loadSubdistrictBoundaries() {
+            try {
+                const distRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=Mueang+Si+Sa+Ket+District&polygon_geojson=1&limit=1`);
+                const distData = await distRes.json();
+                if (distData && distData[0] && distData[0].geojson) {
+                    L.geoJSON(distData[0].geojson, {
+                        style: { color: '#ef4444', weight: 4, opacity: 0.7, fillOpacity: 0 }
+                    }).addTo(map);
+                }
+
+                const tambons = ['เมืองใต้', 'เมืองเหนือ', 'โพนข่า', 'หญ้าปล้อง', 'หนองครก', 'โพนค้อ', 'ซำ', 'จาน', 'ตะดอบ', 'คูซอด', 'หนองไฮ', 'น้ำคำ'];
+                for (const t of tambons) {
+                    const tRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=ตำบล${t}+เมืองศรีสะเกษ&polygon_geojson=1&limit=1`);
+                    const tData = await tRes.json();
+                    if (tData && tData[0] && tData[0].geojson) {
+                        L.geoJSON(tData[0].geojson, {
+                            style: { color: '#3b82f6', weight: 1.5, opacity: 0.5, fillColor: '#3b82f6', fillOpacity: 0.03 }
+                        }).bindTooltip('ตำบล' + t, { sticky: true, opacity: 0.9 }).addTo(map);
+                    }
+                    await new Promise(r => setTimeout(r, 600));
+                }
+            } catch (e) { console.error("Boundary loading failed", e); }
+        }
+        loadSubdistrictBoundaries();
+
+        let activeMarker = null;
+        let dbMarkers = {};
+
+        async function fetchSmartAddress(lat, lng, retryCount = 0) {
+            const box = document.getElementById('address-preview-box');
+            const txt = document.getElementById('address-preview-text');
+            const inputTambon = document.getElementById('input-tambon');
+            const inputAmphoe = document.getElementById('input-amphoe');
+            
+            box.classList.remove('hidden');
+            txt.innerHTML = '<i class="fas fa-spinner fa-spin mr-2 text-blue-500"></i> กำลังวิเคราะห์ที่อยู่จากพิกัด...';
+
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&accept-language=th`);
+                
+                if (!res.ok) throw new Error("HTTP Status " + res.status);
+                
+                const data = await res.json();
+                
+                if (data) {
+                    const ad = data.address || {};
+                    const full = data.display_name || '';
+                    
+                    let t = '';
+                    for (let key in ad) {
+                        const val = String(ad[key]);
+                        if (val.includes('ตำบล') || val.includes('แขวง')) { t = val; break; }
+                    }
+                    if (!t) {
+                        const tMatch = full.match(/(ตำบล|แขวง)\s*([^\s,]+)/);
+                        if (tMatch) t = tMatch[0];
+                    }
+                    if (!t) t = ad.subdistrict || ad.town || ad.city_district || ad.suburb || '';
+
+                    const result = { 
+                        full: full, 
+                        tambon: t, 
+                        amphoe: "อำเภอเมืองศรีสะเกษ", // FORCE DISTRICT NAME
+                        cleanT: t.replace(/ตำบล|แขวง/g, '').trim(),
+                        cleanA: "เมืองศรีสะเกษ"
+                    };
+                    
+                    inputTambon.value = result.tambon;
+                    inputAmphoe.value = "อำเภอเมืองศรีสะเกษ"; // ALWAYS SET TO TARGET DISTRICT
+                    txt.classList.remove('text-red-500');
+                    txt.innerHTML = result.full;
+                    window.lastResolvedAddress = result;
+                } else {
+                    throw new Error("No data received");
+                }
+            } catch (e) {
+                console.error("Geocoding Error:", e);
+                if (retryCount < 1) {
+                    txt.innerHTML = '<i class="fas fa-sync-alt fa-spin mr-2"></i> ลองระบุพื้นที่อีกครั้ง...';
+                    setTimeout(() => fetchSmartAddress(lat, lng, retryCount + 1), 1000);
+                } else {
+                    txt.classList.add('text-red-500');
+                    txt.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i> ระบุพื้นที่อัตโนมัติไม่สำเร็จ กรุณาพิมพ์ระบุตำบลด้วยตนเอง';
+                }
+            }
+        }
+
+        map.on('click', (e) => {
+            const ll = [e.latlng.lat, e.latlng.lng];
+            document.getElementById('lat').value = ll[0].toFixed(6);
+            document.getElementById('lng').value = ll[1].toFixed(6);
+            if (activeMarker) activeMarker.setLatLng(ll);
+            else activeMarker = L.marker(ll, { draggable: true }).addTo(map);
+            fetchSmartAddress(ll[0], ll[1]);
+        });
+
+        document.getElementById('map-gps-btn').onclick = document.getElementById('form-gps-btn').onclick = () => {
+            if (!navigator.geolocation) return showAlert('GPS ไม่รองรับในเครื่องนี้', 'error');
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const ll = [pos.coords.latitude, pos.coords.longitude];
+                map.setView(ll, 17);
+                document.getElementById('lat').value = ll[0].toFixed(6);
+                document.getElementById('lng').value = ll[1].toFixed(6);
+                if (activeMarker) activeMarker.setLatLng(ll);
+                else activeMarker = L.marker(ll).addTo(map);
+                fetchSmartAddress(ll[0], ll[1]);
+            }, (err) => {
+                showAlert('ไม่สามารถดึงพิกัด GPS ได้ กรุณาแตะเลือกพื้นที่บนแผนที่แทน', 'error');
+            });
+        };
+
+        // ==========================================
+        // 4. Data Processing & Analytics
+        // ==========================================
+        function initRealtime() {
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'accidents'), (snap) => {
+                document.getElementById('loading-list').classList.add('hidden');
+                allData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                allData.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+                updateListUI();
+                updateMapMarkers();
+            });
+        }
+
+        function updateListUI() {
+            const cont = document.getElementById('accidents-container');
+            document.getElementById('count-badge').innerText = allData.length;
+            cont.innerHTML = '';
+            document.getElementById('empty-list').classList.toggle('hidden', allData.length > 0);
+
+            allData.forEach(item => {
+                const color = item.severity === 'สาหัส' ? 'red' : item.severity === 'เล็กน้อย' ? 'emerald' : item.severity === 'ปานกลาง' ? 'amber' : 'slate';
+                const html = `
+                    <div class="bg-white border-l-4 border-${color}-500 rounded-2xl shadow-sm p-4 hover:shadow-md transition cursor-pointer active:scale-95" onclick="focusMap(${item.lat}, ${item.lng})">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-black text-slate-800 text-sm">${item.type}</h4>
+                            <span class="text-[9px] font-black text-slate-300 uppercase">${item.accidentDate?.split('-').reverse().join('/')}</span>
+                        </div>
+                        <p class="text-xs text-slate-500 font-medium mb-3">${item.victimName} (${item.victimAge || '-'} ปี, ${item.victimGender})</p>
+                        <div class="flex items-center justify-between">
+                            <span class="bg-slate-100 text-slate-500 text-[9px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wider">${item.severity}</span>
+                            <span class="text-[10px] font-black text-blue-500 flex items-center"><i class="fas fa-location-dot mr-1"></i> ${item.address?.tambon || ''} ${item.address?.amphoe || 'อำเภอเมืองศรีสะเกษ'}</span>
+                        </div>
+                    </div>`;
+                cont.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        function updateMapMarkers() {
+            allData.forEach(item => {
+                if (dbMarkers[item.id]) return;
+                const color = item.severity === 'สาหัส' ? '#ef4444' : item.severity === 'เล็กน้อย' ? '#10b981' : '#f59e0b';
+                const icon = L.divIcon({ 
+                    html: `<div style="background:${color}; width:16px; height:16px; border:3px solid white; border-radius:50%; box-shadow:0 4px 10px rgba(0,0,0,0.3)"></div>`,
+                    className: '', iconSize: [16,16]
+                });
+                const m = L.marker([item.lat, item.lng], { icon }).addTo(map);
+                m.bindPopup(`<div class="text-xs font-black">${item.type}</div><div class="text-[10px] text-slate-500 mt-1">${item.victimName}</div>`);
+                dbMarkers[item.id] = m;
+            });
+        }
+
+        window.focusMap = (lat, lng) => {
+            map.flyTo([lat, lng], 17);
+            if (window.innerWidth < 768) {
+                switchTab('form');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
+        function renderAnalytics() {
+            if (allData.length === 0) return;
+            let severe = 0;
+            let timeStats = Array(24).fill(0);
+            let ageGrp = { '<20': 0, '20-39': 0, '40-59': 0, '60+': 0 };
+            let genStats = { 'ชาย': 0, 'หญิง': 0, 'ไม่ระบุ': 0 };
+            let areaStats = {};
+
+            allData.forEach(i => {
+                if (['สาหัส', 'เสียชีวิต'].includes(i.severity)) severe++;
+                const hr = i.accidentTime ? parseInt(i.accidentTime.split(':')[0]) : -1;
+                if (hr >= 0) timeStats[hr]++;
+                const age = parseInt(i.victimAge) || 0;
+                if (age < 20) ageGrp['<20']++; else if (age < 40) ageGrp['20-39']++; else if (age < 60) ageGrp['40-59']++; else ageGrp['60+']++;
+                genStats[i.victimGender || 'ไม่ระบุ']++;
+                const area = i.address?.cleanT || 'ไม่ทราบตำบล';
+                if (!areaStats[area]) areaStats[area] = { name: area, count: 0, severe: 0 };
+                areaStats[area].count++;
+                if (['สาหัส', 'เสียชีวิต'].includes(i.severity)) areaStats[area].severe++;
+            });
+
+            document.getElementById('kpi-total').innerText = allData.length;
+            document.getElementById('kpi-severe').innerText = severe;
+            document.getElementById('kpi-severe-pct').innerText = ((severe / allData.length) * 100).toFixed(0) + '%';
+            document.getElementById('kpi-age').innerText = Object.keys(ageGrp).reduce((a, b) => ageGrp[a] > ageGrp[b] ? a : b);
+            let maxHr = 0; timeStats.forEach((v, i) => { if (v > timeStats[maxHr]) maxHr = i; });
+            document.getElementById('kpi-time').innerText = `${maxHr}:00-${maxHr + 1}:00`;
+
+            Object.values(charts).forEach(c => c.destroy());
+            Chart.defaults.font.family = "'Sarabun', sans-serif";
+
+            const sortedAreas = Object.values(areaStats).sort((a,b) => b.count - a.count);
+            charts.area = new Chart(document.getElementById('areaBarChart'), {
+                type: 'bar',
+                data: {
+                    labels: sortedAreas.map(a => a.name),
+                    datasets: [
+                        { label: 'สาหัส/ตาย', data: sortedAreas.map(a => a.severe), backgroundColor: '#ef4444', stack: '0' },
+                        { label: 'ทั่วไป', data: sortedAreas.map(a => a.count - a.severe), backgroundColor: '#e2e8f0', stack: '0' }
+                    ]
+                },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } }
+            });
+
+            charts.time = new Chart(document.getElementById('timeLineChart'), {
+                type: 'line',
+                data: {
+                    labels: timeStats.map((_, i) => `${i}:00`),
+                    datasets: [{ data: timeStats, borderColor: '#f59e0b', backgroundColor: '#f59e0b20', fill: true, tension: 0.4 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            charts.gender = new Chart(document.getElementById('genderPieChart'), {
+                type: 'pie',
+                data: { labels: Object.keys(genStats), datasets: [{ data: Object.values(genStats), backgroundColor: ['#3b82f6', '#ec4899', '#94a3b8'] }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+            charts.age = new Chart(document.getElementById('ageBarChart'), {
+                type: 'bar',
+                data: { labels: Object.keys(ageGrp), datasets: [{ data: Object.values(ageGrp), backgroundColor: '#6366f1', borderRadius: 8 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        // ==========================================
+        // 5. Form Submission Logic
+        // ==========================================
+        let photosBase64 = [];
+        document.getElementById('photo-upload-btn').onclick = () => document.getElementById('photo-upload').click();
+        document.getElementById('photo-upload').onchange = (e) => {
+            Array.from(e.target.files).forEach(f => {
+                if (photosBase64.length >= 2) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let w = img.width, h = img.height;
+                        if (w > 800) { h *= 800/w; w = 800; }
+                        canvas.width = w; canvas.height = h;
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        photosBase64.push(canvas.toDataURL('image/jpeg', 0.7));
+                        renderPhotoPreviews();
+                    };
+                    img.src = ev.target.result;
+                };
+                reader.readAsDataURL(f);
+            });
+        };
+
+        function renderPhotoPreviews() {
+            const cont = document.getElementById('photo-preview-container'); cont.innerHTML = '';
+            cont.classList.toggle('hidden', photosBase64.length === 0);
+            photosBase64.forEach((p, idx) => {
+                cont.insertAdjacentHTML('beforeend', `<div class="relative w-14 h-14 rounded-xl overflow-hidden border-2 border-white shadow-sm"><img src="${p}" class="w-full h-full object-cover"><button type="button" onclick="window.removePhoto(${idx})" class="absolute top-0 right-0 bg-red-500 text-white w-4 h-4 flex items-center justify-center text-[8px]"><i class="fas fa-times"></i></button></div>`);
+            });
+        }
+        window.removePhoto = (idx) => { photosBase64.splice(idx, 1); renderPhotoPreviews(); };
+
+        document.getElementById('accident-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const lat = document.getElementById('lat').value;
+            if (!lat) return showAlert('กรุณาปักหมุดบนแผนที่ก่อนบันทึก', 'error');
+
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> กำลังส่งข้อมูล...';
+
+            try {
+                const manualTambon = document.getElementById('input-tambon').value;
+                const manualAmphoe = "อำเภอเมืองศรีสะเกษ"; // HARDCODED FOR DB
+                
+                const addr = {
+                    ...(window.lastResolvedAddress || {}),
+                    full: document.getElementById('address-preview-text').innerText,
+                    tambon: manualTambon,
+                    amphoe: manualAmphoe,
+                    cleanT: manualTambon.replace(/ตำบล|แขวง/g, '').trim(),
+                    cleanA: "เมืองศรีสะเกษ"
+                };
+
+                const sev = document.querySelector('input[name="severity"]:checked')?.value || 'ไม่ระบุ';
+                
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'accidents'), {
+                    lat: parseFloat(lat), lng: parseFloat(document.getElementById('lng').value),
+                    accidentDate: document.getElementById('accidentDate').value, accidentTime: document.getElementById('accidentTime').value,
+                    type: document.getElementById('type').value, victimName: document.getElementById('victimName').value, victimAge: document.getElementById('victimAge').value,
+                    victimGender: document.getElementById('victimGender').value, severity: sev, photos: photosBase64, address: addr, 
+                    timestamp: serverTimestamp(), userId: currentUser.uid
+                });
+
+                document.getElementById('accident-form').reset();
+                photosBase64 = []; renderPhotoPreviews();
+                document.getElementById('address-preview-box').classList.add('hidden');
+                document.getElementById('input-tambon').value = '';
+                document.getElementById('input-amphoe').value = 'อำเภอเมืองศรีสะเกษ'; // RESET TO DEFAULT
+                if (activeMarker) { map.removeLayer(activeMarker); activeMarker = null; }
+                initDateTime();
+                showAlert('บันทึกรายงานสำเร็จ', 'success');
+                switchTab('list');
+            } catch (err) { showAlert('ข้อผิดพลาด: ' + err.message, 'error'); }
+            finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane mr-3 text-red-500"></i> บันทึกและส่งข้อมูลรายงาน'; }
+        };
+
+        function initDateTime() {
+            const n = new Date(); const off = n.getTimezoneOffset() * 60000;
+            const iso = (new Date(n - off)).toISOString();
+            document.getElementById('accidentDate').value = iso.split('T')[0];
+            document.getElementById('accidentTime').value = iso.split('T')[1].substring(0, 5);
+        }
+
+        document.getElementById('btn-search').onclick = async () => {
+            const q = document.getElementById('location-search').value; if (!q) return;
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}+Si+Sa+Ket&countrycodes=th&limit=5`);
+            const d = await res.json();
+            const resBox = document.getElementById('search-results'); resBox.innerHTML = '';
+            if (d.length === 0) return resBox.innerHTML = '<li class="p-3 text-slate-400">ไม่พบสถานที่</li>';
+            d.forEach(item => {
+                const li = document.createElement('li'); li.className = 'p-3 hover:bg-slate-50 cursor-pointer transition-colors';
+                li.innerHTML = `<i class="fas fa-map-pin text-red-500 mr-2"></i> ${item.display_name}`;
+                li.onclick = () => {
+                    const ll = [parseFloat(item.lat), parseFloat(item.lon)];
+                    map.setView(ll, 17);
+                    document.getElementById('lat').value = ll[0].toFixed(6);
+                    document.getElementById('lng').value = ll[1].toFixed(6);
+                    if (activeMarker) activeMarker.setLatLng(ll); else activeMarker = L.marker(ll).addTo(map);
+                    fetchSmartAddress(ll[0], ll[1]);
+                    resBox.classList.add('hidden');
+                };
+                resBox.appendChild(li);
+            });
+            resBox.classList.remove('hidden');
+        };
+
+        window.onload = async () => {
+            await signInAnonymously(auth);
+            onAuthStateChanged(auth, (u) => { if (u) { currentUser = u; initRealtime(); } });
+            initDateTime();
+            setTimeout(() => map.invalidateSize(), 500);
+        };
+    </script>
+</body>
+</html>
