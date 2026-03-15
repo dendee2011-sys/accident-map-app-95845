@@ -974,6 +974,84 @@
             renderVictimsForm();
         });
 
+        // --- NEW: Photo Upload & Compress Logic ---
+        let currentPhotos = [];
+        const photoInput = document.getElementById('photo-upload');
+        const photoBtn = document.getElementById('photo-upload-btn');
+        const photoContainer = document.getElementById('photo-preview-container');
+
+        if (photoBtn && photoInput) {
+            photoBtn.addEventListener('click', () => photoInput.click());
+
+            photoInput.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files);
+                if (currentPhotos.length + files.length > 2) {
+                    showAlert('เลือกรูปได้สูงสุด 2 รูปเท่านั้น', 'error');
+                    photoInput.value = '';
+                    return;
+                }
+
+                files.forEach(file => {
+                    if (currentPhotos.length >= 2) return;
+                    
+                    // บีบอัดรูปลดขนาดก่อนบันทึก
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            const MAX_WIDTH = 800;
+                            const MAX_HEIGHT = 800;
+                            let width = img.width;
+                            let height = img.height;
+
+                            if (width > height) {
+                                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                            } else {
+                                if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                            }
+
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+
+                            const dataUrl = canvas.toDataURL('image/jpeg', 0.6); // 60% quality jpeg
+                            currentPhotos.push(dataUrl);
+                            window.renderPhotoPreviews();
+                        };
+                        img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+                photoInput.value = ''; // Reset input
+            });
+        }
+
+        window.renderPhotoPreviews = () => {
+            if (!photoContainer) return;
+            photoContainer.innerHTML = '';
+            if (currentPhotos.length > 0) {
+                photoContainer.classList.remove('hidden');
+                currentPhotos.forEach((src, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'relative w-20 h-20 rounded-xl overflow-hidden border border-slate-200 shadow-sm';
+                    div.innerHTML = `
+                        <img src="${src}" class="w-full h-full object-cover">
+                        <button type="button" onclick="event.stopPropagation(); window.removePhoto(${idx})" class="absolute top-1 right-1 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] hover:bg-red-600 shadow-sm"><i class="fas fa-times"></i></button>
+                    `;
+                    photoContainer.appendChild(div);
+                });
+            } else {
+                photoContainer.classList.add('hidden');
+            }
+        };
+
+        window.removePhoto = (idx) => {
+            currentPhotos.splice(idx, 1);
+            window.renderPhotoPreviews();
+        };
+
         // Helper to get highest severity for marker and overall report
         function getHighestSeverity(victimsArr) {
             if (!victimsArr || victimsArr.length === 0) return 'ไม่ระบุ';
@@ -1297,6 +1375,14 @@
                 // Display multiple vehicles if present
                 const vVehiclesList = item.vehicles && item.vehicles.length > 0 ? item.vehicles.map(v => v.type).join(', ') : (item.type || 'ไม่ระบุ');
 
+                // NEW: Display photos if present
+                let photosHtml = '';
+                if (item.photos && item.photos.length > 0) {
+                    photosHtml = `<div class="flex gap-2 mb-3 mt-1">` + 
+                        item.photos.map(p => `<img src="${p}" class="w-12 h-12 object-cover rounded-lg border border-slate-200 shadow-sm cursor-pointer" onclick="window.open('${p}', '_blank')">`).join('') +
+                    `</div>`;
+                }
+
                 cont.insertAdjacentHTML('beforeend', `
                     <div class="bg-white border-l-4 border-${color}-500 rounded-2xl shadow-sm p-4 hover:shadow-md transition relative group overflow-hidden mb-3">
                         <div class="flex justify-between items-start mb-1 pr-16" onclick="focusMap(${item.lat}, ${item.lng})">
@@ -1309,6 +1395,7 @@
                         </div>
                         <div onclick="focusMap(${item.lat}, ${item.lng})">
                             <p class="text-[11px] font-bold text-slate-500 mb-3 bg-slate-50 inline-block px-2 py-1 rounded-md">พาหนะ: ${vVehiclesList}</p>
+                            ${photosHtml}
                             <div class="mb-3">
                                 <div class="text-[10px] font-bold text-slate-400 mb-2 border-b border-slate-50 pb-1">ผู้บาดเจ็บในเหตุการณ์ (${victimsList.length} คน):</div>
                                 ${victimsHtml}
@@ -1426,6 +1513,10 @@
             }
             renderVictimsForm();
 
+            // Load Photos
+            currentPhotos = item.photos ? [...item.photos] : [];
+            window.renderPhotoPreviews();
+
             if (activeMarker) map.removeLayer(activeMarker); activeMarker = L.marker([item.lat, item.lng], { draggable: true }).addTo(map);
         };
 
@@ -1434,6 +1525,7 @@
             document.getElementById('accident-form').reset(); document.getElementById('submit-btn').innerHTML = '<i class="fas fa-save mr-2 text-red-500"></i> บันทึกข้อมูลอุบัติเหตุ';
             currentVictims = []; renderVictimsForm(); // Reset victims
             currentVehicles = []; renderVehiclesForm(); // Reset vehicles
+            currentPhotos = []; window.renderPhotoPreviews(); // Reset photos
             initDateTime(); if (activeMarker) { map.removeLayer(activeMarker); activeMarker = null; }
         };
 
@@ -1723,6 +1815,7 @@
                     // New Array field
                     victims: currentVictims,
                     vehicles: currentVehicles,
+                    photos: currentPhotos,
                     address: addr, userId: currentUser.uid, lastUpdated: serverTimestamp()
                 };
 
@@ -1737,6 +1830,7 @@
                 document.getElementById('accident-form').reset(); 
                 currentVictims = []; renderVictimsForm(); // reset array
                 currentVehicles = []; renderVehiclesForm(); // reset array
+                currentPhotos = []; window.renderPhotoPreviews(); // reset photos
                 if (activeMarker) { map.removeLayer(activeMarker); activeMarker = null; }
                 initDateTime(); switchTab('list'); showAlert('บันทึกสำเร็จ', 'success');
             } catch (err) { showAlert(err.message, 'error'); }
