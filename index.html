@@ -136,6 +136,58 @@
 </head>
 <body class="h-dvh w-full flex flex-col md:flex-row text-slate-800">
 
+    <!-- LOGIN SCREEN OVERLAY (BEAUTIFIED - CHANGED BG) -->
+    <div id="login-screen" class="fixed inset-0 z-[9999] flex items-center justify-center transition-opacity duration-500 bg-slate-900 bg-[url('https://images.unsplash.com/photo-1510486008696-6cc800b6fbff?q=80&w=1920&auto=format&fit=crop')] bg-cover bg-center">
+        <!-- Dark Overlay -->
+        <div class="absolute inset-0 bg-slate-900/70 backdrop-blur-[2px]"></div>
+        
+        <!-- Login Card -->
+        <div class="relative bg-white/95 backdrop-blur-md p-8 sm:p-10 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-full max-w-sm mx-4 animate-in zoom-in-95 duration-300 border border-white/20">
+            
+            <!-- Logo -->
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-gradient-to-tr from-red-600 to-red-500 text-white rounded-full flex items-center justify-center mx-auto text-4xl mb-4 shadow-lg shadow-red-500/30 border-4 border-white">
+                    <i class="fas fa-truck-medical"></i>
+                </div>
+                <h2 class="text-2xl font-black text-slate-800 tracking-tight">ระบบรายงานอุบัติเหตุทางถนน</h2>
+                <p class="text-sm text-slate-500 mt-1 font-bold">อำเภอเมืองศรีสะเกษ</p>
+            </div>
+
+            <form id="login-form" class="space-y-5">
+                <div id="login-error" class="hidden bg-red-50 text-red-600 text-xs font-bold p-3 rounded-xl border border-red-100 text-center animate-pulse">
+                    ชื่อผู้ใช้ หรือ รหัสผ่านไม่ถูกต้อง!
+                </div>
+                
+                <div class="space-y-1.5">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">ชื่อผู้ใช้ (Username)</label>
+                    <div class="relative">
+                        <input type="text" id="login-username" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all font-medium text-slate-700 placeholder-slate-400" placeholder="กรอกชื่อผู้ใช้..." required>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">รหัสผ่าน (Password)</label>
+                    <div class="relative">
+                        <input type="password" id="login-password" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all font-medium text-slate-700 placeholder-slate-400" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-black py-4 rounded-xl shadow-lg shadow-red-500/30 transition-all active:scale-[0.98] uppercase tracking-widest mt-6 flex items-center justify-center gap-2">
+                    เข้าสู่ระบบ <i class="fas fa-arrow-right text-xs"></i>
+                </button>
+            </form>
+
+            <div class="mt-8 text-center border-t border-slate-100 pt-5">
+                <p class="text-[10px] text-slate-400 font-medium">
+                    *สงวนสิทธิ์การเข้าใช้งานเฉพาะเจ้าหน้าที่เท่านั้น
+                </p>
+                <p class="text-[9px] text-slate-300 mt-1">
+                    Road accident reporting system, Mueang Si Sa Ket District
+                </p>
+            </div>
+        </div>
+    </div>
+
     <!-- Section 1: Interactive Map -->
     <div id="map-panel" class="w-full md:w-2/3 h-[30%] md:h-full relative order-1 md:order-1 flex-shrink-0 transition-all duration-500 border-b md:border-b-0 md:border-r border-slate-200">
         <div id="map" class="w-full h-full bg-slate-100"></div>
@@ -161,22 +213,32 @@
     <!-- Section 2: Sidebar -->
     <div id="sidebar-panel" class="w-full md:w-1/3 h-[70%] md:h-full bg-white shadow-[-10px_0_30px_rgba(0,0,0,0.05)] flex flex-col order-2 md:order-2 sidebar relative">
         
-        <div class="p-5 bg-slate-900 text-white shadow-lg z-10 hidden md:block">
+        <div class="p-5 bg-slate-900 text-white shadow-lg z-10 hidden md:block relative">
             <h1 class="text-xl font-black tracking-tight flex items-center">
-                <i class="fas fa-car-burst mr-3 text-red-500 text-2xl"></i> ระบบรายงานอุบัติเหตุทางถนน อ.เมืองศรีสะเกษ
+                <i class="fas fa-car-burst mr-3 text-red-500 text-2xl"></i> ระบบรายงานอุบัติเหตุทางถนน
             </h1>
-            <p class="text-[10px] text-slate-400 mt-1 uppercase font-bold tracking-widest opacity-80">Road accident reporting system, Mueang Si Sa Ket District</p>
+            <p id="user-org-display" class="text-[10px] text-slate-300 mt-1 uppercase font-bold tracking-widest opacity-90">
+                <i class="fas fa-spinner fa-spin mr-1"></i> กำลังตรวจสอบสิทธิ์...
+            </p>
         </div>
 
-        <div class="flex border-b border-slate-100 z-10 bg-white shadow-sm flex-shrink-0">
-            <button id="tab-form" class="flex-1 py-4 text-xs md:text-sm text-center tab-active focus:outline-none transition-all">
+        <div class="flex border-b border-slate-100 z-10 bg-white shadow-sm flex-shrink-0 overflow-x-auto custom-scrollbar">
+            <button id="tab-form" class="flex-1 py-4 px-2 text-xs md:text-sm text-center tab-active focus:outline-none transition-all whitespace-nowrap">
                 <i class="fas fa-edit mb-1 block md:inline md:mr-1"></i> แจ้งเหตุ
             </button>
-            <button id="tab-list" class="flex-1 py-4 text-xs md:text-sm text-center tab-inactive focus:outline-none transition-all">
+            <button id="tab-list" class="flex-1 py-4 px-2 text-xs md:text-sm text-center tab-inactive focus:outline-none transition-all whitespace-nowrap">
                 <i class="fas fa-list-ul mb-1 block md:inline md:mr-1"></i> รายการ (<span id="count-badge">0</span>)
             </button>
-            <button id="tab-report" class="flex-1 py-4 text-xs md:text-sm text-center tab-inactive focus:outline-none transition-all">
+            <button id="tab-report" class="flex-1 py-4 px-2 text-xs md:text-sm text-center tab-inactive focus:outline-none transition-all whitespace-nowrap">
                 <i class="fas fa-chart-pie mb-1 block md:inline md:mr-1"></i> สถิติ
+            </button>
+            <!-- NEW TAB FOR ADMIN -->
+            <button id="tab-users" class="hidden flex-1 py-4 px-2 text-xs md:text-sm text-center tab-inactive focus:outline-none transition-all whitespace-nowrap">
+                <i class="fas fa-users-cog mb-1 block md:inline md:mr-1"></i> Users
+            </button>
+            <!-- LOGOUT BUTTON -->
+            <button onclick="window.logout()" class="w-12 border-l border-slate-100 flex-shrink-0 py-4 text-xs md:text-sm text-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all" title="ออกจากระบบ">
+                <i class="fas fa-power-off"></i>
             </button>
         </div>
 
@@ -323,232 +385,6 @@
                 </form>
             </div>
 
-            <!-- VIEW NEW: ปภ.บอ.4 -->
-            <div id="view-paboa4" class="absolute inset-0 overflow-y-auto custom-scrollbar p-5 bg-slate-50 hidden">
-                <form id="paboa4-form" class="space-y-4 pb-12">
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative">
-                        <div class="flex items-center mb-4 pb-3 border-b border-slate-100">
-                            <button type="button" onclick="window.switchTab('list')" class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full flex items-center justify-center transition mr-3">
-                                <i class="fas fa-arrow-left"></i>
-                            </button>
-                            <div>
-                                <h2 class="text-base font-black text-slate-800 uppercase tracking-widest leading-none">ปภ.บอ.4</h2>
-                                <p class="text-[10px] text-slate-500 mt-1 font-bold">แบบบันทึกข้อมูลผู้ประสบอุบัติเหตุ</p>
-                            </div>
-                        </div>
-                        
-                        <div class="space-y-4">
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">วันที่เกิดอุบัติเหตุ</label>
-                                    <input type="date" id="pb_date" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" required>
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">ลำดับที่ของผู้ประสบอุบัติเหตุ</label>
-                                    <input type="number" id="pb_victim_seq" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" placeholder="1">
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">ลำดับที่ของยานพาหนะ</label>
-                                    <input type="number" id="pb_vehicle_seq" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" placeholder="1">
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">หมายเลขทะเบียนรถ</label>
-                                    <input type="text" id="pb_plate" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" placeholder="กท 1234">
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">รายละเอียดรถ</label>
-                                <input type="text" id="pb_vehicle_detail" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" placeholder="ยี่ห้อ รุ่น สี">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                        <h3 class="text-sm font-black text-slate-800 border-b border-slate-50 pb-2"><i class="fas fa-user mr-2 text-blue-500"></i>ข้อมูลส่วนบุคคล</h3>
-                        
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">ชื่อ-นามสกุล</label>
-                            <input type="text" id="pb_name" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" required>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">เพศ</label>
-                                <select id="pb_gender" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
-                                    <option value="ชาย">ชาย</option>
-                                    <option value="หญิง">หญิง</option>
-                                    <option value="ไม่ระบุ">ไม่ระบุ</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">อายุ (ปี)</label>
-                                <input type="number" id="pb_age" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" placeholder="0">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">หมายเลขประจำตัวประชาชน</label>
-                            <input type="text" id="pb_idcard" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" maxlength="13" placeholder="X-XXXX-XXXXX-XX-X">
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">เลขประจำตัวต่างด้าว</label>
-                                <input type="text" id="pb_alien_id" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">สัญชาติ</label>
-                                <input type="text" id="pb_nationality" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" value="ไทย">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                        <h3 class="text-sm font-black text-slate-800 border-b border-slate-50 pb-2"><i class="fas fa-heartbeat mr-2 text-red-500"></i>สถานะและการรักษา</h3>
-                        
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 border border-slate-100 rounded-xl p-3 bg-slate-50">
-                            <label class="flex items-center space-x-2 text-sm font-bold text-slate-700">
-                                <input type="radio" name="pb_status" value="บาดเจ็บ(Admit)" class="w-4 h-4 text-blue-600 focus:ring-blue-500" checked>
-                                <span>บาดเจ็บ (Admit)</span>
-                            </label>
-                            <label class="flex items-center space-x-2 text-sm font-bold text-slate-700">
-                                <input type="radio" name="pb_status" value="บาดเจ็บ(ไม่ Admit)" class="w-4 h-4 text-orange-500 focus:ring-orange-500">
-                                <span>บาดเจ็บ (ไม่ Admit)</span>
-                            </label>
-                            <label class="flex items-center space-x-2 text-sm font-bold text-slate-700">
-                                <input type="radio" name="pb_status" value="เสียชีวิต" class="w-4 h-4 text-red-600 focus:ring-red-500">
-                                <span>เสียชีวิต</span>
-                            </label>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">วันที่เสียชีวิต (ถ้ามี)</label>
-                            <input type="date" id="pb_death_date" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">สถานะในเหตุการณ์</label>
-                            <div class="grid grid-cols-2 gap-2 text-xs text-slate-600">
-                                <label><input type="radio" name="pb_role" value="คนเดินถนน" class="mr-1" checked> คนเดินถนน</label>
-                                <label><input type="radio" name="pb_role" value="ผู้ขับขี่" class="mr-1"> ผู้ขับขี่</label>
-                                <label><input type="radio" name="pb_role" value="ผู้โดยสาร" class="mr-1"> ผู้โดยสาร</label>
-                                <label><input type="radio" name="pb_role" value="อื่นๆ" class="mr-1"> อื่นๆ</label>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">สถานที่เสียชีวิต</label>
-                            <div class="flex flex-col gap-2 text-xs text-slate-600">
-                                <label><input type="radio" name="pb_death_place" value="เสียชีวิตที่เกิดเหตุ" class="mr-1"> เสียชีวิตที่เกิดเหตุ</label>
-                                <label><input type="radio" name="pb_death_place" value="เสียชีวิตระหว่างนำส่งโรงพยาบาล" class="mr-1"> เสียชีวิตระหว่างนำส่งโรงพยาบาล</label>
-                                <label><input type="radio" name="pb_death_place" value="เสียชีวิตที่โรงพยาบาล" class="mr-1"> เสียชีวิตที่โรงพยาบาล</label>
-                            </div>
-                        </div>
-
-                        <div class="border-t border-slate-100 pt-4 space-y-3">
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase">ที่อยู่ปัจจุบัน</label>
-                            <div class="grid grid-cols-3 gap-2">
-                                <input type="text" id="pb_addr_tambon" placeholder="ตำบล" class="w-full border border-slate-200 rounded-xl p-2 text-xs outline-none bg-slate-50">
-                                <input type="text" id="pb_addr_amphoe" placeholder="อำเภอ" class="w-full border border-slate-200 rounded-xl p-2 text-xs outline-none bg-slate-50">
-                                <input type="text" id="pb_addr_province" placeholder="จังหวัด" class="w-full border border-slate-200 rounded-xl p-2 text-xs outline-none bg-slate-50">
-                            </div>
-                            
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase mt-2">ภูมิลำเนา (จังหวัด)</label>
-                            <input type="text" id="pb_domicile" placeholder="ระบุจังหวัด" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none bg-slate-50">
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">พื้นที่ของผู้ประสบเหตุ</label>
-                            <div class="flex flex-col gap-2 text-xs text-slate-600">
-                                <label><input type="radio" name="pb_area_status" value="คนในพื้นที่" class="mr-1" checked> คนในพื้นที่ (ในตำบล/แขวง)</label>
-                                <label><input type="radio" name="pb_area_status" value="คนนอกพื้นที่ (ในจังหวัด)" class="mr-1"> คนนอกพื้นที่ (ในจังหวัด)</label>
-                                <label><input type="radio" name="pb_area_status" value="คนนอกพื้นที่ (นอกเขตจังหวัด)" class="mr-1"> คนนอกพื้นที่ (นอกเขตจังหวัด)</label>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">ข้อมูลสถานะผู้เสียชีวิต (กรณีชาวต่างชาติ)</label>
-                            <div class="grid grid-cols-3 gap-2 text-xs text-slate-600">
-                                <label><input type="radio" name="pb_foreign_status" value="ทำงาน" class="mr-1"> ทำงาน</label>
-                                <label><input type="radio" name="pb_foreign_status" value="ท่องเที่ยว" class="mr-1"> ท่องเที่ยว</label>
-                                <label><input type="radio" name="pb_foreign_status" value="อื่นๆ" class="mr-1"> อื่นๆ</label>
-                            </div>
-                            <input type="text" id="pb_foreign_other" placeholder="ระบุอื่นๆ..." class="w-full border border-slate-200 rounded-xl p-2 text-xs outline-none bg-slate-50 mt-2">
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                        <h3 class="text-sm font-black text-slate-800 border-b border-slate-50 pb-2"><i class="fas fa-ambulance mr-2 text-emerald-500"></i>ข้อมูลการรักษาและ EMS</h3>
-                        
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">ผู้นำส่ง EMS</label>
-                            <div class="grid grid-cols-2 gap-2 text-xs text-slate-600">
-                                <label><input type="radio" name="pb_ems" value="ผู้ประสบอุบัติเหตุ/ญาติ" class="mr-1"> ผู้ประสบอุบัติเหตุ/ญาติ</label>
-                                <label><input type="radio" name="pb_ems" value="เจ้าหน้าที่ตำรวจ" class="mr-1"> เจ้าหน้าที่ตำรวจ</label>
-                                <label><input type="radio" name="pb_ems" value="มูลนิธิ/อาสาสมัคร" class="mr-1"> มูลนิธิ/อาสาสมัคร</label>
-                                <label><input type="radio" name="pb_ems" value="หน่วยกู้ชีพขั้นพื้นฐาน" class="mr-1"> หน่วยกู้ชีพขั้นพื้นฐาน</label>
-                                <label><input type="radio" name="pb_ems" value="หน่วยกู้ชีพขั้นสูง" class="mr-1"> หน่วยกู้ชีพขั้นสูง</label>
-                                <label><input type="radio" name="pb_ems" value="อื่นๆ" class="mr-1"> อื่นๆ</label>
-                                <label><input type="radio" name="pb_ems" value="ไม่ทราบ" class="mr-1"> ไม่ทราบ</label>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">ชื่อโรงพยาบาลที่นำส่ง</label>
-                            <input type="text" id="pb_hospital" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-slate-50">
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                        <h3 class="text-sm font-black text-slate-800 border-b border-slate-50 pb-2"><i class="fas fa-exclamation-triangle mr-2 text-amber-500"></i>พฤติกรรมเสี่ยงที่ทำให้เกิดอุบัติเหตุ</h3>
-                        <p class="text-[10px] text-slate-400 uppercase mb-2">(เลือกได้มากกว่า 1 รายการ)</p>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-slate-700">
-                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ไม่มีความผิดตามมาตรการ" class="rounded text-blue-500 w-4 h-4"> <span>ไม่มีความผิดตามมาตรการ</span></label>
-                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ไม่มีใบขับขี่" class="rounded text-blue-500 w-4 h-4"> <span>ไม่มีใบขับขี่</span></label>
-                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ไม่สวมหมวกนิรภัย" class="rounded text-blue-500 w-4 h-4"> <span>ไม่สวมหมวกนิรภัย</span></label>
-                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ขับรถเร็วเกินกำหนด" class="rounded text-blue-500 w-4 h-4"> <span>ขับรถเร็วเกินกำหนด</span></label>
-                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="มอเตอร์ไซค์ไม่ปลอดภัย" class="rounded text-blue-500 w-4 h-4"> <span>มอเตอร์ไซค์ไม่ปลอดภัย</span></label>
-                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ฝ่าฝืนสัญญาณไฟจราจร" class="rounded text-blue-500 w-4 h-4"> <span>ฝ่าฝืนสัญญาณไฟจราจร</span></label>
-                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="เมาสุรา" class="rounded text-blue-500 w-4 h-4"> <span>เมาสุรา</span></label>
-                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ขับรถย้อนศร" class="rounded text-blue-500 w-4 h-4"> <span>ขับรถย้อนศร</span></label>
-                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ไม่คาดเข็มขัดนิรภัย" class="rounded text-blue-500 w-4 h-4"> <span>ไม่คาดเข็มขัดนิรภัย</span></label>
-                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ใช้โทรศัพท์เคลื่อนที่ขณะขับรถ" class="rounded text-blue-500 w-4 h-4"> <span>ใช้โทรศัพท์เคลื่อนที่ขณะขับรถ</span></label>
-                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ฝ่าฝืนเครื่องหมายจราจร" class="rounded text-blue-500 w-4 h-4"> <span>ฝ่าฝืนเครื่องหมายจราจร</span></label>
-                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="หลับใน" class="rounded text-blue-500 w-4 h-4"> <span>หลับใน</span></label>
-                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="แซงรถผิดกฎหมาย" class="rounded text-blue-500 w-4 h-4"> <span>แซงรถผิดกฎหมาย</span></label>
-                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="เสพสารเสพติด" class="rounded text-blue-500 w-4 h-4"> <span>เสพสารเสพติด</span></label>
-                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ตัดหน้ากระชั้นชิด" class="rounded text-blue-500 w-4 h-4"> <span>ตัดหน้ากระชั้นชิด</span></label>
-                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="บรรทุกเกินอัตรา" class="rounded text-blue-500 w-4 h-4"> <span>บรรทุกเกินอัตรา</span></label>
-                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="อื่นๆ" class="rounded text-blue-500 w-4 h-4"> <span>อื่นๆ</span></label>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                        <h3 class="text-sm font-black text-slate-800 border-b border-slate-50 pb-2"><i class="fas fa-pencil-alt mr-2 text-slate-500"></i>ผู้รายงานข้อมูล</h3>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">ลงชื่อ</label>
-                                <input type="text" id="pb_reporter_name" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" required>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">ตำแหน่ง</label>
-                                <input type="text" id="pb_reporter_position" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
-                            </div>
-                        </div>
-                    </div>
-
-                    <button type="submit" id="submit-paboa4-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-3xl shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 uppercase tracking-widest">
-                        <i class="fas fa-save"></i> บันทึกข้อมูล ปภ.บอ.4
-                    </button>
-                    <div class="h-10"></div>
-                </form>
-            </div>
-
             <!-- VIEW 2: Recent List -->
             <div id="view-list" class="absolute inset-0 overflow-y-auto custom-scrollbar p-5 bg-slate-50 hidden">
                 
@@ -562,7 +398,7 @@
                 </div>
 
                 <div class="flex justify-between items-center mb-6 px-1">
-                    <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest">รายงานอุบัติล่าสุด (<span id="count-badge">0</span>)</h2>
+                    <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest">รายงานอุบัติเหตุล่าสุด (<span id="count-badge">0</span>)</h2>
                     <div class="flex items-center text-[10px] font-black text-emerald-500 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
                         <div class="w-2 h-2 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></div> REAL-TIME
                     </div>
@@ -728,7 +564,7 @@
                             </div>
                         </div>
 
-                        <!-- NEW: Cascading Address inputs with Dropdowns for Province, Amphoe, Tambon -->
+                        <!-- Cascading Address inputs with Dropdowns for Province, Amphoe, Tambon -->
                         <div class="border-t border-slate-100 pt-4 space-y-3">
                             <label class="block text-[10px] font-bold text-slate-400 uppercase">ที่อยู่ปัจจุบัน (จังหวัด / อำเภอ / ตำบล)</label>
                             
@@ -851,6 +687,67 @@
                     </button>
                     <div class="h-10"></div>
                 </form>
+            </div>
+
+            <!-- VIEW NEW: User Management (Admin Only) -->
+            <div id="view-users" class="absolute inset-0 overflow-y-auto custom-scrollbar p-5 bg-slate-50 hidden z-20">
+                
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm mb-6 relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h2 class="text-lg font-black text-slate-800 uppercase tracking-widest">จัดการผู้ใช้งานระบบ</h2>
+                        <p class="text-xs text-slate-500 mt-1 mb-4 font-bold">เพิ่ม แก้ไข และลบรายชื่อผู้ใช้งานระดับตำบล</p>
+                    </div>
+                    <i class="fas fa-users-cog absolute right-0 bottom-0 text-6xl text-slate-100 translate-x-4 translate-y-2"></i>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 mb-6">
+                    <h3 id="form-title-text" class="text-sm font-black text-slate-800 border-b border-slate-50 pb-2"><i class="fas fa-user-plus mr-2 text-blue-500"></i>เพิ่มผู้ใช้งานใหม่</h3>
+                    <form id="add-user-form" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Username (ชื่อผู้ใช้)</label>
+                            <input type="text" id="new-user-name" required class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Password (รหัสผ่าน)</label>
+                            <input type="text" id="new-user-pass" required class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">พื้นที่รับผิดชอบ</label>
+                            <input type="text" id="new-user-area" placeholder="เช่น เทศบาลเมืองศรีสะเกษ" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
+                        </div>
+                        <div class="md:col-span-3 mt-2 flex gap-2">
+                            <button type="submit" class="bg-slate-800 text-white px-5 py-3 rounded-xl text-xs font-black hover:bg-black transition shadow-md w-full md:w-auto uppercase tracking-widest">
+                                <i class="fas fa-save mr-1"></i> บันทึกผู้ใช้งาน
+                            </button>
+                            <button type="button" id="cancel-edit-user-btn" onclick="window.cancelEditUser()" class="hidden bg-slate-200 text-slate-600 px-5 py-3 rounded-xl text-xs font-black hover:bg-slate-300 transition shadow-sm w-full md:w-auto uppercase tracking-widest">
+                                ยกเลิก
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                        <h3 class="text-sm font-black text-slate-800"><i class="fas fa-list-ul mr-2 text-slate-500"></i>รายชื่อผู้ใช้งานในระบบ</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="bg-slate-100/50 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                    <th class="p-3 pl-5">พื้นที่/ตำบล</th>
+                                    <th class="p-3">Username</th>
+                                    <th class="p-3">Password</th>
+                                    <th class="p-3 text-center">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body" class="divide-y divide-slate-100">
+                                <!-- Populated by JS -->
+                                <tr><td colspan="4" class="p-8 text-center text-slate-400"><i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลด...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="h-10"></div>
             </div>
 
             <!-- VIEW 3: Dashboard (Epidemiological Analysis) -->
@@ -979,6 +876,33 @@
         window.activePaboa4VictimId = null;
         window.paboa4VictimsList = [];
         window.paboa4CurrentVictimIndex = 0;
+        
+        // App Users Tracking
+        let appUsers = [];
+        let isUsersSeeded = false;
+        let editingUserId = null; // NEW: ตัวแปรเก็บ ID ของ User ที่กำลังถูกแก้ไข
+
+        const defaultInitialUsers = [
+            { username: '33001', password: '033001', tambon: 'เทศบาลเมืองศรีสะเกษ' },
+            { username: '33002', password: '033002', tambon: 'คูซอด' },
+            { username: '33003', password: '033003', tambon: 'จาน' },
+            { username: '33004', password: '033004', tambon: 'ซำ' },
+            { username: '33005', password: '033005', tambon: 'ตะดอบ' },
+            { username: '33006', password: '033006', tambon: 'ทุ่ม' },
+            { username: '33007', password: '033007', tambon: 'น้ำคำ' },
+            { username: '33008', password: '033008', tambon: 'หญ้าปล้อง' },
+            { username: '33009', password: '033009', tambon: 'หนองครก' },
+            { username: '33010', password: '033010', tambon: 'หนองแก้ว' },
+            { username: '33011', password: '033011', tambon: 'หนองไผ่' },
+            { username: '33012', password: '033012', tambon: 'หนองไฮ' },
+            { username: '33013', password: '033013', tambon: 'หมากเขียบ' },
+            { username: '33014', password: '033014', tambon: 'เมืองเหนือ' },
+            { username: '33015', password: '033015', tambon: 'เมืองใต้' },
+            { username: '33016', password: '033016', tambon: 'โพธิ์' },
+            { username: '33017', password: '033017', tambon: 'โพนข่า' },
+            { username: '33018', password: '033018', tambon: 'โพนค้อ' },
+            { username: '33019', password: '033019', tambon: 'โพนเขวา' }
+        ];
 
         // --- NEW: Address Cascading Data for Paboa4 ---
         // ฐานข้อมูลพื้นที่: ศรีสะเกษ (อำเภอและตำบล)
@@ -1128,7 +1052,7 @@
                 const html = `
                     <div class="relative p-4 border border-slate-100 rounded-xl bg-slate-50 shadow-sm mb-3">
                         <div class="flex justify-between items-center mb-3">
-                            <span class="text-xs font-black text-slate-500 bg-slate-200 px-2 py-0.5 rounded-lg">คนที่ ${index + 1}</span>
+                            <span class="text-xs font-black text-slate-50 bg-slate-200 px-2 py-0.5 rounded-lg">คนที่ ${index + 1}</span>
                             ${index > 0 ? `<button type="button" onclick="window.removeVictim(${uid})" class="text-red-400 hover:text-red-600 text-xs font-bold transition"><i class="fas fa-times mr-1"></i>ลบ</button>` : ''}
                         </div>
                         <div class="space-y-3">
@@ -1306,9 +1230,8 @@
         }
 
         // --- VIEWS AND TABS MAP ---
-        // PABOA4 IS REMOVED FROM MAIN TABS, KEEPS VIEW FOR OVERLAY
-        const views = { form: document.getElementById('view-form'), paboa4: document.getElementById('view-paboa4'), list: document.getElementById('view-list'), report: document.getElementById('view-report') };
-        const tabs = { form: document.getElementById('tab-form'), list: document.getElementById('tab-list'), report: document.getElementById('tab-report') };
+        const views = { form: document.getElementById('view-form'), paboa4: document.getElementById('view-paboa4'), list: document.getElementById('view-list'), report: document.getElementById('view-report'), users: document.getElementById('view-users') };
+        const tabs = { form: document.getElementById('tab-form'), list: document.getElementById('tab-list'), report: document.getElementById('tab-report'), users: document.getElementById('tab-users') };
 
         // --- NEW: ฟังก์ชันสลับคนเจ็บใน ปภ.บอ.4 ---
         window.navigatePaboa4 = (step) => {
@@ -1326,6 +1249,12 @@
             if (!vic) return;
 
             window.activePaboa4VictimId = vic.id;
+            
+            const appUsername = localStorage.getItem('appUsername') || '';
+            const userRole = localStorage.getItem('userRole') || '';
+            const isSuperUser = userRole === 'admin' || appUsername === 'ตำรวจ' || appUsername.toLowerCase() === 'police';
+            // สิทธิ์การเห็นข้อมูลส่วนตัว
+            const canViewSensitive = isSuperUser || acc.recordedBy === appUsername;
 
             // --- Auto Fill ข้อมูล ---
             document.getElementById('paboa4-form').reset(); // Reset first
@@ -1391,8 +1320,8 @@
             const primaryVehicle = acc.vehicles && acc.vehicles.length > 0 ? acc.vehicles[0].type : (acc.type || '');
             document.getElementById('pb_vehicle_detail').value = primaryVehicle;
 
-            // 4. ข้อมูลคนเจ็บ
-            document.getElementById('pb_name').value = vic.name || '';
+            // 4. ข้อมูลคนเจ็บ (ใช้กฎ Data Masking)
+            document.getElementById('pb_name').value = canViewSensitive ? (vic.name || '') : '*** (ปกปิดข้อมูล)';
             document.getElementById('pb_age').value = vic.age || '';
             
             if(vic.gender) {
@@ -1452,19 +1381,34 @@
         };
 
         function switchTab(id) {
+            // เช็คสิทธิ์การเข้าถึงหน้า Users ป้องกันการพิมพ์เรียกฟังก์ชันโดยตรง
+            if (id === 'users' && localStorage.getItem('userRole') !== 'admin') {
+                showAlert('คุณไม่มีสิทธิ์เข้าถึงหน้านี้', 'error');
+                return;
+            }
+
+            // ซ่อนทุก view
             Object.keys(views).forEach(k => { views[k].classList.add('hidden'); });
-            Object.keys(tabs).forEach(k => { if(tabs[k]) tabs[k].className = "flex-1 py-4 text-xs md:text-sm text-center tab-inactive outline-none"; });
+            
+            // ล้างสถานะ active ทุก tab อย่างปลอดภัยโดยไม่กระทบแอตทริบิวต์อื่นๆ
+            Object.keys(tabs).forEach(k => { 
+                if(tabs[k]) {
+                    tabs[k].classList.remove('tab-active');
+                    tabs[k].classList.add('tab-inactive');
+                }
+            });
             
             views[id].classList.remove('hidden'); 
             
-            // If viewing paboa4, keep "list" tab highlighted
-            if (id === 'paboa4') {
-                if(tabs['list']) tabs['list'].className = "flex-1 py-4 text-xs md:text-sm text-center tab-active outline-none";
-            } else {
-                if(tabs[id]) tabs[id].className = "flex-1 py-4 text-xs md:text-sm text-center tab-active outline-none";
+            // จัดการไฮไลท์แท็บ
+            const activeTabId = (id === 'paboa4') ? 'list' : id;
+            if(tabs[activeTabId]) {
+                tabs[activeTabId].classList.remove('tab-inactive');
+                tabs[activeTabId].classList.add('tab-active');
             }
 
             if (id === 'report') { document.getElementById('map-panel').classList.add('hidden'); document.getElementById('sidebar-panel').classList.replace('md:w-1/3', 'w-full'); setTimeout(renderAnalytics, 100); }
+            else if (id === 'users') { document.getElementById('map-panel').classList.add('hidden'); document.getElementById('sidebar-panel').classList.replace('md:w-1/3', 'w-full'); }
             else { document.getElementById('map-panel').classList.remove('hidden'); document.getElementById('sidebar-panel').classList.replace('w-full', 'md:w-1/3'); setTimeout(() => map.invalidateSize(), 200); }
         }
         window.switchTab = switchTab;
@@ -1557,7 +1501,7 @@
             reader.readAsText(file);
         };
 
-        // FIREBASE SYNC
+        // FIREBASE SYNC & USER MANAGEMENT
         function initRealtime() {
             if (!currentUser) return;
             const accidentsRef = collection(db, 'artifacts', appId, 'public', 'data', 'accidents');
@@ -1567,7 +1511,125 @@
                 allData.sort((a, b) => new Date(b.accidentDate + 'T' + b.accidentTime) - new Date(a.accidentDate + 'T' + a.accidentTime));
                 updateListUI(); updateMapMarkers();
             }, (err) => { showAlert("ไม่สามารถซิงค์ข้อมูล: " + err.message, "error"); });
+
+            // --- APP USERS LOGIC ---
+            const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'app_users');
+            onSnapshot(usersRef, (snap) => {
+                if (snap.empty && !isUsersSeeded) {
+                    isUsersSeeded = true;
+                    // Seed initial user data
+                    defaultInitialUsers.forEach(async (u) => { await addDoc(usersRef, u); });
+                } else {
+                    appUsers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    appUsers.sort((a,b) => a.username.localeCompare(b.username));
+                    if(window.renderUsersTable) window.renderUsersTable();
+                }
+            });
         }
+
+        // --- NEW: Edit & Render Users Table (For Admin) ---
+        window.editUser = (id) => {
+            const userToEdit = appUsers.find(u => u.id === id);
+            if(!userToEdit) return;
+            editingUserId = id;
+
+            // Populate form
+            document.getElementById('new-user-name').value = userToEdit.username;
+            document.getElementById('new-user-pass').value = userToEdit.password;
+            document.getElementById('new-user-area').value = userToEdit.tambon || '';
+
+            // Update UI texts
+            document.getElementById('form-title-text').innerHTML = '<i class="fas fa-user-edit mr-2 text-blue-500"></i>แก้ไขผู้ใช้งาน';
+            const submitBtn = document.querySelector('#add-user-form button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-sync mr-1"></i> อัปเดตผู้ใช้งาน';
+
+            // Show cancel button
+            document.getElementById('cancel-edit-user-btn').classList.remove('hidden');
+
+            // Scroll to form
+            document.getElementById('view-users').scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.cancelEditUser = () => {
+            editingUserId = null;
+            document.getElementById('add-user-form').reset();
+            document.getElementById('form-title-text').innerHTML = '<i class="fas fa-user-plus mr-2 text-blue-500"></i>เพิ่มผู้ใช้งานใหม่';
+            const submitBtn = document.querySelector('#add-user-form button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-save mr-1"></i> บันทึกผู้ใช้งาน';
+            document.getElementById('cancel-edit-user-btn').classList.add('hidden');
+        };
+
+        window.renderUsersTable = () => {
+            const tbody = document.getElementById('users-table-body');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            appUsers.forEach(u => {
+                // ถ้าในฐานข้อมูลมี @ ให้ดึงเฉพาะส่วนหน้ามาแสดงให้ดูง่ายๆ
+                const displayUser = u.username.includes('@') ? u.username.split('@')[0] : u.username;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3 pl-5 font-bold text-blue-600">${u.tambon}</td>
+                        <td class="p-3 font-mono text-slate-600">${displayUser}</td>
+                        <td class="p-3 font-mono text-slate-600">${u.password}</td>
+                        <td class="p-3 text-center whitespace-nowrap">
+                            <button type="button" onclick="window.editUser('${u.id}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 w-7 h-7 rounded-lg transition mr-1"><i class="fas fa-pen text-[10px]"></i></button>
+                            <button type="button" onclick="window.deleteUser('${u.id}')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 w-7 h-7 rounded-lg transition"><i class="fas fa-trash-alt text-[10px]"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        };
+
+        window.deleteUser = async (id) => {
+            if (localStorage.getItem('userRole') !== 'admin') {
+                return showAlert('สงวนสิทธิ์เฉพาะผู้ดูแลระบบ', 'error');
+            }
+            if (confirm("ยืนยันการลบผู้ใช้งานนี้?")) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'app_users', id));
+                    showAlert('ลบผู้ใช้งานสำเร็จ', 'success');
+                    if(editingUserId === id) window.cancelEditUser();
+                } catch(e) {
+                    showAlert(e.message, 'error');
+                }
+            }
+        };
+
+        document.getElementById('add-user-form').onsubmit = async (e) => {
+            e.preventDefault();
+            if (localStorage.getItem('userRole') !== 'admin') {
+                return showAlert('สงวนสิทธิ์เฉพาะผู้ดูแลระบบ', 'error');
+            }
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true; btn.innerHTML = 'กำลังบันทึก...';
+            try {
+                // บันทึก/อัปเดตผู้ใช้
+                const u = document.getElementById('new-user-name').value.trim();
+                const p = document.getElementById('new-user-pass').value.trim();
+                const t = document.getElementById('new-user-area').value.trim();
+                
+                if (editingUserId) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'app_users', editingUserId), {
+                        username: u, password: p, tambon: t
+                    });
+                    showAlert('อัปเดตผู้ใช้งานสำเร็จ', 'success');
+                    window.cancelEditUser(); // รีเซ็ตฟอร์มกลับเป็นโหมดเพิ่มข้อมูล
+                } else {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'app_users'), {
+                        username: u, password: p, tambon: t
+                    });
+                    document.getElementById('add-user-form').reset();
+                    showAlert('เพิ่มผู้ใช้งานสำเร็จ', 'success');
+                }
+            } catch(e) {
+                showAlert(e.message, 'error');
+            } finally {
+                btn.disabled = false; 
+                if(!editingUserId) {
+                    btn.innerHTML = '<i class="fas fa-save mr-1"></i> บันทึกผู้ใช้งาน';
+                }
+            }
+        };
 
         // --- NEW: Navigate List function ---
         window.navigateList = (step) => {
@@ -1637,6 +1699,11 @@
             cont.innerHTML = '';
             document.getElementById('empty-list').classList.toggle('hidden', filteredData.length > 0);
 
+            // ดึงข้อมูล User เพื่อจัดการสิทธิ์การแสดงปุ่มแก้ไข/ลบ และการมองเห็นข้อมูลส่วนตัว
+            const currentAppUsername = localStorage.getItem('appUsername') || '';
+            const currentUserRole = localStorage.getItem('userRole') || '';
+            const isSuperUser = currentUserRole === 'admin' || currentAppUsername === 'ตำรวจ' || currentAppUsername.toLowerCase() === 'police';
+
             let lastDate = "";
             paginatedData.forEach(item => {
                 const d = new Date(item.accidentDate);
@@ -1651,11 +1718,18 @@
                 const overallSeverity = getHighestSeverity(victimsList);
                 const color = overallSeverity === 'สาหัส' ? 'red' : overallSeverity === 'เล็กน้อย' ? 'emerald' : overallSeverity === 'ปานกลาง' ? 'amber' : overallSeverity === 'เสียชีวิต' ? 'slate' : 'blue';
                 
+                // เช็คสิทธิ์การเข้าถึงข้อมูลส่วนบุคคล และ ปุ่ม Action
+                const canAccessSensitive = isSuperUser || item.recordedBy === currentAppUsername;
+
                 // NEW: Victims list with dedicated button for each to open Paboa4 form
-                let victimsHtml = victimsList.map(v => `
+                let victimsHtml = victimsList.map(v => {
+                    // MASKING DATA: ซ่อนชื่อถ้าไม่มีสิทธิ์
+                    const displayName = canAccessSensitive ? (v.name || 'ไม่ระบุชื่อ') : '*** (ปกปิดข้อมูล)';
+                    
+                    return `
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-2 pl-2 border-l-2 border-slate-200 py-1 bg-slate-50/50 rounded-r-lg">
                         <div class="text-xs text-slate-600 font-medium mb-2 sm:mb-0">
-                            <i class="fas fa-user-injured text-slate-300 mr-1.5"></i> ${v.name || 'ไม่ระบุชื่อ'} (${v.age || '-'} ปี)
+                            <i class="fas fa-user-injured text-slate-300 mr-1.5"></i> ${displayName} (${v.age || '-'} ปี)
                             <span class="text-blue-500 font-bold ml-2">${v.role || 'ผู้ขับขี่'}</span>
                             <span class="text-[9px] font-black uppercase text-${v.severity === 'สาหัส'?'red':v.severity==='เสียชีวิต'?'slate':v.severity==='ปานกลาง'?'amber':'emerald'}-500 ml-1 bg-white px-1.5 py-0.5 rounded border border-slate-100 shadow-sm">[${v.severity}]</span>
                         </div>
@@ -1663,17 +1737,28 @@
                             <i class="fas fa-file-medical mr-1.5"></i> ปภ.บอ.4
                         </button>
                     </div>
-                `).join('');
+                    `;
+                }).join('');
 
                 // Display multiple vehicles if present
                 const vVehiclesList = item.vehicles && item.vehicles.length > 0 ? item.vehicles.map(v => v.type).join(', ') : (item.type || 'ไม่ระบุ');
 
-                // NEW: Display photos if present
+                // Display photos if present
                 let photosHtml = '';
                 if (item.photos && item.photos.length > 0) {
                     photosHtml = `<div class="flex gap-2 mb-3 mt-1">` + 
                         item.photos.map(p => `<img src="${p}" class="w-12 h-12 object-cover rounded-lg border border-slate-200 shadow-sm cursor-pointer" onclick="window.open('${p}', '_blank')">`).join('') +
                     `</div>`;
+                }
+
+                let actionButtonsHtml = '';
+                if (canAccessSensitive) {
+                    actionButtonsHtml = `
+                        <div class="absolute top-3 right-3 flex gap-1">
+                            <button onclick="event.stopPropagation(); window.editAccident('${item.id}')" class="w-7 h-7 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xs hover:bg-blue-600 hover:text-white transition shadow-sm" title="แก้ไข"><i class="fas fa-pen"></i></button>
+                            <button onclick="event.stopPropagation(); window.deleteAccident('${item.id}')" class="w-7 h-7 bg-red-50 text-red-600 rounded-lg flex items-center justify-center text-xs hover:bg-red-600 hover:text-white transition shadow-sm" title="ลบ"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    `;
                 }
 
                 cont.insertAdjacentHTML('beforeend', `
@@ -1682,10 +1767,7 @@
                             <h4 class="font-black text-slate-800 text-sm leading-tight">${item.customIncidentType || 'อุบัติเหตุ'}</h4>
                             <span class="text-[10px] font-black text-slate-400 shrink-0">${item.accidentTime} น.</span>
                         </div>
-                        <div class="absolute top-3 right-3 flex gap-1">
-                            <button onclick="window.editAccident('${item.id}')" class="w-7 h-7 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xs hover:bg-blue-600 hover:text-white transition shadow-sm" title="แก้ไข"><i class="fas fa-pen"></i></button>
-                            <button onclick="window.deleteAccident('${item.id}')" class="w-7 h-7 bg-red-50 text-red-600 rounded-lg flex items-center justify-center text-xs hover:bg-red-600 hover:text-white transition shadow-sm" title="ลบ"><i class="fas fa-trash-alt"></i></button>
-                        </div>
+                        ${actionButtonsHtml}
                         <div onclick="focusMap(${item.lat}, ${item.lng})">
                             <p class="text-[11px] font-bold text-slate-500 mb-3 bg-slate-50 inline-block px-2 py-1 rounded-md">พาหนะ: ${vVehiclesList}</p>
                             ${photosHtml}
@@ -1782,6 +1864,16 @@
         window.editAccident = (id) => {
             const item = allData.find(d => d.id === id);
             if (!item) return;
+            
+            // เช็คสิทธิ์ก่อนเข้าไปแก้ไข
+            const appUsername = localStorage.getItem('appUsername') || '';
+            const userRole = localStorage.getItem('userRole') || '';
+            const isSuperUser = userRole === 'admin' || appUsername === 'ตำรวจ' || appUsername.toLowerCase() === 'police';
+            
+            if (!isSuperUser && item.recordedBy !== appUsername) {
+                return showAlert('คุณไม่มีสิทธิ์แก้ไขข้อมูลนี้ (ไม่ใช่ผู้แจ้ง)', 'error');
+            }
+            
             editingId = id; switchTab('form');
             document.getElementById('editing-indicator').classList.remove('hidden');
             document.getElementById('submit-btn').innerHTML = '<i class="fas fa-sync mr-3"></i> อัปเดตข้อมูล';
@@ -1823,7 +1915,23 @@
             initDateTime(); if (activeMarker) { map.removeLayer(activeMarker); activeMarker = null; }
         };
 
-        window.deleteAccident = (id) => { deletingId = id; document.getElementById('delete-modal').classList.remove('hidden'); };
+        window.deleteAccident = (id) => { 
+            const item = allData.find(d => d.id === id);
+            if (!item) return;
+            
+            // เช็คสิทธิ์ก่อนลบ
+            const appUsername = localStorage.getItem('appUsername') || '';
+            const userRole = localStorage.getItem('userRole') || '';
+            const isSuperUser = userRole === 'admin' || appUsername === 'ตำรวจ' || appUsername.toLowerCase() === 'police';
+            
+            if (!isSuperUser && item.recordedBy !== appUsername) {
+                return showAlert('คุณไม่มีสิทธิ์ลบข้อมูลนี้ (ไม่ใช่ผู้แจ้ง)', 'error');
+            }
+            
+            deletingId = id; 
+            document.getElementById('delete-modal').classList.remove('hidden'); 
+        };
+        
         document.getElementById('cancel-delete-btn').onclick = () => { deletingId = null; document.getElementById('delete-modal').classList.add('hidden'); };
         document.getElementById('confirm-delete-btn').onclick = async () => {
             if (!deletingId || !currentUser) return;
@@ -2034,10 +2142,13 @@
                         return sel.value === 'other' && oth ? oth.value : sel.value;
                     };
 
+                    const appUsername = localStorage.getItem('appUsername') || 'anonymous';
+
                     // รวบรวมข้อมูลทั้งหมดที่กรอกส่งเข้า Database
                     const payload = {
                         timestamp: serverTimestamp(),
                         userId: currentUser.uid,
+                        recordedBy: appUsername, // ใช้ชื่อก่อน @ บันทึกด้วย
                         accidentId: window.activePaboa4AccidentId,
                         victimId: window.activePaboa4VictimId,
                         type: 'paboa4_report',
@@ -2098,6 +2209,8 @@
                 const addr = { ...(window.lastResolvedAddress || {}), tambon: manualTambon, cleanT: manualTambon.replace(/ตำบล|แขวง/g, '').trim() };
                 
                 const overallSeverity = getHighestSeverity(currentVictims);
+                
+                const appUsername = localStorage.getItem('appUsername') || 'anonymous';
 
                 const payload = {
                     lat: parseFloat(document.getElementById('lat').value), lng: parseFloat(document.getElementById('lng').value),
@@ -2110,7 +2223,9 @@
                     victims: currentVictims,
                     vehicles: currentVehicles,
                     photos: currentPhotos,
-                    address: addr, userId: currentUser.uid, lastUpdated: serverTimestamp()
+                    address: addr, userId: currentUser.uid, 
+                    recordedBy: appUsername, // เพิ่มฟิลด์ให้แสดงผลใน Firebase Console ได้สะดวกขึ้น
+                    lastUpdated: serverTimestamp()
                 };
 
                 if (editingId) {
@@ -2137,17 +2252,127 @@
             document.getElementById('accidentTime').value = iso.split('T')[1].substring(0, 5);
         }
 
+        window.setupUIForRole = (role) => {
+            const tabUsers = document.getElementById('tab-users');
+            if (role === 'admin') {
+                if(tabUsers) tabUsers.classList.remove('hidden');
+            } else {
+                if(tabUsers) tabUsers.classList.add('hidden');
+            }
+            
+            const orgDisplay = document.getElementById('user-org-display');
+            if (orgDisplay) {
+                if (role === 'admin') {
+                    orgDisplay.innerHTML = '<i class="fas fa-shield-alt text-red-400 mr-1"></i> ศูนย์สั่งการส่วนกลาง (Admin)';
+                } else {
+                    const tambon = localStorage.getItem('userTambon');
+                    orgDisplay.innerHTML = `<i class="fas fa-map-marker-alt text-emerald-400 mr-1"></i> พื้นที่: ${tambon || 'ไม่ระบุ'}`;
+                }
+            }
+        };
+
+        window.logout = () => {
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userTambon');
+            localStorage.removeItem('appUsername');
+            location.reload();
+        };
+
         window.onload = async () => {
-            window.populateProvinces(); // Initialize province dropdown
-            renderVehiclesForm(); // Initialize first vehicle row
-            renderVictimsForm(); // Initialize first victim row
+            const loginScreen = document.getElementById('login-screen');
+            const loginForm = document.getElementById('login-form');
+            const loginBtn = loginForm.querySelector('button[type="submit"]');
+
+            // 1. โหลด UI พื้นฐานรอก่อนเลย
+            window.populateProvinces(); 
+            renderVehiclesForm(); 
+            renderVictimsForm(); 
+            initDateTime(); 
+            setTimeout(() => map.invalidateSize(), 500);
+
+            // 2. ล็อกอิน Firebase แบบไม่ระบุตัวตนในพื้นหลังทันที เพื่อไปโหลดรายชื่อ User มาตรวจสอบ
+            if(loginBtn && !localStorage.getItem('userRole')) {
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>กำลังเชื่อมต่อฐานข้อมูล...';
+            }
+
             const initAuth = async () => {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
                 else await signInAnonymously(auth);
             };
+            
             await initAuth();
-            onAuthStateChanged(auth, (u) => { if (u) { currentUser = u; initRealtime(); } });
-            initDateTime(); setTimeout(() => map.invalidateSize(), 500);
+            
+            onAuthStateChanged(auth, (u) => { 
+                if (u) { 
+                    currentUser = u; 
+                    initRealtime(); // ดึงข้อมูลทันที
+
+                    // เปิดปุ่มให้ล็อกอินได้
+                    if(loginBtn && !localStorage.getItem('userRole')) {
+                        setTimeout(() => {
+                            loginBtn.disabled = false;
+                            loginBtn.innerHTML = 'เข้าสู่ระบบ <i class="fas fa-arrow-right text-xs"></i>';
+                        }, 1000);
+                    }
+                } 
+            });
+
+            // ตรวจสอบสถานะการเข้าสู่ระบบจาก LocalStorage
+            if (localStorage.getItem('userRole')) {
+                loginScreen.classList.add('hidden');
+                window.setupUIForRole(localStorage.getItem('userRole'));
+            } else {
+                loginForm.onsubmit = (e) => {
+                    e.preventDefault();
+                    // --- เพิ่มการตัดเอาเฉพาะชื่อก่อน @ มาใช้งาน ---
+                    const rawUserVal = document.getElementById('login-username').value.trim();
+                    const userVal = rawUserVal.includes('@') ? rawUserVal.split('@')[0] : rawUserVal;
+                    
+                    const passVal = document.getElementById('login-password').value;
+                    
+                    // แอดมินหลัก
+                    if (userVal === 'admin' && passVal === '123456') {
+                        localStorage.setItem('userRole', 'admin');
+                        localStorage.setItem('appUsername', 'admin');
+                        loginScreen.style.opacity = '0'; 
+                        setTimeout(() => {
+                            loginScreen.classList.add('hidden');
+                            window.setupUIForRole('admin');
+                        }, 500);
+                    } else {
+                        // ค้นหาในรายชื่อ User ลูกข่าย โดยเทียบจากส่วนก่อน @
+                        // ใช้ fallback เป็น defaultInitialUsers กรณีฐานข้อมูลยังดึงมาไม่เสร็จ
+                        const listToSearch = appUsers.length > 0 ? appUsers : defaultInitialUsers;
+                        const matchedUser = listToSearch.find(u => {
+                            const dbUser = u.username.includes('@') ? u.username.split('@')[0] : u.username;
+                            return dbUser === userVal && u.password === passVal;
+                        });
+                        
+                        if (matchedUser) {
+                            localStorage.setItem('userRole', 'user');
+                            localStorage.setItem('userTambon', matchedUser.tambon);
+                            localStorage.setItem('appUsername', userVal); // เก็บชื่อไว้เซฟลง Firebase
+                            loginScreen.style.opacity = '0';
+                            setTimeout(() => {
+                                loginScreen.classList.add('hidden');
+                                window.setupUIForRole('user');
+                                // (ออปชันเสริม: ตั้งค่า Input ตำบลเริ่มต้นให้ตรงกับที่รับผิดชอบ)
+                                const tambonInput = document.getElementById('input-tambon');
+                                if(tambonInput) {
+                                    for(let i=0; i<tambonInput.options.length; i++) {
+                                        if(matchedUser.tambon.includes(tambonInput.options[i].value)) {
+                                            tambonInput.selectedIndex = i; break;
+                                        }
+                                    }
+                                }
+                            }, 500);
+                        } else {
+                            document.getElementById('login-error').classList.remove('hidden');
+                        }
+                    }
+                };
+            }
         };
     </script>
 </body>
