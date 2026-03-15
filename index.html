@@ -150,7 +150,7 @@
                 <div class="w-20 h-20 bg-gradient-to-tr from-red-600 to-red-500 text-white rounded-full flex items-center justify-center mx-auto text-4xl mb-4 shadow-lg shadow-red-500/30 border-4 border-white">
                     <i class="fas fa-truck-medical"></i>
                 </div>
-                <h2 class="text-2xl font-black text-slate-800 tracking-tight">ระบบรายงานอุบัติเหตุ</h2>
+                <h2 class="text-2xl font-black text-slate-800 tracking-tight">ระบบรายงานอุบัติเหตุทางถนน</h2>
                 <p class="text-sm text-slate-500 mt-1 font-bold">ศูนย์ปฏิบัติการความปลอดภัยทางถนน</p>
                 <p class="text-sm text-slate-500 mt-1 font-bold">อำเภอเมืองศรีสะเกษ</p>
             </div>
@@ -896,6 +896,10 @@
                                 <h4 class="text-xs font-black text-slate-700 uppercase tracking-widest mb-4">วันในสัปดาห์ (Day of Week)</h4>
                                 <div class="chart-container flex-1"><canvas id="chart-time-day"></canvas></div>
                             </div>
+                        </div>
+                        <div class="p-6 border-t border-slate-100">
+                            <h4 class="text-xs font-black text-slate-700 uppercase tracking-widest mb-4">แนวโน้มรายเดือน (Monthly Trend)</h4>
+                            <div class="chart-container flex-1 w-full"><canvas id="chart-time-month"></canvas></div>
                         </div>
                     </div>
 
@@ -2145,6 +2149,7 @@
                 severityStats = { 'เล็กน้อย':0, 'ปานกลาง':0, 'สาหัส':0, 'เสียชีวิต':0 };
             
             let dayStats = { 'อาทิตย์':0, 'จันทร์':0, 'อังคาร':0, 'พุธ':0, 'พฤหัสบดี':0, 'ศุกร์':0, 'เสาร์':0 };
+            let monthStats = { 'ม.ค.':0, 'ก.พ.':0, 'มี.ค.':0, 'เม.ย.':0, 'พ.ค.':0, 'มิ.ย.':0, 'ก.ค.':0, 'ส.ค.':0, 'ก.ย.':0, 'ต.ค.':0, 'พ.ย.':0, 'ธ.ค.':0 };
 
             reportData.forEach(item => {
                 const vList = item.victims && item.victims.length > 0 ? item.victims : [{ name: item.victimName, age: item.victimAge, gender: item.victimGender, role: item.victimRole || 'ผู้ขับขี่', severity: item.severity }];
@@ -2202,7 +2207,9 @@
                     const d = new Date(item.accidentDate);
                     if (!isNaN(d.getTime())) {
                         const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+                        const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
                         dayStats[days[d.getDay()]]++;
+                        monthStats[months[d.getMonth()]]++;
                     }
                 }
                 if (item.accidentTime) {
@@ -2260,6 +2267,16 @@
                     type: 'bar', 
                     data: { labels: Object.keys(dayStats), datasets: [{ label: 'จำนวน', data: Object.values(dayStats), backgroundColor: '#3b82f6', borderRadius: 6 }] }, 
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } } 
+                });
+            }
+            
+            // 3.5 กราฟเดือน (Monthly Bar)
+            const ctxMonth = document.getElementById('chart-time-month');
+            if (ctxMonth) {
+                charts.month = new Chart(ctxMonth, { 
+                    type: 'bar', 
+                    data: { labels: Object.keys(monthStats), datasets: [{ label: 'จำนวนอุบัติเหตุ', data: Object.values(monthStats), backgroundColor: '#0ea5e9', borderRadius: 6 }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } } } 
                 });
             }
 
