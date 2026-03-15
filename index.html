@@ -52,6 +52,7 @@
         }
 
         .chart-container { position: relative; width: 100%; height: 260px; }
+        .chart-container-lg { position: relative; width: 100%; height: 320px; }
         
         .triage-card {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -136,7 +137,7 @@
 </head>
 <body class="h-dvh w-full flex flex-col md:flex-row text-slate-800">
 
-    <!-- LOGIN SCREEN OVERLAY (BEAUTIFIED - CHANGED BG) -->
+    <!-- LOGIN SCREEN OVERLAY -->
     <div id="login-screen" class="fixed inset-0 z-[9999] flex items-center justify-center transition-opacity duration-500 bg-slate-900 bg-[url('https://images.unsplash.com/photo-1510486008696-6cc800b6fbff?q=80&w=1920&auto=format&fit=crop')] bg-cover bg-center">
         <!-- Dark Overlay -->
         <div class="absolute inset-0 bg-slate-900/70 backdrop-blur-[2px]"></div>
@@ -149,7 +150,8 @@
                 <div class="w-20 h-20 bg-gradient-to-tr from-red-600 to-red-500 text-white rounded-full flex items-center justify-center mx-auto text-4xl mb-4 shadow-lg shadow-red-500/30 border-4 border-white">
                     <i class="fas fa-truck-medical"></i>
                 </div>
-                <h2 class="text-2xl font-black text-slate-800 tracking-tight">ระบบรายงานอุบัติเหตุทางถนน</h2>
+                <h2 class="text-2xl font-black text-slate-800 tracking-tight">ระบบรายงานอุบัติเหตุ</h2>
+                <p class="text-sm text-slate-500 mt-1 font-bold">ศูนย์ปฏิบัติการความปลอดภัยทางถนน</p>
                 <p class="text-sm text-slate-500 mt-1 font-bold">อำเภอเมืองศรีสะเกษ</p>
             </div>
 
@@ -215,7 +217,7 @@
         
         <div class="p-5 bg-slate-900 text-white shadow-lg z-10 hidden md:block relative">
             <h1 class="text-xl font-black tracking-tight flex items-center">
-                <i class="fas fa-car-burst mr-3 text-red-500 text-2xl"></i> ระบบรายงานอุบัติเหตุทางถนน
+                <i class="fas fa-car-burst mr-3 text-red-500 text-2xl"></i> ระบบรายงานอุบัติเหตุ
             </h1>
             <p id="user-org-display" class="text-[10px] text-slate-300 mt-1 uppercase font-bold tracking-widest opacity-90">
                 <i class="fas fa-spinner fa-spin mr-1"></i> กำลังตรวจสอบสิทธิ์...
@@ -750,102 +752,186 @@
                 <div class="h-10"></div>
             </div>
 
-            <!-- VIEW 3: Dashboard (Epidemiological Analysis) -->
-            <div id="view-report" class="absolute inset-0 overflow-y-auto custom-scrollbar bg-slate-100 hidden">
-                <div class="max-w-6xl mx-auto p-5 md:p-10 space-y-8 pb-24 text-slate-700">
+            <!-- VIEW 3: Dashboard (Epidemiological Analysis) (BEAUTIFIED) -->
+            <div id="view-report" class="absolute inset-0 overflow-y-auto custom-scrollbar bg-slate-50 hidden">
+                <div class="max-w-7xl mx-auto p-4 md:p-8 space-y-6 pb-24 text-slate-700">
                     
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-5 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-                        <div>
-                            <h2 class="text-2xl font-black text-slate-800 tracking-tight flex items-center uppercase leading-none">
-                                <i class="fas fa-chart-pie text-red-600 mr-3"></i>สถิติระบาดวิทยาอุบัติเหตุทางถนน
+                    <!-- Header -->
+                    <div class="bg-slate-900 rounded-[2rem] p-6 md:p-10 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div class="relative z-10">
+                            <h2 class="text-2xl md:text-3xl font-black tracking-tight flex items-center leading-none">
+                                <i class="fas fa-chart-pie text-red-500 mr-3 md:mr-4"></i> EPIDEMIOLOGY ANALYSIS
                             </h2>
-                            <p class="text-xs text-slate-500 mt-2 font-medium italic">EPIDEMIOLOGY ANALYSIS • อำเภอเมืองศรีสะเกษ</p>
+                            <p class="text-xs md:text-sm text-slate-400 mt-3 font-medium max-w-lg leading-relaxed">
+                                บทวิเคราะห์ข้อมูลเชิงลึกจากการระบาดวิทยา แยกองค์ประกอบอุบัติเหตุตามบุคคล สถานที่ และเวลา เพื่อการวางแผนป้องกันที่แม่นยำ
+                            </p>
                         </div>
-                        <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-                            <select id="report-tambon-filter" class="w-full sm:w-auto bg-slate-50 border border-slate-200 text-slate-600 px-4 py-2.5 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none transition cursor-pointer">
-                                <option value="">ทุกตำบล (ภาพรวม)</option>
-                                <option value="เทศบาลเมืองศรีสะเกษ">เทศบาลเมืองศรีสะเกษ</option>
-                                <option value="คูซอด">คูซอด</option>
-                                <option value="ซำ">ซำ</option>
-                                <option value="จาน">จาน</option>
-                                <option value="ตะดอบ">ตะดอบ</option>
-                                <option value="หนองครก">หนองครก</option>
-                                <option value="โพนข่า">โพนข่า</option>
-                                <option value="โพนค้อ">โพนค้อ</option>
-                                <option value="โพนเขวา">โพนเขวา</option>
-                                <option value="หญ้าปล้อง">หญ้าปล้อง</option>
-                                <option value="ทุ่ม">ทุ่ม</option>
-                                <option value="หนองไฮ">หนองไฮ</option>
-                                <option value="หนองแก้ว">หนองแก้ว</option>
-                                <option value="น้ำคำ">น้ำคำ</option>
-                                <option value="โพธิ์">โพธิ์</option>
-                                <option value="หมากเขียบ">หมากเขียบ</option>
-                                <option value="หนองไผ่">หนองไผ่</option>
-                            </select>
-                            <button onclick="window.print()" class="w-full sm:w-auto bg-slate-50 border border-slate-200 text-slate-600 px-5 py-2.5 rounded-2xl text-sm font-black hover:bg-slate-100 transition shadow-sm flex items-center justify-center">
-                                <i class="fas fa-print mr-2"></i> พิมพ์รายงาน
+                        <div class="relative z-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+                            <div class="relative flex-1 sm:flex-none">
+                                <select id="report-tambon-filter" class="w-full bg-white/10 border border-white/20 text-white backdrop-blur-md px-4 py-3 rounded-xl text-sm font-bold focus:ring-2 focus:ring-red-500 outline-none transition appearance-none cursor-pointer pr-10">
+                                    <option value="" class="text-slate-800">ทุกตำบล (ภาพรวม)</option>
+                                    <option value="เทศบาลเมืองศรีสะเกษ" class="text-slate-800">เทศบาลเมืองศรีสะเกษ</option>
+                                    <option value="คูซอด" class="text-slate-800">คูซอด</option>
+                                    <option value="ซำ" class="text-slate-800">ซำ</option>
+                                    <option value="จาน" class="text-slate-800">จาน</option>
+                                    <option value="ตะดอบ" class="text-slate-800">ตะดอบ</option>
+                                    <option value="หนองครก" class="text-slate-800">หนองครก</option>
+                                    <option value="โพนข่า" class="text-slate-800">โพนข่า</option>
+                                    <option value="โพนค้อ" class="text-slate-800">โพนค้อ</option>
+                                    <option value="โพนเขวา" class="text-slate-800">โพนเขวา</option>
+                                    <option value="หญ้าปล้อง" class="text-slate-800">หญ้าปล้อง</option>
+                                    <option value="ทุ่ม" class="text-slate-800">ทุ่ม</option>
+                                    <option value="หนองไฮ" class="text-slate-800">หนองไฮ</option>
+                                    <option value="หนองแก้ว" class="text-slate-800">หนองแก้ว</option>
+                                    <option value="น้ำคำ" class="text-slate-800">น้ำคำ</option>
+                                    <option value="โพธิ์" class="text-slate-800">โพธิ์</option>
+                                    <option value="หมากเขียบ" class="text-slate-800">หมากเขียบ</option>
+                                    <option value="หนองไผ่" class="text-slate-800">หนองไผ่</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-white">
+                                    <i class="fas fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                            <button onclick="window.print()" class="w-full sm:w-auto bg-white text-slate-900 px-5 py-3 rounded-xl text-sm font-black hover:bg-slate-100 transition shadow-lg flex items-center justify-center gap-2">
+                                <i class="fas fa-print"></i> พิมพ์รายงาน
                             </button>
+                        </div>
+                        <div class="absolute right-0 bottom-0 opacity-[0.03] translate-x-1/4 translate-y-1/4 pointer-events-none">
+                            <i class="fas fa-microscope text-[15rem]"></i>
                         </div>
                     </div>
 
                     <!-- Macro KPIs -->
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-5">
-                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 h-32 flex flex-col justify-between">
-                            <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">เหตุการณ์สะสม</div>
-                            <div class="text-4xl font-black text-slate-900 leading-none" id="kpi-total">0</div>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">อุบัติเหตุสะสม</span>
+                                <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-car-crash"></i></div>
+                            </div>
+                            <div class="flex items-baseline gap-1.5">
+                                <span class="text-3xl font-black text-slate-800 leading-none" id="kpi-total">0</span>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ครั้ง</span>
+                            </div>
                         </div>
-                        <!-- CHANGED: Now separates Total Injured and Dead explicitly -->
-                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 border-l-4 border-l-orange-500 h-32 flex flex-col justify-between">
-                            <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">บาดเจ็บรวม / เสียชีวิต</div>
-                            <div class="flex items-baseline gap-4">
+                        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between h-32 border-l-4 border-l-red-500 hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">บาดเจ็บรวม/เสียชีวิต</span>
+                                <div class="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center"><i class="fas fa-skull-crossbones"></i></div>
+                            </div>
+                            <div class="flex items-baseline gap-3">
                                 <div class="flex items-baseline gap-1">
-                                    <span class="text-4xl font-black text-orange-500 leading-none" id="kpi-injured">0</span>
-                                    <span class="text-[10px] font-black text-slate-400">เจ็บ</span>
+                                    <span class="text-3xl font-black text-red-500 leading-none" id="kpi-injured">0</span>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase">เจ็บ</span>
                                 </div>
                                 <div class="flex items-baseline gap-1">
-                                    <span class="text-2xl font-black text-slate-900 leading-none" id="kpi-dead">0</span>
-                                    <span class="text-[10px] font-black text-slate-400">ตาย</span>
+                                    <span class="text-xl font-black text-slate-800 leading-none" id="kpi-dead">0</span>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase">ตาย</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 h-32 flex flex-col justify-between">
-                            <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">กลุ่มอายุเสี่ยง (บุคคล)</div>
-                            <div class="text-xl font-black text-orange-500 leading-none" id="kpi-age">--</div>
+                        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">กลุ่มอายุเสี่ยง</span>
+                                <div class="w-8 h-8 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center"><i class="fas fa-user-tag"></i></div>
+                            </div>
+                            <div class="flex items-baseline gap-1.5">
+                                <span class="text-2xl font-black text-orange-500 leading-none" id="kpi-age">--</span>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ปี</span>
+                            </div>
                         </div>
-                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 h-32 flex flex-col justify-between">
-                            <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">ชั่วโมงอันตราย (เวลา)</div>
-                            <div class="text-xl font-black text-amber-500 leading-none" id="kpi-time">--</div>
+                        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">ชั่วโมงอันตราย</span>
+                                <div class="w-8 h-8 rounded-full bg-purple-50 text-purple-500 flex items-center justify-center"><i class="far fa-clock"></i></div>
+                            </div>
+                            <div class="flex items-baseline gap-1.5">
+                                <span class="text-2xl font-black text-purple-500 leading-none" id="kpi-time">--</span>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">น.</span>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Row 1: Place & Time -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 flex flex-col">
-                            <h3 class="text-sm font-black text-slate-800 mb-4 uppercase flex items-center gap-2"><i class="fas fa-map-marked-alt text-blue-500"></i>สถานที่ (Place)</h3>
-                            <div class="chart-container flex-1 relative" style="height: 250px;"><canvas id="areaBarChart"></canvas></div>
+                    <!-- Section 1: Person -->
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mt-8">
+                        <div class="bg-slate-50/80 p-5 border-b border-slate-100 flex items-center gap-3">
+                            <div class="w-10 h-10 bg-orange-500 text-white rounded-xl flex items-center justify-center shadow-md shadow-orange-500/20"><i class="fas fa-users text-lg"></i></div>
+                            <div>
+                                <h3 class="text-lg font-black text-slate-800 tracking-tight">1. ข้อมูลบุคคล (Person)</h3>
+                                <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-0.5">ประชากรศาสตร์และผลลัพธ์การบาดเจ็บ</p>
+                            </div>
                         </div>
-                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 flex flex-col">
-                            <h3 class="text-sm font-black text-slate-800 mb-4 uppercase flex items-center gap-2"><i class="far fa-clock text-amber-500"></i>เวลา (Time)</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
-                                <div class="chart-container relative" style="height: 250px;"><canvas id="monthChart"></canvas></div>
-                                <div class="chart-container relative" style="height: 250px;"><canvas id="dayChart"></canvas></div>
-                                <div class="chart-container relative" style="height: 250px;"><canvas id="timeRangeChart"></canvas></div>
+                        <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div class="flex flex-col">
+                                <h4 class="text-xs font-black text-slate-700 uppercase tracking-widest mb-4">ช่วงอายุ (Age Group)</h4>
+                                <div class="chart-container flex-1"><canvas id="chart-age"></canvas></div>
+                            </div>
+                            <div class="flex flex-col">
+                                <h4 class="text-xs font-black text-slate-700 uppercase tracking-widest mb-4">เพศ (Gender)</h4>
+                                <div class="chart-container flex-1"><canvas id="chart-gender"></canvas></div>
+                            </div>
+                            <div class="flex flex-col">
+                                <h4 class="text-xs font-black text-slate-700 uppercase tracking-widest mb-4">ความรุนแรง (Severity)</h4>
+                                <div id="severity-container" class="flex-1 flex flex-col justify-center gap-5">
+                                    <!-- Rendered by JS -->
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Row 2: Person & Agent -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 lg:col-span-2 flex flex-col">
-                            <h3 class="text-sm font-black text-slate-800 mb-4 uppercase flex items-center gap-2"><i class="fas fa-users text-orange-500"></i>บุคคล (Person)</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
-                                <div class="chart-container relative"><canvas id="ageBarChart"></canvas></div>
-                                <div class="chart-container relative"><canvas id="genderPieChart"></canvas></div>
+                    <!-- Section 2: Time -->
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mt-8">
+                        <div class="bg-slate-50/80 p-5 border-b border-slate-100 flex items-center gap-3">
+                            <div class="w-10 h-10 bg-blue-500 text-white rounded-xl flex items-center justify-center shadow-md shadow-blue-500/20"><i class="far fa-clock text-lg"></i></div>
+                            <div>
+                                <h3 class="text-lg font-black text-slate-800 tracking-tight">2. ข้อมูลเวลา (Time)</h3>
+                                <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-0.5">รูปแบบเวลาและวันที่มีความถี่ในการเกิดอุบัติเหตุ</p>
                             </div>
                         </div>
-                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 lg:col-span-1 flex flex-col">
-                            <h3 class="text-sm font-black text-slate-800 mb-4 uppercase flex items-center gap-2"><i class="fas fa-motorcycle text-purple-500"></i>พาหนะ (Agent)</h3>
-                            <div class="chart-container flex-1 relative"><canvas id="vehiclePieChart"></canvas></div>
+                        <div class="p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="flex flex-col">
+                                <h4 class="text-xs font-black text-slate-700 uppercase tracking-widest mb-4">แนวโน้มรายชั่วโมง (Hourly Trend)</h4>
+                                <div class="chart-container flex-1"><canvas id="chart-time-hour"></canvas></div>
+                            </div>
+                            <div class="flex flex-col">
+                                <h4 class="text-xs font-black text-slate-700 uppercase tracking-widest mb-4">วันในสัปดาห์ (Day of Week)</h4>
+                                <div class="chart-container flex-1"><canvas id="chart-time-day"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Place -->
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mt-8">
+                        <div class="bg-slate-50/80 p-5 border-b border-slate-100 flex items-center gap-3">
+                            <div class="w-10 h-10 bg-emerald-500 text-white rounded-xl flex items-center justify-center shadow-md shadow-emerald-500/20"><i class="fas fa-map-marked-alt text-lg"></i></div>
+                            <div>
+                                <h3 class="text-lg font-black text-slate-800 tracking-tight">3. ข้อมูลสถานที่ (Place)</h3>
+                                <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-0.5">พื้นที่จุดเกิดเหตุแยกตามตำบลและอำเภอ</p>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <h4 class="text-xs font-black text-slate-700 uppercase tracking-widest mb-4">อุบัติเหตุสะสมรายพื้นที่</h4>
+                            <div class="chart-container-lg w-full"><canvas id="chart-place-area"></canvas></div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Agent & Risk -->
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mt-8">
+                        <div class="bg-slate-50/80 p-5 border-b border-slate-100 flex items-center gap-3">
+                            <div class="w-10 h-10 bg-purple-500 text-white rounded-xl flex items-center justify-center shadow-md shadow-purple-500/20"><i class="fas fa-motorcycle text-lg"></i></div>
+                            <div>
+                                <h3 class="text-lg font-black text-slate-800 tracking-tight">4. พาหนะและปัจจัยเสี่ยง (Agent & Risk)</h3>
+                                <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-0.5">ประเภทของยานพาหนะและพฤติกรรมเสี่ยงที่พบ</p>
+                            </div>
+                        </div>
+                        <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div class="lg:col-span-1 flex flex-col">
+                                <h4 class="text-xs font-black text-slate-700 uppercase tracking-widest mb-4">ยานพาหนะ (Vehicle)</h4>
+                                <div class="chart-container flex-1"><canvas id="chart-agent-vehicle"></canvas></div>
+                            </div>
+                            <div class="lg:col-span-2 flex flex-col">
+                                <h4 class="text-xs font-black text-slate-700 uppercase tracking-widest mb-4">พฤติกรรมเสี่ยงสูงสุด (Top 10 Risks)</h4>
+                                <div class="chart-container flex-1"><canvas id="chart-risk"></canvas></div>
+                            </div>
                         </div>
                     </div>
 
@@ -905,6 +991,10 @@
         let editingUserId = null; // NEW: ตัวแปรเก็บ ID ของ User ที่กำลังถูกแก้ไข
 
         const defaultInitialUsers = [
+            { username: 'admin', password: 'admin_password', tambon: 'ศูนย์สั่งการส่วนกลาง' },
+            { username: '33020', password: '033020', tambon: 'สภ.เมืองศรีสะเกษ' },
+            { username: '33024', password: '033024', tambon: 'ที่ว่าการอำเภอเมืองศรีสะเกษ' },
+            { username: 'ตำรวจ', password: 'police_password', tambon: 'สภ.เมืองศรีสะเกษ' },
             { username: '33001', password: '033001', tambon: 'เทศบาลเมืองศรีสะเกษ' },
             { username: '33002', password: '033002', tambon: 'คูซอด' },
             { username: '33003', password: '033003', tambon: 'จาน' },
@@ -1272,11 +1362,11 @@
 
             window.activePaboa4VictimId = vic.id;
             
-            const appUsername = localStorage.getItem('appUsername') || '';
+            const appUsername = (localStorage.getItem('appUsername') || '').trim();
             const userRole = localStorage.getItem('userRole') || '';
-            const isSuperUser = userRole === 'admin' || appUsername === 'ตำรวจ' || appUsername.toLowerCase() === 'police';
+            const isSuperUser = userRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police'].includes(appUsername.toLowerCase());
             // สิทธิ์การเห็นข้อมูลส่วนตัว
-            const canViewSensitive = isSuperUser || acc.recordedBy === appUsername;
+            const canViewSensitive = isSuperUser || acc.recordedBy === appUsername || acc.recordedBy === localStorage.getItem('appUsername');
 
             // --- Auto Fill ข้อมูล ---
             document.getElementById('paboa4-form').reset(); // Reset first
@@ -1728,9 +1818,9 @@
             document.getElementById('empty-list').classList.toggle('hidden', filteredData.length > 0);
 
             // ดึงข้อมูล User เพื่อจัดการสิทธิ์การแสดงปุ่มแก้ไข/ลบ และการมองเห็นข้อมูลส่วนตัว
-            const currentAppUsername = localStorage.getItem('appUsername') || '';
+            const currentAppUsername = (localStorage.getItem('appUsername') || '').trim();
             const currentUserRole = localStorage.getItem('userRole') || '';
-            const isSuperUser = currentUserRole === 'admin' || currentAppUsername === 'ตำรวจ' || currentAppUsername.toLowerCase() === 'police';
+            const isSuperUser = currentUserRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police'].includes(currentAppUsername.toLowerCase());
 
             let lastDate = "";
             paginatedData.forEach(item => {
@@ -1744,26 +1834,44 @@
                 // Fallback support for old data without 'victims' array
                 const victimsList = item.victims && item.victims.length > 0 ? item.victims : [{ id: 'old_vic', name: item.victimName, age: item.victimAge, gender: item.victimGender, role: item.victimRole || 'ผู้ขับขี่', severity: item.severity }];
                 const overallSeverity = getHighestSeverity(victimsList);
-                const color = overallSeverity === 'สาหัส' ? 'red' : overallSeverity === 'เล็กน้อย' ? 'emerald' : overallSeverity === 'ปานกลาง' ? 'amber' : overallSeverity === 'เสียชีวิต' ? 'slate' : 'blue';
                 
                 // เช็คสิทธิ์การเข้าถึงข้อมูลส่วนบุคคล และ ปุ่ม Action
                 const canAccessSensitive = isSuperUser || item.recordedBy === currentAppUsername;
+
+                // Helper for Tailwind colors
+                const getSevStyle = (sev) => {
+                    if (sev === 'เสียชีวิต') return { bar: 'bg-slate-800', text: 'text-slate-800', bg: 'bg-slate-200', border: 'border-slate-300' };
+                    if (sev === 'สาหัส') return { bar: 'bg-red-500', text: 'text-red-700', bg: 'bg-red-100', border: 'border-red-200' };
+                    if (sev === 'ปานกลาง') return { bar: 'bg-amber-500', text: 'text-amber-700', bg: 'bg-amber-100', border: 'border-amber-200' };
+                    return { bar: 'bg-emerald-500', text: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-200' };
+                };
+
+                const cardStyle = getSevStyle(overallSeverity);
 
                 // NEW: Victims list with dedicated button for each to open Paboa4 form
                 let victimsHtml = victimsList.map(v => {
                     // MASKING DATA: ซ่อนชื่อถ้าไม่มีสิทธิ์
                     const displayName = canAccessSensitive ? (v.name || 'ไม่ระบุชื่อ') : '*** (ปกปิดข้อมูล)';
+                    const vStyle = getSevStyle(v.severity);
                     
                     return `
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-2 pl-2 border-l-2 border-slate-200 py-1 bg-slate-50/50 rounded-r-lg">
-                        <div class="text-xs text-slate-600 font-medium mb-2 sm:mb-0">
-                            <i class="fas fa-user-injured text-slate-300 mr-1.5"></i> ${displayName} (${v.age || '-'} ปี)
-                            <span class="text-blue-500 font-bold ml-2">${v.role || 'ผู้ขับขี่'}</span>
-                            <span class="text-[9px] font-black uppercase text-${v.severity === 'สาหัส'?'red':v.severity==='เสียชีวิต'?'slate':v.severity==='ปานกลาง'?'amber':'emerald'}-500 ml-1 bg-white px-1.5 py-0.5 rounded border border-slate-100 shadow-sm">[${v.severity}]</span>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-slate-100 mb-2 relative overflow-hidden group hover:border-slate-200 transition-colors">
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5 ${vStyle.bar}"></div>
+                        <div class="pl-3 flex-1">
+                            <div class="flex items-center gap-2 mb-1.5">
+                                <span class="text-xs font-black text-slate-800">${displayName}</span>
+                                <span class="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md font-medium">อายุ ${v.age || '-'} ปี</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100"><i class="fas fa-user-tag mr-1"></i>${v.role || 'ผู้ขับขี่'}</span>
+                                <span class="text-[10px] font-black px-2 py-0.5 rounded-md ${vStyle.bg} ${vStyle.text}">${v.severity}</span>
+                            </div>
                         </div>
-                        <button type="button" onclick="event.stopPropagation(); window.openPaboa4('${item.id}', '${v.id}')" class="text-[10px] bg-white text-indigo-600 hover:bg-indigo-600 hover:text-white px-3 py-1.5 rounded-lg shadow-sm font-bold transition-all whitespace-nowrap border border-indigo-100 shrink-0 ml-4 self-start sm:self-auto flex items-center">
-                            <i class="fas fa-file-medical mr-1.5"></i> ปภ.บอ.4
-                        </button>
+                        <div class="mt-3 sm:mt-0 sm:ml-3">
+                            <button type="button" onclick="event.stopPropagation(); window.openPaboa4('${item.id}', '${v.id}')" class="w-full sm:w-auto text-[10px] bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white px-4 py-2 rounded-lg font-black transition-all border border-indigo-100 shadow-sm flex items-center justify-center">
+                                <i class="fas fa-file-medical mr-1.5"></i> ปภ.บอ.4
+                            </button>
+                        </div>
                     </div>
                     `;
                 }).join('');
@@ -1774,38 +1882,68 @@
                 // Display photos if present
                 let photosHtml = '';
                 if (item.photos && item.photos.length > 0) {
-                    photosHtml = `<div class="flex gap-2 mb-3 mt-1">` + 
-                        item.photos.map(p => `<img src="${p}" class="w-12 h-12 object-cover rounded-lg border border-slate-200 shadow-sm cursor-pointer" onclick="window.open('${p}', '_blank')">`).join('') +
+                    photosHtml = `<div class="flex gap-2 mb-4 mt-1">` + 
+                        item.photos.map(p => `<div class="w-16 h-16 rounded-xl overflow-hidden border-2 border-slate-100 shadow-sm"><img src="${p}" class="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform duration-300" onclick="event.stopPropagation(); window.open('${p}', '_blank')"></div>`).join('') +
                     `</div>`;
                 }
 
                 let actionButtonsHtml = '';
                 if (canAccessSensitive) {
                     actionButtonsHtml = `
-                        <div class="absolute top-3 right-3 flex gap-1">
-                            <button onclick="event.stopPropagation(); window.editAccident('${item.id}')" class="w-7 h-7 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xs hover:bg-blue-600 hover:text-white transition shadow-sm" title="แก้ไข"><i class="fas fa-pen"></i></button>
-                            <button onclick="event.stopPropagation(); window.deleteAccident('${item.id}')" class="w-7 h-7 bg-red-50 text-red-600 rounded-lg flex items-center justify-center text-xs hover:bg-red-600 hover:text-white transition shadow-sm" title="ลบ"><i class="fas fa-trash-alt"></i></button>
+                        <div class="flex gap-1.5 shrink-0 ml-2">
+                            <button onclick="event.stopPropagation(); window.editAccident('${item.id}')" class="w-8 h-8 bg-white text-blue-600 rounded-lg flex items-center justify-center text-xs hover:bg-blue-50 transition border border-slate-200 shadow-sm" title="แก้ไข"><i class="fas fa-pen"></i></button>
+                            <button onclick="event.stopPropagation(); window.deleteAccident('${item.id}')" class="w-8 h-8 bg-white text-red-600 rounded-lg flex items-center justify-center text-xs hover:bg-red-50 transition border border-slate-200 shadow-sm" title="ลบ"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     `;
                 }
 
                 cont.insertAdjacentHTML('beforeend', `
-                    <div id="acc-card-${item.id}" class="bg-white border-l-4 border-${color}-500 rounded-2xl shadow-sm p-4 hover:shadow-md transition relative group overflow-hidden mb-3">
-                        <div class="flex justify-between items-start mb-1 pr-16" onclick="focusMap(${item.lat}, ${item.lng})">
-                            <h4 class="font-black text-slate-800 text-sm leading-tight">${item.customIncidentType || 'อุบัติเหตุ'}</h4>
-                            <span class="text-[10px] font-black text-slate-400 shrink-0">${item.accidentTime} น.</span>
-                        </div>
-                        ${actionButtonsHtml}
-                        <div onclick="focusMap(${item.lat}, ${item.lng})">
-                            <p class="text-[11px] font-bold text-slate-500 mb-3 bg-slate-50 inline-block px-2 py-1 rounded-md">พาหนะ: ${vVehiclesList}</p>
-                            ${photosHtml}
-                            <div class="mb-3">
-                                <div class="text-[10px] font-bold text-slate-400 mb-2 border-b border-slate-50 pb-1">ผู้บาดเจ็บในเหตุการณ์ (${victimsList.length} คน):</div>
-                                ${victimsHtml}
+                    <div id="acc-card-${item.id}" class="${overallSeverity === 'เสียชีวิต' ? 'bg-slate-50' : 'bg-white'} rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-200 overflow-hidden mb-5 group cursor-pointer" onclick="focusMap(${item.lat}, ${item.lng})">
+                        <!-- Top color bar indicating severity -->
+                        <div class="h-1.5 w-full ${cardStyle.bar}"></div>
+                        
+                        <div class="p-5">
+                            <!-- Header Row -->
+                            <div class="flex justify-between items-start mb-4 gap-4">
+                                <div class="flex-1">
+                                    <div class="flex items-center flex-wrap gap-2 mb-2">
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${cardStyle.bg} ${cardStyle.text} ${cardStyle.border} border shadow-sm">
+                                            <i class="fas fa-exclamation-circle mr-1"></i>สูงสุด: ${overallSeverity}
+                                        </span>
+                                        <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 shadow-sm">
+                                            <i class="far fa-clock mr-1"></i>${item.accidentTime} น.
+                                        </span>
+                                    </div>
+                                    <h4 class="font-black text-slate-800 text-sm md:text-base leading-snug">${item.customIncidentType || 'อุบัติเหตุ'}</h4>
+                                </div>
+                                <!-- Action Buttons -->
+                                ${actionButtonsHtml}
                             </div>
-                            <div class="flex items-center justify-between border-t border-slate-50 pt-2 mt-2">
-                                <span class="bg-slate-100 text-slate-500 text-[9px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wider">สูงสุด: ${overallSeverity}</span>
-                                <span class="text-[10px] font-black text-blue-500 flex items-center"><i class="fas fa-location-dot mr-1"></i> ${item.address?.tambon || ''}</span>
+
+                            <!-- Details Container -->
+                            <div class="bg-slate-50/80 p-3.5 rounded-xl border border-slate-100 shadow-inner mb-4 space-y-3">
+                                <div class="text-xs text-slate-600 flex items-start gap-3">
+                                    <div class="w-6 flex justify-center text-slate-400 mt-0.5 text-sm"><i class="fas fa-car-side"></i></div>
+                                    <div><strong class="text-slate-800 block text-[10px] uppercase mb-0.5 tracking-wide">พาหนะที่เกี่ยวข้อง</strong> ${vVehiclesList}</div>
+                                </div>
+                                <div class="h-px w-full bg-slate-200/60"></div>
+                                <div class="text-xs text-slate-600 flex items-start gap-3">
+                                    <div class="w-6 flex justify-center text-blue-500 mt-0.5 text-sm"><i class="fas fa-map-marker-alt"></i></div>
+                                    <div><strong class="text-slate-800 block text-[10px] uppercase mb-0.5 tracking-wide">สถานที่เกิดเหตุ</strong> ${item.address?.tambon || ''} ${item.address?.amphoe || 'ไม่ระบุ'}</div>
+                                </div>
+                            </div>
+
+                            <!-- Photos -->
+                            ${photosHtml}
+
+                            <!-- Victims Section -->
+                            <div class="mt-2">
+                                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 flex items-center px-1">
+                                    <i class="fas fa-users mr-1.5 text-slate-300"></i> รายชื่อผู้บาดเจ็บ/เสียชีวิต (${victimsList.length})
+                                </div>
+                                <div class="space-y-0">
+                                    ${victimsHtml}
+                                </div>
                             </div>
                         </div>
                     </div>`);
@@ -1894,11 +2032,11 @@
             if (!item) return;
             
             // เช็คสิทธิ์ก่อนเข้าไปแก้ไข
-            const appUsername = localStorage.getItem('appUsername') || '';
+            const appUsername = (localStorage.getItem('appUsername') || '').trim();
             const userRole = localStorage.getItem('userRole') || '';
-            const isSuperUser = userRole === 'admin' || appUsername === 'ตำรวจ' || appUsername.toLowerCase() === 'police';
+            const isSuperUser = userRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police'].includes(appUsername.toLowerCase());
             
-            if (!isSuperUser && item.recordedBy !== appUsername) {
+            if (!isSuperUser && item.recordedBy !== appUsername && item.recordedBy !== localStorage.getItem('appUsername')) {
                 return showAlert('คุณไม่มีสิทธิ์แก้ไขข้อมูลนี้ (ไม่ใช่ผู้แจ้ง)', 'error');
             }
             
@@ -1948,11 +2086,11 @@
             if (!item) return;
             
             // เช็คสิทธิ์ก่อนลบ
-            const appUsername = localStorage.getItem('appUsername') || '';
+            const appUsername = (localStorage.getItem('appUsername') || '').trim();
             const userRole = localStorage.getItem('userRole') || '';
-            const isSuperUser = userRole === 'admin' || appUsername === 'ตำรวจ' || appUsername.toLowerCase() === 'police';
+            const isSuperUser = userRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police'].includes(appUsername.toLowerCase());
             
-            if (!isSuperUser && item.recordedBy !== appUsername) {
+            if (!isSuperUser && item.recordedBy !== appUsername && item.recordedBy !== localStorage.getItem('appUsername')) {
                 return showAlert('คุณไม่มีสิทธิ์ลบข้อมูลนี้ (ไม่ใช่ผู้แจ้ง)', 'error');
             }
             
@@ -1972,35 +2110,41 @@
             renderAnalytics();
         });
 
+        // Set default font for charts
+        Chart.defaults.font.family = "'Sarabun', sans-serif";
+        Chart.defaults.color = '#64748b';
+
         function renderAnalytics() {
             // เช็คและเคลียร์กราฟเก่า ป้องกันการวาดทับและ error
-            if (charts.area) {
-                Object.values(charts).forEach(c => { if (c) c.destroy(); });
-            }
+            Object.values(charts).forEach(c => { if (c) c.destroy(); });
+            charts = {};
 
             const selectedTambon = document.getElementById('report-tambon-filter')?.value;
             const reportData = selectedTambon ? allData.filter(item => item.address?.tambon === selectedTambon) : allData;
 
-            // ถ้าไม่มีข้อมูล ให้รีเซ็ตตัวเลข KPI และตั้งค่าให้กราฟวาดแกนเปล่าๆ รอไว้
+            // ถ้าไม่มีข้อมูล ให้รีเซ็ตตัวเลข KPI และซ่อนกราฟความรุนแรง
             if (reportData.length === 0) {
                 if(document.getElementById('kpi-total')) document.getElementById('kpi-total').innerText = '0';
                 if(document.getElementById('kpi-injured')) document.getElementById('kpi-injured').innerText = '0';
                 if(document.getElementById('kpi-dead')) document.getElementById('kpi-dead').innerText = '0';
                 if(document.getElementById('kpi-age')) document.getElementById('kpi-age').innerText = '--';
                 if(document.getElementById('kpi-time')) document.getElementById('kpi-time').innerText = '--';
+                const sevContainer = document.getElementById('severity-container');
+                if(sevContainer) sevContainer.innerHTML = '<div class="text-xs text-slate-400 text-center py-10">ยังไม่มีข้อมูล</div>';
+                return;
             }
 
             let totalInjuredCount = 0, 
                 totalDeadCount = 0, 
                 tStats = Array(24).fill(0), 
-                ageGrp = { '<20': 0, '20-39': 0, '40-59': 0, '60+': 0 }, 
+                ageGrp = { '<15':0, '15-24':0, '25-34':0, '35-44':0, '45-54':0, '55-64':0, '65+':0 }, 
                 genStats = { 'ชาย': 0, 'หญิง': 0, 'ไม่ระบุ': 0 }, 
                 areaStats = {}, 
-                typeStats = {};
+                typeStats = {},
+                riskStats = {},
+                severityStats = { 'เล็กน้อย':0, 'ปานกลาง':0, 'สาหัส':0, 'เสียชีวิต':0 };
             
-            let monthStats = { 'ม.ค.':0, 'ก.พ.':0, 'มี.ค.':0, 'เม.ย.':0, 'พ.ค.':0, 'มิ.ย.':0, 'ก.ค.':0, 'ส.ค.':0, 'ก.ย.':0, 'ต.ค.':0, 'พ.ย.':0, 'ธ.ค.':0 };
             let dayStats = { 'อาทิตย์':0, 'จันทร์':0, 'อังคาร':0, 'พุธ':0, 'พฤหัสบดี':0, 'ศุกร์':0, 'เสาร์':0 };
-            let timeRangeStats = { '00:00-05:59':0, '06:00-11:59':0, '12:00-17:59':0, '18:00-23:59':0 };
 
             reportData.forEach(item => {
                 const vList = item.victims && item.victims.length > 0 ? item.victims : [{ name: item.victimName, age: item.victimAge, gender: item.victimGender, role: item.victimRole || 'ผู้ขับขี่', severity: item.severity }];
@@ -2019,20 +2163,37 @@
                     typeStats[vType] = (typeStats[vType] || 0) + 1;
                 });
                 
-                // วิเคราะห์บุคคล (Person)
+                // วิเคราะห์พฤติกรรมเสี่ยง
+                if (item.risks && Array.isArray(item.risks)) {
+                    item.risks.forEach(r => {
+                        if(r !== 'ไม่มีความผิดตามมาตรการ') {
+                            riskStats[r] = (riskStats[r] || 0) + 1;
+                        }
+                    });
+                }
+                
+                // วิเคราะห์บุคคล (Person) & ความรุนแรง
                 vList.forEach(v => {
-                    // แยกนับจำนวน บาดเจ็บ และ เสียชีวิต ของทุกคน
+                    // นับความรุนแรง
+                    if (v.severity && severityStats[v.severity] !== undefined) {
+                        severityStats[v.severity]++;
+                    }
+                    
                     if (v.severity === 'เสียชีวิต') {
                         totalDeadCount++;
                     } else if (v.severity !== 'ไม่ระบุ') {
-                        totalInjuredCount++; // เล็กน้อย, ปานกลาง, สาหัส ถือเป็นบาดเจ็บ
+                        totalInjuredCount++;
                     }
 
                     const age = parseInt(v.age) || 0; 
-                    if (age < 20) ageGrp['<20']++; 
-                    else if (age < 40) ageGrp['20-39']++; 
-                    else if (age < 60) ageGrp['40-59']++; 
-                    else ageGrp['60+']++;
+                    if (age < 15) ageGrp['<15']++; 
+                    else if (age <= 24) ageGrp['15-24']++; 
+                    else if (age <= 34) ageGrp['25-34']++; 
+                    else if (age <= 44) ageGrp['35-44']++; 
+                    else if (age <= 54) ageGrp['45-54']++; 
+                    else if (age <= 64) ageGrp['55-64']++; 
+                    else ageGrp['65+']++;
+                    
                     genStats[v.gender || 'ไม่ระบุ'] = (genStats[v.gender || 'ไม่ระบุ'] || 0) + 1;
                 });
 
@@ -2040,9 +2201,7 @@
                 if (item.accidentDate) {
                     const d = new Date(item.accidentDate);
                     if (!isNaN(d.getTime())) {
-                        const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
                         const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
-                        monthStats[months[d.getMonth()]]++;
                         dayStats[days[d.getDay()]]++;
                     }
                 }
@@ -2050,108 +2209,127 @@
                     const hr = parseInt(item.accidentTime.split(':')[0]);
                     if (hr >= 0 && hr < 24) {
                         tStats[hr]++;
-                        if (hr >= 0 && hr < 6) timeRangeStats['00:00-05:59']++;
-                        else if (hr >= 6 && hr < 12) timeRangeStats['06:00-11:59']++;
-                        else if (hr >= 12 && hr < 18) timeRangeStats['12:00-17:59']++;
-                        else if (hr >= 18 && hr <= 23) timeRangeStats['18:00-23:59']++;
                     }
                 }
             });
 
-            // อัปเดตตัวเลข KPI ป้องกัน Error ด้วยการเช็ค if(element)
-            if (reportData.length > 0) {
-                if(document.getElementById('kpi-total')) document.getElementById('kpi-total').innerText = reportData.length;
-                if(document.getElementById('kpi-injured')) document.getElementById('kpi-injured').innerText = totalInjuredCount;
-                if(document.getElementById('kpi-dead')) document.getElementById('kpi-dead').innerText = totalDeadCount;
-                
-                if(document.getElementById('kpi-age')) document.getElementById('kpi-age').innerText = Object.keys(ageGrp).reduce((a, b) => ageGrp[a] > ageGrp[b] ? a : b);
-                
-                let topRange = '--';
-                let maxCount = -1;
-                for(let key in timeRangeStats) {
-                    if(timeRangeStats[key] > maxCount) {
-                        maxCount = timeRangeStats[key];
-                        topRange = key;
-                    }
-                }
-                if(document.getElementById('kpi-time')) document.getElementById('kpi-time').innerText = maxCount > 0 ? topRange : '--';
-            }
+            // อัปเดตตัวเลข KPI
+            if(document.getElementById('kpi-total')) document.getElementById('kpi-total').innerText = reportData.length;
+            if(document.getElementById('kpi-injured')) document.getElementById('kpi-injured').innerText = totalInjuredCount;
+            if(document.getElementById('kpi-dead')) document.getElementById('kpi-dead').innerText = totalDeadCount;
+            if(document.getElementById('kpi-age')) document.getElementById('kpi-age').innerText = Object.keys(ageGrp).reduce((a, b) => ageGrp[a] > ageGrp[b] ? a : b, '--');
+            
+            let topRange = '--';
+            let maxCount = -1;
+            tStats.forEach((val, hr) => {
+                if (val > maxCount) { maxCount = val; topRange = `${hr.toString().padStart(2, '0')}:00`; }
+            });
+            if(document.getElementById('kpi-time')) document.getElementById('kpi-time').innerText = maxCount > 0 ? topRange : '--';
 
-            // เตรียมข้อมูลวาดกราฟ (รับรองว่าถึงข้อมูลเป็น 0 ກราฟก็จะไม่พัง)
+            // เตรียมข้อมูลวาดกราฟ
             const sArea = Object.values(areaStats).sort((a,b) => b.count - a.count);
             const areaLabels = sArea.length > 0 ? sArea.map(a => a.name) : ['ยังไม่มีข้อมูล'];
             const areaSevere = sArea.length > 0 ? sArea.map(a => a.severe) : [0];
             const areaTotal = sArea.length > 0 ? sArea.map(a => a.count - a.severe) : [0];
 
-            // 1. กราฟพื้นที่ (Area)
-            const ctxArea = document.getElementById('areaBarChart');
+            // 1. กราฟพื้นที่ (Area Bar)
+            const ctxArea = document.getElementById('chart-place-area');
             if (ctxArea) {
                 charts.area = new Chart(ctxArea, { 
                     type: 'bar', 
                     data: { labels: areaLabels, datasets: [{ label: 'สาหัส/ตาย', data: areaSevere, backgroundColor: '#ef4444', borderRadius: 4 }, { label: 'บาดเจ็บทั่วไป', data: areaTotal, backgroundColor: '#cbd5e1', borderRadius: 4 }] }, 
-                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } 
+                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true, grid: {display: false} }, y: { stacked: true, grid: {display: false} } }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: {size: 10} } } } } 
                 });
             }
 
-            // 2. กราฟเดือน (Month)
-            const ctxMonth = document.getElementById('monthChart');
-            if (ctxMonth) {
-                charts.month = new Chart(ctxMonth, { 
-                    type: 'bar', 
-                    data: { labels: Object.keys(monthStats), datasets: [{ label: 'จำนวนเคส', data: Object.values(monthStats), backgroundColor: '#3b82f6', borderRadius: 4 }] }, 
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'แยกตามเดือน' } } } 
+            // 2. กราฟชั่วโมง (Hourly Trend Line)
+            const ctxHour = document.getElementById('chart-time-hour');
+            if (ctxHour) {
+                const hoursLabel = Array.from({length: 24}, (_, i) => `${i.toString().padStart(2,'0')}:00`);
+                charts.hour = new Chart(ctxHour, { 
+                    type: 'line', 
+                    data: { labels: hoursLabel, datasets: [{ label: 'จำนวนอุบัติเหตุ', data: tStats, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4, pointRadius: 2, pointBackgroundColor: '#3b82f6' }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false }, ticks: { maxTicksLimit: 12 } } } } 
                 });
             }
 
-            // 3. กราฟวัน (Day)
-            const ctxDay = document.getElementById('dayChart');
+            // 3. กราฟวันในสัปดาห์ (Day Bar)
+            const ctxDay = document.getElementById('chart-time-day');
             if (ctxDay) {
                 charts.day = new Chart(ctxDay, { 
                     type: 'bar', 
-                    data: { labels: Object.keys(dayStats), datasets: [{ label: 'จำนวนเคส', data: Object.values(dayStats), backgroundColor: '#10b981', borderRadius: 4 }] }, 
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'แยกตามวันในสัปดาห์' } } } 
+                    data: { labels: Object.keys(dayStats), datasets: [{ label: 'จำนวน', data: Object.values(dayStats), backgroundColor: '#3b82f6', borderRadius: 6 }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } } 
                 });
             }
 
-            // 4. กราฟช่วงเวลา (Time Range)
-            const ctxTimeRange = document.getElementById('timeRangeChart');
-            if (ctxTimeRange) {
-                charts.timeRange = new Chart(ctxTimeRange, { 
+            // 4. กราฟอายุ (Age Bar)
+            const ctxAge = document.getElementById('chart-age');
+            if (ctxAge) {
+                charts.age = new Chart(ctxAge, { 
                     type: 'bar', 
-                    data: { labels: Object.keys(timeRangeStats), datasets: [{ label: 'จำนวนเคส', data: Object.values(timeRangeStats), backgroundColor: '#f59e0b', borderRadius: 4 }] }, 
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'แยกตามช่วงเวลา' } } } 
+                    data: { labels: Object.keys(ageGrp), datasets: [{ label: 'จำนวนคนเจ็บ', data: Object.values(ageGrp), backgroundColor: '#f97316', borderRadius: 6 }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } } } 
                 });
             }
 
-            // 5. กราฟพาหนะ (Vehicle)
-            const ctxVehicle = document.getElementById('vehiclePieChart');
+            // 5. กราฟเพศ (Gender Pie)
+            const ctxGender = document.getElementById('chart-gender');
+            if (ctxGender) {
+                charts.gender = new Chart(ctxGender, { 
+                    type: 'doughnut', 
+                    data: { labels: Object.keys(genStats), datasets: [{ data: Object.values(genStats), backgroundColor: ['#3b82f6', '#ec4899', '#94a3b8'], borderWidth: 0 }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: {size: 10} } } } } 
+                });
+            }
+
+            // 6. กราฟพาหนะ (Vehicle Pie)
+            const ctxVehicle = document.getElementById('chart-agent-vehicle');
             if (ctxVehicle) {
                 const vehicleLabels = Object.keys(typeStats).length > 0 ? Object.keys(typeStats) : ['ไม่มีข้อมูล'];
                 const vehicleData = Object.keys(typeStats).length > 0 ? Object.values(typeStats) : [1];
                 charts.vehicle = new Chart(ctxVehicle, { 
                     type: 'doughnut', 
-                    data: { labels: vehicleLabels, datasets: [{ data: vehicleData, backgroundColor: ['#8b5cf6', '#10b981', '#f43f5e', '#06b6d4', '#f59e0b', '#cbd5e1'] }] }, 
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: {size: 10} } } } } 
+                    data: { labels: vehicleLabels, datasets: [{ data: vehicleData, backgroundColor: ['#a855f7', '#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#f43f5e', '#64748b'], borderWidth: 0 }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: {size: 10} } } } } 
                 });
             }
 
-            // 6. กราฟเพศ (Gender)
-            const ctxGender = document.getElementById('genderPieChart');
-            if (ctxGender) {
-                charts.gender = new Chart(ctxGender, { 
-                    type: 'pie', 
-                    data: { labels: Object.keys(genStats), datasets: [{ data: Object.values(genStats), backgroundColor: ['#3b82f6', '#ec4899', '#94a3b8'] }] }, 
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, title: { display: true, text: 'สัดส่วนเพศผู้บาดเจ็บ' } } } 
+            // 7. กราฟพฤติกรรมเสี่ยง (Top Risks Horizontal Bar)
+            const ctxRisk = document.getElementById('chart-risk');
+            if (ctxRisk) {
+                const sRisks = Object.keys(riskStats).map(k => ({ name: k, count: riskStats[k] })).sort((a,b) => b.count - a.count).slice(0, 10);
+                const riskLabels = sRisks.length > 0 ? sRisks.map(r => r.name) : ['ไม่มีข้อมูล'];
+                const riskData = sRisks.length > 0 ? sRisks.map(r => r.count) : [0];
+
+                charts.risk = new Chart(ctxRisk, { 
+                    type: 'bar', 
+                    data: { labels: riskLabels, datasets: [{ label: 'จำนวนครั้ง', data: riskData, backgroundColor: '#a855f7', borderRadius: 4 }] }, 
+                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { display: false }, ticks: { font: { size: 10 } } } } } 
                 });
             }
-            
-            // 7. กราฟอายุ (Age)
-            const ctxAge = document.getElementById('ageBarChart');
-            if (ctxAge) {
-                charts.age = new Chart(ctxAge, { 
-                    type: 'bar', 
-                    data: { labels: Object.keys(ageGrp), datasets: [{ label: 'จำนวนคนเจ็บ', data: Object.values(ageGrp), backgroundColor: '#6366f1', borderRadius: 4 }] }, 
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'กลุ่มอายุผู้บาดเจ็บ' } } } 
+
+            // 8. แสดงผล HTML Bar ความรุนแรง (Severity Outcome)
+            const sevContainer = document.getElementById('severity-container');
+            if (sevContainer) {
+                sevContainer.innerHTML = '';
+                const totalVic = totalInjuredCount + totalDeadCount;
+                const colors = { 'เล็กน้อย': 'bg-emerald-500', 'ปานกลาง': 'bg-amber-500', 'สาหัส': 'bg-red-500', 'เสียชีวิต': 'bg-slate-900' };
+                
+                ['เล็กน้อย', 'ปานกลาง', 'สาหัส', 'เสียชีวิต'].forEach(sev => {
+                    const count = severityStats[sev] || 0;
+                    const pct = totalVic > 0 ? (count / totalVic) * 100 : 0;
+                    sevContainer.innerHTML += `
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between text-[10px] font-black uppercase text-slate-600">
+                                <span>${sev}</span>
+                                <span class="text-slate-400">${count} เคส (${pct.toFixed(0)}%)</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden shadow-inner border border-slate-200/50">
+                                <div class="${colors[sev] || 'bg-slate-400'} h-full transition-all duration-1000 ease-out rounded-full" style="width: ${pct}%"></div>
+                            </div>
+                        </div>
+                    `;
                 });
             }
         }
@@ -2261,7 +2439,8 @@
                     photos: currentPhotos,
                     address: addr, userId: currentUser.uid, 
                     recordedBy: appUsername, // เพิ่มฟิลด์ให้แสดงผลใน Firebase Console ได้สะดวกขึ้น
-                    lastUpdated: serverTimestamp()
+                    lastUpdated: serverTimestamp(),
+                    risks: [] // Initialize empty risks array for accident entry
                 };
 
                 if (editingId) {
@@ -2298,8 +2477,13 @@
             
             const orgDisplay = document.getElementById('user-org-display');
             if (orgDisplay) {
-                if (role === 'admin') {
-                    orgDisplay.innerHTML = '<i class="fas fa-shield-alt text-red-400 mr-1"></i> ศูนย์สั่งการส่วนกลาง (Admin)';
+                const appUsername = (localStorage.getItem('appUsername') || '').trim().toLowerCase();
+                if (appUsername === 'admin') {
+                    orgDisplay.innerHTML = `<i class="fas fa-shield-alt text-red-400 mr-1"></i> ศูนย์สั่งการส่วนกลาง (Admin)`;
+                } else if (['33020', 'ตำรวจ', 'police'].includes(appUsername)) {
+                    orgDisplay.innerHTML = `<i class="fas fa-shield-alt text-blue-400 mr-1"></i> สภ.เมืองศรีสะเกษ`;
+                } else if (appUsername === '33024') {
+                    orgDisplay.innerHTML = `<i class="fas fa-shield-alt text-purple-500 mr-1"></i> ที่ว่าการอำเภอเมืองศรีสะเกษ`;
                 } else {
                     const tambon = localStorage.getItem('userTambon');
                     orgDisplay.innerHTML = `<i class="fas fa-map-marker-alt text-emerald-400 mr-1"></i> พื้นที่: ${tambon || 'ไม่ระบุ'}`;
@@ -2364,48 +2548,42 @@
                     // --- เพิ่มการตัดเอาเฉพาะชื่อก่อน @ มาใช้งาน ---
                     const rawUserVal = document.getElementById('login-username').value.trim();
                     const userVal = rawUserVal.includes('@') ? rawUserVal.split('@')[0] : rawUserVal;
-                    
                     const passVal = document.getElementById('login-password').value;
+
+                    // ค้นหาในรายชื่อ User ลูกข่าย โดยเทียบจากส่วนก่อน @
+                    // ใช้ fallback เป็น defaultInitialUsers กรณีฐานข้อมูลยังดึงมาไม่เสร็จ
+                    const listToSearch = appUsers.length > 0 ? appUsers : defaultInitialUsers;
+                    const matchedUser = listToSearch.find(u => {
+                        const dbUser = u.username.includes('@') ? u.username.split('@')[0] : u.username;
+                        return dbUser === userVal && u.password === passVal;
+                    });
                     
-                    // แอดมินหลัก
-                    if (userVal === 'admin' && passVal === '123456') {
-                        localStorage.setItem('userRole', 'admin');
-                        localStorage.setItem('appUsername', 'admin');
-                        loginScreen.style.opacity = '0'; 
+                    if (matchedUser) {
+                        const unameLow = userVal.toLowerCase();
+                        // 33020, 33024 มีสิทธิ์เทียบเท่า admin
+                        const isSuperUser = ['admin', '33020', '33024', 'ตำรวจ', 'police'].includes(unameLow);
+                        
+                        // ให้สิทธิ์ admin เพื่อให้มีสิทธิ์แก้ไขลบ แต่เฉพาะ user ที่ชื่อ admin แท้ๆ ถึงจะเห็นเมนูการจัดการ Users
+                        // (แก้ไขเพิ่มเติม: จัดการที่ setupUIForRole ให้แสดง/ซ่อนเมนู Users)
+                        localStorage.setItem('userRole', isSuperUser ? 'admin' : 'user');
+                        localStorage.setItem('userTambon', matchedUser.tambon || '');
+                        localStorage.setItem('appUsername', userVal); // เก็บชื่อไว้เซฟลง Firebase
+                        loginScreen.style.opacity = '0';
                         setTimeout(() => {
                             loginScreen.classList.add('hidden');
-                            window.setupUIForRole('admin');
-                        }, 500);
-                    } else {
-                        // ค้นหาในรายชื่อ User ลูกข่าย โดยเทียบจากส่วนก่อน @
-                        // ใช้ fallback เป็น defaultInitialUsers กรณีฐานข้อมูลยังดึงมาไม่เสร็จ
-                        const listToSearch = appUsers.length > 0 ? appUsers : defaultInitialUsers;
-                        const matchedUser = listToSearch.find(u => {
-                            const dbUser = u.username.includes('@') ? u.username.split('@')[0] : u.username;
-                            return dbUser === userVal && u.password === passVal;
-                        });
-                        
-                        if (matchedUser) {
-                            localStorage.setItem('userRole', 'user');
-                            localStorage.setItem('userTambon', matchedUser.tambon);
-                            localStorage.setItem('appUsername', userVal); // เก็บชื่อไว้เซฟลง Firebase
-                            loginScreen.style.opacity = '0';
-                            setTimeout(() => {
-                                loginScreen.classList.add('hidden');
-                                window.setupUIForRole('user');
-                                // (ออปชันเสริม: ตั้งค่า Input ตำบลเริ่มต้นให้ตรงกับที่รับผิดชอบ)
-                                const tambonInput = document.getElementById('input-tambon');
-                                if(tambonInput) {
-                                    for(let i=0; i<tambonInput.options.length; i++) {
-                                        if(matchedUser.tambon.includes(tambonInput.options[i].value)) {
-                                            tambonInput.selectedIndex = i; break;
-                                        }
+                            window.setupUIForRole(isSuperUser ? 'admin' : 'user');
+                            // (ออปชันเสริม: ตั้งค่า Input ตำบลเริ่มต้นให้ตรงกับที่รับผิดชอบ)
+                            const tambonInput = document.getElementById('input-tambon');
+                            if(tambonInput) {
+                                for(let i=0; i<tambonInput.options.length; i++) {
+                                    if(matchedUser.tambon && matchedUser.tambon.includes(tambonInput.options[i].value)) {
+                                        tambonInput.selectedIndex = i; break;
                                     }
                                 }
-                            }, 500);
-                        } else {
-                            document.getElementById('login-error').classList.remove('hidden');
-                        }
+                            }
+                        }, 500);
+                    } else {
+                        document.getElementById('login-error').classList.remove('hidden');
                     }
                 };
             }
