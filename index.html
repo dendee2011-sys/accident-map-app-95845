@@ -133,6 +133,16 @@
             left: -7px;
             filter: blur(1px);
         }
+
+        /* --- MAP FULLSCREEN CLASS --- */
+        .map-expanded {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            z-index: 50 !important;
+        }
     </style>
 </head>
 <body class="h-dvh w-full flex flex-col md:flex-row text-slate-800">
@@ -194,13 +204,16 @@
     <div id="map-panel" class="w-full md:w-2/3 h-[30%] md:h-full relative order-1 md:order-1 flex-shrink-0 transition-all duration-500 border-b md:border-b-0 md:border-r border-slate-200">
         <div id="map" class="w-full h-full bg-slate-100"></div>
         
-        <div class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-xl z-[400] flex items-center space-x-2 text-[11px] sm:text-xs font-bold border border-slate-200 pointer-events-none whitespace-nowrap">
-            <i class="fas fa-location-dot text-red-500"></i>
-            <span>ปักหมุดจุดเกิดอุบัติเหตุทางถนนในพื้นที่ อ.เมืองศรีสะเกษ</span>
+        <div id="map-instruction-bar" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur px-4 py-2.5 rounded-full shadow-xl z-[400] flex items-center space-x-2 text-[11px] sm:text-xs font-bold border border-slate-200 cursor-pointer hover:bg-white hover:scale-105 transition-all whitespace-nowrap" onclick="window.toggleMapFullscreen()">
+            <i id="map-instruction-icon" class="fas fa-location-dot text-red-500 text-sm md:text-base"></i>
+            <span id="map-instruction-text">ปักหมุดจุดเกิดอุบัติเหตุ (กดเพื่อขยาย)</span>
         </div>
 
         <!-- Float Buttons -->
         <div class="absolute bottom-6 right-4 z-[400] flex flex-col gap-2">
+            <button type="button" onclick="window.toggleMapFullscreen()" id="map-fullscreen-btn" class="bg-white p-3.5 rounded-2xl shadow-2xl text-slate-700 hover:bg-blue-50 focus:outline-none transition-all border border-slate-100 flex items-center justify-center w-12 h-12 md:w-14 md:h-14" title="ขยายแผนที่เต็มจอ">
+                <i id="fullscreen-icon" class="fas fa-expand text-lg md:text-xl text-slate-700"></i>
+            </button>
             <button id="map-geojson-btn" class="bg-white p-3.5 rounded-2xl shadow-2xl text-slate-700 hover:bg-blue-50 focus:outline-none transition-all border border-slate-100 flex items-center justify-center w-12 h-12 md:w-14 md:h-14" title="โหลดขอบเขตพื้นที่ (GeoJSON)">
                 <i class="fas fa-layer-group text-lg md:text-xl text-blue-500"></i>
             </button>
@@ -1352,6 +1365,36 @@
         const views = { form: document.getElementById('view-form'), paboa4: document.getElementById('view-paboa4'), list: document.getElementById('view-list'), report: document.getElementById('view-report'), users: document.getElementById('view-users') };
         const tabs = { form: document.getElementById('tab-form'), list: document.getElementById('tab-list'), report: document.getElementById('tab-report'), users: document.getElementById('tab-users') };
 
+        // --- MAP FULLSCREEN TOGGLE ---
+        window.isMapExpanded = false;
+        window.toggleMapFullscreen = () => {
+            const mapPanel = document.getElementById('map-panel');
+            const icon = document.getElementById('fullscreen-icon');
+            const instructionText = document.getElementById('map-instruction-text');
+            const instructionIcon = document.getElementById('map-instruction-icon');
+            const instructionBar = document.getElementById('map-instruction-bar');
+
+            window.isMapExpanded = !window.isMapExpanded;
+            
+            if (window.isMapExpanded) {
+                mapPanel.classList.add('map-expanded');
+                if(icon) { icon.classList.remove('fa-expand'); icon.classList.add('fa-compress'); }
+                if(instructionText) instructionText.innerText = 'ยืนยันจุดนี้ (ย่อแผนที่ลง)';
+                if(instructionIcon) instructionIcon.className = 'fas fa-check-circle text-emerald-500 text-sm md:text-base';
+                if(instructionBar) instructionBar.classList.add('ring-2', 'ring-emerald-500', 'bg-emerald-50');
+            } else {
+                mapPanel.classList.remove('map-expanded');
+                if(icon) { icon.classList.remove('fa-compress'); icon.classList.add('fa-expand'); }
+                if(instructionText) instructionText.innerText = 'ปักหมุดจุดเกิดอุบัติเหตุ (กดเพื่อขยาย)';
+                if(instructionIcon) instructionIcon.className = 'fas fa-location-dot text-red-500 text-sm md:text-base';
+                if(instructionBar) instructionBar.classList.remove('ring-2', 'ring-emerald-500', 'bg-emerald-50');
+            }
+            
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 300);
+        };
+
         // --- NEW: ฟังก์ชันสลับคนเจ็บใน ปภ.บอ.4 ---
         window.navigatePaboa4 = (step) => {
             const newIdx = window.paboa4CurrentVictimIndex + step;
@@ -2033,7 +2076,16 @@
             });
         }
 
-        window.focusMap = (lat, lng) => { map.flyTo([lat, lng], 17); if (window.innerWidth < 768) { switchTab('form'); window.scrollTo({ top: 0, behavior: 'smooth' }); } };
+        window.focusMap = (lat, lng) => { 
+            map.flyTo([lat, lng], 17); 
+            if (window.isMapExpanded) {
+                window.toggleMapFullscreen();
+            }
+            if (window.innerWidth < 768) { 
+                switchTab('form'); 
+                window.scrollTo({ top: 0, behavior: 'smooth' }); 
+            } 
+        };
 
         // Events สำหรับตัวกรองวันที่
         document.getElementById('list-date-filter').addEventListener('change', () => {
