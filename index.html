@@ -150,7 +150,7 @@
                 <div class="w-20 h-20 bg-gradient-to-tr from-red-600 to-red-500 text-white rounded-full flex items-center justify-center mx-auto text-4xl mb-4 shadow-lg shadow-red-500/30 border-4 border-white">
                     <i class="fas fa-truck-medical"></i>
                 </div>
-               <h2 class="text-2xl font-black text-slate-800 tracking-tight">ระบบรายงานอุบัติเหตุทางถนน</h2>
+                <h2 class="text-2xl font-black text-slate-800 tracking-tight">ระบบรายงานอุบัติเหตุทางถนน</h2>
                 <p class="text-sm text-slate-500 mt-1 font-bold">ศูนย์ปฏิบัติการความปลอดภัยทางถนน</p>
                 <p class="text-sm text-slate-500 mt-1 font-bold">อำเภอเมืองศรีสะเกษ</p>
             </div>
@@ -215,13 +215,16 @@
     <!-- Section 2: Sidebar -->
     <div id="sidebar-panel" class="w-full md:w-1/3 h-[70%] md:h-full bg-white shadow-[-10px_0_30px_rgba(0,0,0,0.05)] flex flex-col order-2 md:order-2 sidebar relative">
         
-        <div class="p-5 bg-slate-900 text-white shadow-lg z-10 hidden md:block relative">
-            <h1 class="text-xl font-black tracking-tight flex items-center">
-                <i class="fas fa-car-burst mr-3 text-red-500 text-2xl"></i> ระบบรายงานอุบัติเหตุทางถนน
+        <div class="p-4 md:p-5 bg-slate-900 text-white shadow-lg z-10 relative">
+            <h1 class="text-lg md:text-xl font-black tracking-tight flex items-center">
+                <i class="fas fa-car-burst mr-2 md:mr-3 text-red-500 text-xl md:text-2xl"></i> <span class="truncate">ระบบรายงานอุบัติเหตุทางถนน</span>
             </h1>
-            <p id="user-org-display" class="text-[10px] text-slate-300 mt-1 uppercase font-bold tracking-widest opacity-90">
-                <i class="fas fa-spinner fa-spin mr-1"></i> กำลังตรวจสอบสิทธิ์...
-            </p>
+            <div class="flex justify-between items-center mt-1.5 md:mt-1">
+                <p id="user-org-display" class="text-[9px] md:text-[10px] text-slate-300 uppercase font-bold tracking-widest opacity-90 truncate">
+                    <i class="fas fa-spinner fa-spin mr-1"></i> กำลังตรวจสอบสิทธิ์...
+                </p>
+                <span id="user-name-display" class="text-[9px] md:text-[10px] bg-white/10 border border-white/20 text-white px-2 py-0.5 rounded-md ml-2 whitespace-nowrap hidden"></span>
+            </div>
         </div>
 
         <div class="flex border-b border-slate-100 z-10 bg-white shadow-sm flex-shrink-0 overflow-x-auto custom-scrollbar">
@@ -2505,8 +2508,24 @@
             }
             
             const orgDisplay = document.getElementById('user-org-display');
+            const nameDisplay = document.getElementById('user-name-display');
+            
             if (orgDisplay) {
-                const appUsername = (localStorage.getItem('appUsername') || '').trim().toLowerCase();
+                const rawUsername = localStorage.getItem('appUsername') || '';
+                const appUsername = rawUsername.trim().toLowerCase();
+                const tambon = localStorage.getItem('userTambon') || '';
+                
+                if (nameDisplay && rawUsername) {
+                    let displayName = rawUsername;
+                    if (appUsername === 'admin') displayName = 'ผู้ดูแลระบบ';
+                    else if (['33020', 'ตำรวจ', 'police'].includes(appUsername)) displayName = 'สภ.เมืองศรีสะเกษ';
+                    else if (appUsername === '33024') displayName = 'ที่ว่าการอำเภอฯ';
+                    else if (tambon) displayName = tambon;
+
+                    nameDisplay.innerHTML = `<i class="fas fa-user-circle text-white/70 mr-1"></i> ${displayName}`;
+                    nameDisplay.classList.remove('hidden');
+                }
+
                 if (appUsername === 'admin') {
                     orgDisplay.innerHTML = `<i class="fas fa-shield-alt text-red-400 mr-1"></i> ศูนย์สั่งการส่วนกลาง (Admin)`;
                 } else if (['33020', 'ตำรวจ', 'police'].includes(appUsername)) {
@@ -2514,7 +2533,6 @@
                 } else if (appUsername === '33024') {
                     orgDisplay.innerHTML = `<i class="fas fa-shield-alt text-purple-500 mr-1"></i> ที่ว่าการอำเภอเมืองศรีสะเกษ`;
                 } else {
-                    const tambon = localStorage.getItem('userTambon');
                     orgDisplay.innerHTML = `<i class="fas fa-map-marker-alt text-emerald-400 mr-1"></i> พื้นที่: ${tambon || 'ไม่ระบุ'}`;
                 }
             }
