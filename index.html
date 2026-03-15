@@ -398,7 +398,7 @@
                 </div>
 
                 <div class="flex justify-between items-center mb-6 px-1">
-                    <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest">รายงานอุบัติเหตุล่าสุด (<span id="count-badge">0</span>)</h2>
+                    <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest">รายงานอุบัติล่าสุด (<span id="count-badge">0</span>)</h2>
                     <div class="flex items-center text-[10px] font-black text-emerald-500 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
                         <div class="w-2 h-2 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></div> REAL-TIME
                     </div>
@@ -757,13 +757,35 @@
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-5 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
                         <div>
                             <h2 class="text-2xl font-black text-slate-800 tracking-tight flex items-center uppercase leading-none">
-                                <i class="fas fa-chart-pie text-red-600 mr-3"></i>สถิติระบาดวิทยาอุบัติเหตุ
+                                <i class="fas fa-chart-pie text-red-600 mr-3"></i>สถิติระบาดวิทยาอุบัติเหตุทางถนน
                             </h2>
                             <p class="text-xs text-slate-500 mt-2 font-medium italic">EPIDEMIOLOGY ANALYSIS • อำเภอเมืองศรีสะเกษ</p>
                         </div>
-                        <button onclick="window.print()" class="bg-slate-50 border border-slate-200 text-slate-600 px-5 py-2.5 rounded-2xl text-sm font-black hover:bg-slate-100 transition shadow-sm flex items-center">
-                            <i class="fas fa-print mr-2"></i> พิมพ์รายงาน
-                        </button>
+                        <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                            <select id="report-tambon-filter" class="w-full sm:w-auto bg-slate-50 border border-slate-200 text-slate-600 px-4 py-2.5 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none transition cursor-pointer">
+                                <option value="">ทุกตำบล (ภาพรวม)</option>
+                                <option value="เทศบาลเมืองศรีสะเกษ">เทศบาลเมืองศรีสะเกษ</option>
+                                <option value="คูซอด">คูซอด</option>
+                                <option value="ซำ">ซำ</option>
+                                <option value="จาน">จาน</option>
+                                <option value="ตะดอบ">ตะดอบ</option>
+                                <option value="หนองครก">หนองครก</option>
+                                <option value="โพนข่า">โพนข่า</option>
+                                <option value="โพนค้อ">โพนค้อ</option>
+                                <option value="โพนเขวา">โพนเขวา</option>
+                                <option value="หญ้าปล้อง">หญ้าปล้อง</option>
+                                <option value="ทุ่ม">ทุ่ม</option>
+                                <option value="หนองไฮ">หนองไฮ</option>
+                                <option value="หนองแก้ว">หนองแก้ว</option>
+                                <option value="น้ำคำ">น้ำคำ</option>
+                                <option value="โพธิ์">โพธิ์</option>
+                                <option value="หมากเขียบ">หมากเขียบ</option>
+                                <option value="หนองไผ่">หนองไผ่</option>
+                            </select>
+                            <button onclick="window.print()" class="w-full sm:w-auto bg-slate-50 border border-slate-200 text-slate-600 px-5 py-2.5 rounded-2xl text-sm font-black hover:bg-slate-100 transition shadow-sm flex items-center justify-center">
+                                <i class="fas fa-print mr-2"></i> พิมพ์รายงาน
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Macro KPIs -->
@@ -1510,6 +1532,12 @@
                 allData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 allData.sort((a, b) => new Date(b.accidentDate + 'T' + b.accidentTime) - new Date(a.accidentDate + 'T' + a.accidentTime));
                 updateListUI(); updateMapMarkers();
+                
+                // เรียกใช้อัปเดตกราฟอัตโนมัติหากกำลังเปิดหน้าสถิติอยู่
+                const viewReport = document.getElementById('view-report');
+                if (viewReport && !viewReport.classList.contains('hidden')) {
+                    renderAnalytics();
+                }
             }, (err) => { showAlert("ไม่สามารถซิงค์ข้อมูล: " + err.message, "error"); });
 
             // --- APP USERS LOGIC ---
@@ -1939,14 +1967,22 @@
             catch (e) { alert(e.message); } finally { deletingId = null; }
         };
 
+        // --- NEW: Add event listener to the report tambon filter ---
+        document.getElementById('report-tambon-filter')?.addEventListener('change', () => {
+            renderAnalytics();
+        });
+
         function renderAnalytics() {
             // เช็คและเคลียร์กราฟเก่า ป้องกันการวาดทับและ error
             if (charts.area) {
                 Object.values(charts).forEach(c => { if (c) c.destroy(); });
             }
 
+            const selectedTambon = document.getElementById('report-tambon-filter')?.value;
+            const reportData = selectedTambon ? allData.filter(item => item.address?.tambon === selectedTambon) : allData;
+
             // ถ้าไม่มีข้อมูล ให้รีเซ็ตตัวเลข KPI และตั้งค่าให้กราฟวาดแกนเปล่าๆ รอไว้
-            if (allData.length === 0) {
+            if (reportData.length === 0) {
                 if(document.getElementById('kpi-total')) document.getElementById('kpi-total').innerText = '0';
                 if(document.getElementById('kpi-injured')) document.getElementById('kpi-injured').innerText = '0';
                 if(document.getElementById('kpi-dead')) document.getElementById('kpi-dead').innerText = '0';
@@ -1966,11 +2002,11 @@
             let dayStats = { 'อาทิตย์':0, 'จันทร์':0, 'อังคาร':0, 'พุธ':0, 'พฤหัสบดี':0, 'ศุกร์':0, 'เสาร์':0 };
             let timeRangeStats = { '00:00-05:59':0, '06:00-11:59':0, '12:00-17:59':0, '18:00-23:59':0 };
 
-            allData.forEach(item => {
+            reportData.forEach(item => {
                 const vList = item.victims && item.victims.length > 0 ? item.victims : [{ name: item.victimName, age: item.victimAge, gender: item.victimGender, role: item.victimRole || 'ผู้ขับขี่', severity: item.severity }];
                 const overallSeverity = getHighestSeverity(vList);
                 
-                // วิเคราะห์พื้นที่ (Place)
+                // วิเคราะห์พื้นที่ (Place) - ถ้ากรองด้วยตำบลแล้วกราฟแท่ง Place จะแสดงเฉพาะตำบลนั้น
                 const area = item.address?.tambon || 'ไม่ระบุ'; 
                 if (!areaStats[area]) areaStats[area] = { name: area, count: 0, severe: 0 };
                 areaStats[area].count++;
@@ -2023,8 +2059,8 @@
             });
 
             // อัปเดตตัวเลข KPI ป้องกัน Error ด้วยการเช็ค if(element)
-            if (allData.length > 0) {
-                if(document.getElementById('kpi-total')) document.getElementById('kpi-total').innerText = allData.length;
+            if (reportData.length > 0) {
+                if(document.getElementById('kpi-total')) document.getElementById('kpi-total').innerText = reportData.length;
                 if(document.getElementById('kpi-injured')) document.getElementById('kpi-injured').innerText = totalInjuredCount;
                 if(document.getElementById('kpi-dead')) document.getElementById('kpi-dead').innerText = totalDeadCount;
                 
