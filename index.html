@@ -163,9 +163,9 @@
         
         <div class="p-5 bg-slate-900 text-white shadow-lg z-10 hidden md:block">
             <h1 class="text-xl font-black tracking-tight flex items-center">
-                <i class="fas fa-car-burst mr-3 text-red-500 text-2xl"></i> ระบบรายงานอุบัติเหตุ อ.เมืองศรีสะเกษ
+                <i class="fas fa-car-burst mr-3 text-red-500 text-2xl"></i> ระบบรายงานอุบัติเหตุทางถนน อ.เมืองศรีสะเกษ
             </h1>
-            <p class="text-[10px] text-slate-400 mt-1 uppercase font-bold tracking-widest opacity-80">CONNECTED TO FIREBASE CONSOLE</p>
+            <p class="text-[10px] text-slate-400 mt-1 uppercase font-bold tracking-widest opacity-80">Road accident reporting system, Mueang Si Sa Ket District</p>
         </div>
 
         <div class="flex border-b border-slate-100 z-10 bg-white shadow-sm flex-shrink-0">
@@ -299,16 +299,251 @@
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 mt-2 border-t border-slate-50 pt-4">รูปถ่ายที่เกิดเหตุ (สูงสุด 2 รูป)</label>
                             <input type="file" id="photo-upload" accept="image/*" multiple class="hidden">
-                            <button type="button" id="photo-upload-btn" class="w-full bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center text-slate-400 hover:bg-slate-100 transition">
-                                <i class="fas fa-camera text-3xl mb-2 opacity-30"></i><br>
-                                <span class="text-[10px] font-bold uppercase tracking-widest">แตะเพื่อถ่ายรูปหรือเลือกไฟล์</span>
-                            </button>
+                            <input type="file" id="photo-capture" accept="image/*" capture="environment" class="hidden">
+                            
+                            <div class="flex gap-2">
+                                <button type="button" id="photo-capture-btn" class="flex-1 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-4 text-center text-slate-500 hover:bg-slate-100 transition">
+                                    <i class="fas fa-camera text-2xl mb-1 opacity-70"></i><br>
+                                    <span class="text-[10px] font-bold uppercase tracking-widest">ถ่ายรูป</span>
+                                </button>
+                                <button type="button" id="photo-upload-btn" class="flex-1 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-4 text-center text-slate-500 hover:bg-slate-100 transition">
+                                    <i class="fas fa-images text-2xl mb-1 opacity-70"></i><br>
+                                    <span class="text-[10px] font-bold uppercase tracking-widest">เลือกไฟล์</span>
+                                </button>
+                            </div>
+                            
                             <div id="photo-preview-container" class="flex gap-2 mt-3 hidden"></div>
                         </div>
                     </div>
 
                     <button type="submit" id="submit-btn" class="w-full bg-slate-900 hover:bg-black text-white font-black py-4 rounded-3xl shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 uppercase tracking-widest">
                         <i class="fas fa-save mr-3 text-red-500"></i> บันทึกข้อมูลอุบัติเหตุ
+                    </button>
+                    <div class="h-10"></div>
+                </form>
+            </div>
+
+            <!-- VIEW NEW: ปภ.บอ.4 -->
+            <div id="view-paboa4" class="absolute inset-0 overflow-y-auto custom-scrollbar p-5 bg-slate-50 hidden">
+                <form id="paboa4-form" class="space-y-4 pb-12">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative">
+                        <div class="flex items-center mb-4 pb-3 border-b border-slate-100">
+                            <button type="button" onclick="window.switchTab('list')" class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full flex items-center justify-center transition mr-3">
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                            <div>
+                                <h2 class="text-base font-black text-slate-800 uppercase tracking-widest leading-none">ปภ.บอ.4</h2>
+                                <p class="text-[10px] text-slate-500 mt-1 font-bold">แบบบันทึกข้อมูลผู้ประสบอุบัติเหตุ</p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">วันที่เกิดอุบัติเหตุ</label>
+                                    <input type="date" id="pb_date" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" required>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">ลำดับที่ของผู้ประสบอุบัติเหตุ</label>
+                                    <input type="number" id="pb_victim_seq" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" placeholder="1">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">ลำดับที่ของยานพาหนะ</label>
+                                    <input type="number" id="pb_vehicle_seq" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" placeholder="1">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">หมายเลขทะเบียนรถ</label>
+                                    <input type="text" id="pb_plate" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" placeholder="กท 1234">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">รายละเอียดรถ</label>
+                                <input type="text" id="pb_vehicle_detail" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" placeholder="ยี่ห้อ รุ่น สี">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h3 class="text-sm font-black text-slate-800 border-b border-slate-50 pb-2"><i class="fas fa-user mr-2 text-blue-500"></i>ข้อมูลส่วนบุคคล</h3>
+                        
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">ชื่อ-นามสกุล</label>
+                            <input type="text" id="pb_name" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" required>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">เพศ</label>
+                                <select id="pb_gender" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
+                                    <option value="ชาย">ชาย</option>
+                                    <option value="หญิง">หญิง</option>
+                                    <option value="ไม่ระบุ">ไม่ระบุ</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">อายุ (ปี)</label>
+                                <input type="number" id="pb_age" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" placeholder="0">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">หมายเลขประจำตัวประชาชน</label>
+                            <input type="text" id="pb_idcard" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" maxlength="13" placeholder="X-XXXX-XXXXX-XX-X">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">เลขประจำตัวต่างด้าว</label>
+                                <input type="text" id="pb_alien_id" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">สัญชาติ</label>
+                                <input type="text" id="pb_nationality" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" value="ไทย">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h3 class="text-sm font-black text-slate-800 border-b border-slate-50 pb-2"><i class="fas fa-heartbeat mr-2 text-red-500"></i>สถานะและการรักษา</h3>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 border border-slate-100 rounded-xl p-3 bg-slate-50">
+                            <label class="flex items-center space-x-2 text-sm font-bold text-slate-700">
+                                <input type="radio" name="pb_status" value="บาดเจ็บ(Admit)" class="w-4 h-4 text-blue-600 focus:ring-blue-500" checked>
+                                <span>บาดเจ็บ (Admit)</span>
+                            </label>
+                            <label class="flex items-center space-x-2 text-sm font-bold text-slate-700">
+                                <input type="radio" name="pb_status" value="บาดเจ็บ(ไม่ Admit)" class="w-4 h-4 text-orange-500 focus:ring-orange-500">
+                                <span>บาดเจ็บ (ไม่ Admit)</span>
+                            </label>
+                            <label class="flex items-center space-x-2 text-sm font-bold text-slate-700">
+                                <input type="radio" name="pb_status" value="เสียชีวิต" class="w-4 h-4 text-red-600 focus:ring-red-500">
+                                <span>เสียชีวิต</span>
+                            </label>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">วันที่เสียชีวิต (ถ้ามี)</label>
+                            <input type="date" id="pb_death_date" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">สถานะในเหตุการณ์</label>
+                            <div class="grid grid-cols-2 gap-2 text-xs text-slate-600">
+                                <label><input type="radio" name="pb_role" value="คนเดินถนน" class="mr-1" checked> คนเดินถนน</label>
+                                <label><input type="radio" name="pb_role" value="ผู้ขับขี่" class="mr-1"> ผู้ขับขี่</label>
+                                <label><input type="radio" name="pb_role" value="ผู้โดยสาร" class="mr-1"> ผู้โดยสาร</label>
+                                <label><input type="radio" name="pb_role" value="อื่นๆ" class="mr-1"> อื่นๆ</label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">สถานที่เสียชีวิต</label>
+                            <div class="flex flex-col gap-2 text-xs text-slate-600">
+                                <label><input type="radio" name="pb_death_place" value="เสียชีวิตที่เกิดเหตุ" class="mr-1"> เสียชีวิตที่เกิดเหตุ</label>
+                                <label><input type="radio" name="pb_death_place" value="เสียชีวิตระหว่างนำส่งโรงพยาบาล" class="mr-1"> เสียชีวิตระหว่างนำส่งโรงพยาบาล</label>
+                                <label><input type="radio" name="pb_death_place" value="เสียชีวิตที่โรงพยาบาล" class="mr-1"> เสียชีวิตที่โรงพยาบาล</label>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-slate-100 pt-4 space-y-3">
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase">ที่อยู่ปัจจุบัน</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <input type="text" id="pb_addr_tambon" placeholder="ตำบล" class="w-full border border-slate-200 rounded-xl p-2 text-xs outline-none bg-slate-50">
+                                <input type="text" id="pb_addr_amphoe" placeholder="อำเภอ" class="w-full border border-slate-200 rounded-xl p-2 text-xs outline-none bg-slate-50">
+                                <input type="text" id="pb_addr_province" placeholder="จังหวัด" class="w-full border border-slate-200 rounded-xl p-2 text-xs outline-none bg-slate-50">
+                            </div>
+                            
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mt-2">ภูมิลำเนา (จังหวัด)</label>
+                            <input type="text" id="pb_domicile" placeholder="ระบุจังหวัด" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none bg-slate-50">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">พื้นที่ของผู้ประสบเหตุ</label>
+                            <div class="flex flex-col gap-2 text-xs text-slate-600">
+                                <label><input type="radio" name="pb_area_status" value="คนในพื้นที่" class="mr-1" checked> คนในพื้นที่ (ในตำบล/แขวง)</label>
+                                <label><input type="radio" name="pb_area_status" value="คนนอกพื้นที่ (ในจังหวัด)" class="mr-1"> คนนอกพื้นที่ (ในจังหวัด)</label>
+                                <label><input type="radio" name="pb_area_status" value="คนนอกพื้นที่ (นอกเขตจังหวัด)" class="mr-1"> คนนอกพื้นที่ (นอกเขตจังหวัด)</label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">ข้อมูลสถานะผู้เสียชีวิต (กรณีชาวต่างชาติ)</label>
+                            <div class="grid grid-cols-3 gap-2 text-xs text-slate-600">
+                                <label><input type="radio" name="pb_foreign_status" value="ทำงาน" class="mr-1"> ทำงาน</label>
+                                <label><input type="radio" name="pb_foreign_status" value="ท่องเที่ยว" class="mr-1"> ท่องเที่ยว</label>
+                                <label><input type="radio" name="pb_foreign_status" value="อื่นๆ" class="mr-1"> อื่นๆ</label>
+                            </div>
+                            <input type="text" id="pb_foreign_other" placeholder="ระบุอื่นๆ..." class="w-full border border-slate-200 rounded-xl p-2 text-xs outline-none bg-slate-50 mt-2">
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h3 class="text-sm font-black text-slate-800 border-b border-slate-50 pb-2"><i class="fas fa-ambulance mr-2 text-emerald-500"></i>ข้อมูลการรักษาและ EMS</h3>
+                        
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">ผู้นำส่ง EMS</label>
+                            <div class="grid grid-cols-2 gap-2 text-xs text-slate-600">
+                                <label><input type="radio" name="pb_ems" value="ผู้ประสบอุบัติเหตุ/ญาติ" class="mr-1"> ผู้ประสบอุบัติเหตุ/ญาติ</label>
+                                <label><input type="radio" name="pb_ems" value="เจ้าหน้าที่ตำรวจ" class="mr-1"> เจ้าหน้าที่ตำรวจ</label>
+                                <label><input type="radio" name="pb_ems" value="มูลนิธิ/อาสาสมัคร" class="mr-1"> มูลนิธิ/อาสาสมัคร</label>
+                                <label><input type="radio" name="pb_ems" value="หน่วยกู้ชีพขั้นพื้นฐาน" class="mr-1"> หน่วยกู้ชีพขั้นพื้นฐาน</label>
+                                <label><input type="radio" name="pb_ems" value="หน่วยกู้ชีพขั้นสูง" class="mr-1"> หน่วยกู้ชีพขั้นสูง</label>
+                                <label><input type="radio" name="pb_ems" value="อื่นๆ" class="mr-1"> อื่นๆ</label>
+                                <label><input type="radio" name="pb_ems" value="ไม่ทราบ" class="mr-1"> ไม่ทราบ</label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">ชื่อโรงพยาบาลที่นำส่ง</label>
+                            <input type="text" id="pb_hospital" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-slate-50">
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h3 class="text-sm font-black text-slate-800 border-b border-slate-50 pb-2"><i class="fas fa-exclamation-triangle mr-2 text-amber-500"></i>พฤติกรรมเสี่ยงที่ทำให้เกิดอุบัติเหตุ</h3>
+                        <p class="text-[10px] text-slate-400 uppercase mb-2">(เลือกได้มากกว่า 1 รายการ)</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-slate-700">
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ไม่มีความผิดตามมาตรการ" class="rounded text-blue-500 w-4 h-4"> <span>ไม่มีความผิดตามมาตรการ</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ไม่มีใบขับขี่" class="rounded text-blue-500 w-4 h-4"> <span>ไม่มีใบขับขี่</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ไม่สวมหมวกนิรภัย" class="rounded text-blue-500 w-4 h-4"> <span>ไม่สวมหมวกนิรภัย</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ขับรถเร็วเกินกำหนด" class="rounded text-blue-500 w-4 h-4"> <span>ขับรถเร็วเกินกำหนด</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="มอเตอร์ไซค์ไม่ปลอดภัย" class="rounded text-blue-500 w-4 h-4"> <span>มอเตอร์ไซค์ไม่ปลอดภัย</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ฝ่าฝืนสัญญาณไฟจราจร" class="rounded text-blue-500 w-4 h-4"> <span>ฝ่าฝืนสัญญาณไฟจราจร</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="เมาสุรา" class="rounded text-blue-500 w-4 h-4"> <span>เมาสุรา</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ขับรถย้อนศร" class="rounded text-blue-500 w-4 h-4"> <span>ขับรถย้อนศร</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ไม่คาดเข็มขัดนิรภัย" class="rounded text-blue-500 w-4 h-4"> <span>ไม่คาดเข็มขัดนิรภัย</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ใช้โทรศัพท์เคลื่อนที่ขณะขับรถ" class="rounded text-blue-500 w-4 h-4"> <span>ใช้โทรศัพท์เคลื่อนที่ขณะขับรถ</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ฝ่าฝืนเครื่องหมายจราจร" class="rounded text-blue-500 w-4 h-4"> <span>ฝ่าฝืนเครื่องหมายจราจร</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="หลับใน" class="rounded text-blue-500 w-4 h-4"> <span>หลับใน</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="แซงรถผิดกฎหมาย" class="rounded text-blue-500 w-4 h-4"> <span>แซงรถผิดกฎหมาย</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="เสพสารเสพติด" class="rounded text-blue-500 w-4 h-4"> <span>เสพสารเสพติด</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="ตัดหน้ากระชั้นชิด" class="rounded text-blue-500 w-4 h-4"> <span>ตัดหน้ากระชั้นชิด</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="บรรทุกเกินอัตรา" class="rounded text-blue-500 w-4 h-4"> <span>บรรทุกเกินอัตรา</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="pb_risk" value="อื่นๆ" class="rounded text-blue-500 w-4 h-4"> <span>อื่นๆ</span></label>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h3 class="text-sm font-black text-slate-800 border-b border-slate-50 pb-2"><i class="fas fa-pencil-alt mr-2 text-slate-500"></i>ผู้รายงานข้อมูล</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">ลงชื่อ</label>
+                                <input type="text" id="pb_reporter_name" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" required>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">ตำแหน่ง</label>
+                                <input type="text" id="pb_reporter_position" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submit-paboa4-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-3xl shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 uppercase tracking-widest">
+                        <i class="fas fa-save"></i> บันทึกข้อมูล ปภ.บอ.4
                     </button>
                     <div class="h-10"></div>
                 </form>
@@ -454,10 +689,14 @@
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                         <h3 class="text-sm font-black text-slate-800 border-b border-slate-50 pb-2"><i class="fas fa-heartbeat mr-2 text-red-500"></i>สถานะและการรักษา</h3>
                         
-                        <div class="grid grid-cols-2 gap-4 border border-slate-100 rounded-xl p-3 bg-slate-50">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 border border-slate-100 rounded-xl p-3 bg-slate-50">
                             <label class="flex items-center space-x-2 text-sm font-bold text-slate-700">
                                 <input type="radio" name="pb_status" value="บาดเจ็บ(Admit)" class="w-4 h-4 text-blue-600 focus:ring-blue-500" checked>
                                 <span>บาดเจ็บ (Admit)</span>
+                            </label>
+                            <label class="flex items-center space-x-2 text-sm font-bold text-slate-700">
+                                <input type="radio" name="pb_status" value="บาดเจ็บ(ไม่ Admit)" class="w-4 h-4 text-orange-500 focus:ring-orange-500">
+                                <span>บาดเจ็บ (ไม่ Admit)</span>
                             </label>
                             <label class="flex items-center space-x-2 text-sm font-bold text-slate-700">
                                 <input type="radio" name="pb_status" value="เสียชีวิต" class="w-4 h-4 text-red-600 focus:ring-red-500">
@@ -977,55 +1216,62 @@
         // --- NEW: Photo Upload & Compress Logic ---
         let currentPhotos = [];
         const photoInput = document.getElementById('photo-upload');
+        const photoCapture = document.getElementById('photo-capture');
         const photoBtn = document.getElementById('photo-upload-btn');
+        const captureBtn = document.getElementById('photo-capture-btn');
         const photoContainer = document.getElementById('photo-preview-container');
+
+        const handlePhotoChange = (e) => {
+            const files = Array.from(e.target.files);
+            if (currentPhotos.length + files.length > 2) {
+                showAlert('เลือกรูปได้สูงสุด 2 รูปเท่านั้น', 'error');
+                e.target.value = '';
+                return;
+            }
+
+            files.forEach(file => {
+                if (currentPhotos.length >= 2) return;
+                
+                // บีบอัดรูปลดขนาดก่อนบันทึก
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800;
+                        const MAX_HEIGHT = 800;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        } else {
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.6); // 60% quality jpeg
+                        currentPhotos.push(dataUrl);
+                        window.renderPhotoPreviews();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+            e.target.value = ''; // Reset input
+        };
 
         if (photoBtn && photoInput) {
             photoBtn.addEventListener('click', () => photoInput.click());
-
-            photoInput.addEventListener('change', (e) => {
-                const files = Array.from(e.target.files);
-                if (currentPhotos.length + files.length > 2) {
-                    showAlert('เลือกรูปได้สูงสุด 2 รูปเท่านั้น', 'error');
-                    photoInput.value = '';
-                    return;
-                }
-
-                files.forEach(file => {
-                    if (currentPhotos.length >= 2) return;
-                    
-                    // บีบอัดรูปลดขนาดก่อนบันทึก
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        const img = new Image();
-                        img.onload = () => {
-                            const canvas = document.createElement('canvas');
-                            const MAX_WIDTH = 800;
-                            const MAX_HEIGHT = 800;
-                            let width = img.width;
-                            let height = img.height;
-
-                            if (width > height) {
-                                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                            } else {
-                                if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-                            }
-
-                            canvas.width = width;
-                            canvas.height = height;
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, width, height);
-
-                            const dataUrl = canvas.toDataURL('image/jpeg', 0.6); // 60% quality jpeg
-                            currentPhotos.push(dataUrl);
-                            window.renderPhotoPreviews();
-                        };
-                        img.src = event.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                });
-                photoInput.value = ''; // Reset input
-            });
+            photoInput.addEventListener('change', handlePhotoChange);
+        }
+        if (captureBtn && photoCapture) {
+            captureBtn.addEventListener('click', () => photoCapture.click());
+            photoCapture.addEventListener('change', handlePhotoChange);
         }
 
         window.renderPhotoPreviews = () => {
@@ -1165,8 +1411,13 @@
             // 6. ความรุนแรง (Triage)
             if (vic.severity) {
                 const statusRadios = document.getElementsByName('pb_status');
-                if (vic.severity === 'เสียชีวิต') statusRadios[1].checked = true;
-                else statusRadios[0].checked = true;
+                if (vic.severity === 'เสียชีวิต') {
+                    for(let r of statusRadios) { if(r.value === 'เสียชีวิต') r.checked = true; }
+                } else if (vic.severity === 'เล็กน้อย') {
+                    for(let r of statusRadios) { if(r.value === 'บาดเจ็บ(ไม่ Admit)') r.checked = true; }
+                } else {
+                    for(let r of statusRadios) { if(r.value === 'บาดเจ็บ(Admit)') r.checked = true; }
+                }
             }
 
             // Update Pagination UI
@@ -1325,6 +1576,48 @@
             document.getElementById('view-list').scrollTo({ top: 0, behavior: 'smooth' });
         };
 
+        // --- NEW: Jump to list from Marker ---
+        window.highlightInList = (accId) => {
+            const dateFilter = document.getElementById('list-date-filter').value;
+            let filteredData = dateFilter ? allData.filter(item => item.accidentDate === dateFilter) : allData;
+            
+            let itemIndex = filteredData.findIndex(d => d.id === accId);
+            
+            // ถ้าไม่เจอใน filter ปัจจุบัน ให้ล้าง filter แล้วหาใหม่
+            if (itemIndex === -1) {
+                document.getElementById('list-date-filter').value = '';
+                filteredData = allData;
+                itemIndex = filteredData.findIndex(d => d.id === accId);
+            }
+            
+            if (itemIndex === -1) return;
+
+            // คำนวณหาหน้าที่ข้อมูลอยู่
+            currentPage = Math.ceil((itemIndex + 1) / itemsPerPage) || 1;
+            updateListUI();
+            switchTab('list');
+
+            // หน่วงเวลาให้ CSS Transition สลับแท็บทำงานเสร็จก่อนค่อยเลื่อนหน้าจอ
+            setTimeout(() => {
+                const card = document.getElementById(`acc-card-${accId}`);
+                if (card) {
+                    const listContainer = document.getElementById('view-list');
+                    const cardTop = card.offsetTop;
+                    listContainer.scrollTo({ top: cardTop - 80, behavior: 'smooth' });
+                    
+                    // กระพริบเน้นสีให้รู้ว่าคือรายการไหน
+                    card.style.transition = "all 0.5s ease";
+                    card.style.transform = "scale(1.02)";
+                    card.style.boxShadow = "0 0 0 4px rgba(59, 130, 246, 0.5)";
+                    
+                    setTimeout(() => {
+                        card.style.transform = "scale(1)";
+                        card.style.boxShadow = "";
+                    }, 2000);
+                }
+            }, 300);
+        };
+
         function updateListUI() {
             const cont = document.getElementById('accidents-container');
             const dateFilter = document.getElementById('list-date-filter').value;
@@ -1384,7 +1677,7 @@
                 }
 
                 cont.insertAdjacentHTML('beforeend', `
-                    <div class="bg-white border-l-4 border-${color}-500 rounded-2xl shadow-sm p-4 hover:shadow-md transition relative group overflow-hidden mb-3">
+                    <div id="acc-card-${item.id}" class="bg-white border-l-4 border-${color}-500 rounded-2xl shadow-sm p-4 hover:shadow-md transition relative group overflow-hidden mb-3">
                         <div class="flex justify-between items-start mb-1 pr-16" onclick="focusMap(${item.lat}, ${item.lng})">
                             <h4 class="font-black text-slate-800 text-sm leading-tight">${item.customIncidentType || 'อุบัติเหตุ'}</h4>
                             <span class="text-[10px] font-black text-slate-400 shrink-0">${item.accidentTime} น.</span>
@@ -1466,7 +1759,8 @@
                     });
 
                     const m = L.marker([item.lat, item.lng], { icon }).addTo(map);
-                    m.bindPopup(`<div class="text-xs font-black">${item.customIncidentType || 'อุบัติเหตุ'}</div><div class="text-[10px] text-slate-500 mt-1">เจ็บ/ตาย: ${vList.length} คน</div>`);
+                    m.bindTooltip(`<div class="text-xs font-black">${item.customIncidentType || 'อุบัติเหตุ'}</div><div class="text-[10px] text-slate-500 mt-1">เจ็บ/ตาย: ${vList.length} คน</div>`, { direction: 'top', offset: [0, -30] });
+                    m.on('click', () => { window.highlightInList(item.id); });
                     dbMarkers[item.id] = m;
                 }
             });
