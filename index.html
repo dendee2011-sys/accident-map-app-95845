@@ -160,7 +160,7 @@
                 <div class="w-20 h-20 bg-gradient-to-tr from-red-600 to-red-500 text-white rounded-full flex items-center justify-center mx-auto text-4xl mb-4 shadow-lg shadow-red-500/30 border-4 border-white">
                     <i class="fas fa-truck-medical"></i>
                 </div>
-               <h2 class="text-2xl font-black text-slate-800 tracking-tight">ระบบรายงานอุบัติเหตุทางถนน</h2>
+                 <h2 class="text-2xl font-black text-slate-800 tracking-tight">ระบบรายงานอุบัติเหตุทางถนน</h2>
                 <p class="text-sm text-slate-500 mt-1 font-bold">ศูนย์ปฏิบัติการความปลอดภัยทางถนน</p>
                 <p class="text-sm text-slate-500 mt-1 font-bold">อำเภอเมืองศรีสะเกษ</p>
             </div>
@@ -482,6 +482,14 @@
                                 </div>
                             </div>
 
+                            <div id="pb_photos_section" class="hidden mb-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                <div class="flex justify-between items-center mb-2">
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase">รูปถ่ายจากจุดเกิดเหตุ</label>
+                                    <span class="text-[9px] text-slate-400 font-medium">กดเพื่อดูรูปเต็ม</span>
+                                </div>
+                                <div id="pb_photos_container" class="flex gap-2 overflow-x-auto custom-scrollbar pb-1"></div>
+                            </div>
+
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">ลำดับที่ของยานพาหนะ</label>
@@ -489,7 +497,11 @@
                                 </div>
                                 <div>
                                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">หมายเลขทะเบียนรถ</label>
-                                    <input type="text" id="pb_plate" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" placeholder="กท 1234">
+                                    <div class="flex gap-2 relative">
+                                        <input type="text" id="pb_plate" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50" placeholder="กท 1234">
+                                        <button type="button" id="pb_btn_ocr" class="hidden bg-slate-800 text-white px-3.5 rounded-xl hover:bg-slate-900 transition flex-shrink-0 flex items-center justify-center shadow-sm" title="ให้ AI อ่านป้ายทะเบียนจากรูป"><i class="fas fa-magic"></i></button>
+                                    </div>
+                                    <div id="pb_ocr_status" class="text-[9px] text-blue-500 font-bold mt-1 hidden"><i class="fas fa-spinner fa-spin mr-1"></i>กำลังอ่านข้อมูล...</div>
                                 </div>
                             </div>
                             
@@ -1070,6 +1082,109 @@
             "สุรินทร์": {}
         };
 
+        // --- UPDATED: Client-side OCR using Gemini AI Vision (More Accurate for Thai Plates) ---
+        window.extractLicensePlate = async (base64Image) => {
+            const statusEl = document.getElementById('pb_ocr_status');
+            if (statusEl) {
+                statusEl.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>กำลังให้ AI วิเคราะห์ภาพ...`;
+            }
+
+            // ใส่ API Key ของคุณที่นี่
+            const apiKey = "AIzaSyDcTyq-jSbufWUtvBojveQpOikk9vWYN08"; 
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const base64Data = base64Image.split(',')[1];
+            const mimeType = base64Image.split(';')[0].split(':')[1] || "image/jpeg";
+            
+            const payload = {
+                contents: [{
+                    role: "user",
+                    parts: [
+                        { text: "ดึงเฉพาะหมายเลขทะเบียนรถและจังหวัดจากรูปภาพนี้ (เช่น 1กฬ 4621 ศรีสะเกษ) ตอบแค่ตัวทะเบียนและจังหวัด ไม่ต้องมีคำอธิบายใดๆ ทั้งสิ้น ถ้าไม่เห็นป้ายทะเบียนเลยให้ตอบว่า 'ไม่พบ'" },
+                        { inlineData: { mimeType: mimeType, data: base64Data } }
+                    ]
+                }]
+            };
+
+            // ระบบ Retry เผื่อกรณี Network มีปัญหา
+            const delays = [1000, 2000, 4000, 8000, 16000];
+            
+            for (let i = 0; i <= 5; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        let text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (text) {
+                            text = text.trim().replace(/\*/g, ''); // ลบตัวอักษรหนา Markdown ออก
+                            return text;
+                        }
+                        return 'ไม่พบ';
+                    }
+                } catch (e) {
+                    if (i === 5) {
+                        console.error("OCR Failed after retries", e);
+                        return 'ไม่พบ';
+                    }
+                }
+                
+                if (i < 5) {
+                    if (statusEl) {
+                        statusEl.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>กำลังลองใหม่ (${i+1}/5)...`;
+                    }
+                    await new Promise(r => setTimeout(r, delays[i]));
+                }
+            }
+            return 'ไม่พบ';
+        };
+
+        // Initialize OCR Button Event Listener
+        setTimeout(() => {
+            document.getElementById('pb_btn_ocr')?.addEventListener('click', async () => {
+                if (!window.currentAccidentPhotos || window.currentAccidentPhotos.length === 0) return;
+                
+                const btn = document.getElementById('pb_btn_ocr');
+                const status = document.getElementById('pb_ocr_status');
+                const input = document.getElementById('pb_plate');
+                
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                status.classList.remove('hidden', 'text-emerald-500', 'text-red-500');
+                status.classList.add('text-blue-500');
+                status.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>กำลังเตรียมระบบวิเคราะห์...';
+                
+                let result = await window.extractLicensePlate(window.currentAccidentPhotos[0]);
+                
+                if ((!result || result === 'ไม่พบ' || result.includes('ไม่พบ')) && window.currentAccidentPhotos.length > 1) {
+                    status.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>วิเคราะห์รูปที่ 2...';
+                    result = await window.extractLicensePlate(window.currentAccidentPhotos[1]);
+                }
+                
+                status.classList.remove('text-blue-500');
+                if (result && result !== 'ไม่พบ' && !result.includes('ไม่พบ')) {
+                    // Remove markdown bold if AI adds it
+                    result = result.replace(/\*/g, '');
+                    input.value = result;
+                    status.innerHTML = '<i class="fas fa-check-circle mr-1"></i>ดึงข้อมูลสำเร็จ';
+                    status.classList.add('text-emerald-500');
+                } else {
+                    status.innerHTML = '<i class="fas fa-times-circle mr-1"></i>ไม่พบป้ายทะเบียนที่ชัดเจน';
+                    status.classList.add('text-red-500');
+                }
+                
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-magic"></i>';
+                
+                setTimeout(() => {
+                    status.classList.add('hidden');
+                }, 5000);
+            });
+        }, 1000);
+
         // --- NEW: Image Viewer Modal Functions ---
         window.viewImage = (src) => {
             const modal = document.getElementById('image-viewer-modal');
@@ -1530,6 +1645,25 @@
                         document.getElementById('pb_addr_tambon_other').value = tambon;
                     }
                 }
+            }
+
+            // --- Auto Fill Photos & OCR Button ---
+            const photosSec = document.getElementById('pb_photos_section');
+            const photosCont = document.getElementById('pb_photos_container');
+            const ocrBtn = document.getElementById('pb_btn_ocr');
+            window.currentAccidentPhotos = acc.photos || [];
+
+            if (window.currentAccidentPhotos.length > 0) {
+                if(photosSec) photosSec.classList.remove('hidden');
+                if(ocrBtn) ocrBtn.classList.remove('hidden');
+                if(photosCont) {
+                    photosCont.innerHTML = window.currentAccidentPhotos.map(p => 
+                        `<img src="${p}" class="h-16 w-16 object-cover rounded-lg border border-slate-200 cursor-pointer shadow-sm hover:opacity-80 transition" onclick="window.viewImage('${p}')">`
+                    ).join('');
+                }
+            } else {
+                if(photosSec) photosSec.classList.add('hidden');
+                if(ocrBtn) ocrBtn.classList.add('hidden');
             }
 
             // 3. พาหนะ (ดึงคันแรกสุดมาใส่ก่อน)
