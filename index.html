@@ -160,7 +160,7 @@
                 <div class="w-20 h-20 bg-gradient-to-tr from-red-600 to-red-500 text-white rounded-full flex items-center justify-center mx-auto text-4xl mb-4 shadow-lg shadow-red-500/30 border-4 border-white">
                     <i class="fas fa-truck-medical"></i>
                 </div>
-                <h2 class="text-2xl font-black text-slate-800 tracking-tight">ระบบรายงานอุบัติเหตุทางถนน</h2>
+               <h2 class="text-2xl font-black text-slate-800 tracking-tight">ระบบรายงานอุบัติเหตุทางถนน</h2>
                 <p class="text-sm text-slate-500 mt-1 font-bold">ศูนย์ปฏิบัติการความปลอดภัยทางถนน</p>
                 <p class="text-sm text-slate-500 mt-1 font-bold">อำเภอเมืองศรีสะเกษ</p>
             </div>
@@ -984,6 +984,12 @@
         </div>
     </div>
 
+    <!-- Image Viewer Modal (NEW) -->
+    <div id="image-viewer-modal" class="hidden fixed inset-0 z-[10000] flex items-center justify-center bg-slate-900/95 backdrop-blur-md transition-opacity duration-300" onclick="window.closeImageViewer()">
+        <button type="button" class="absolute top-4 right-4 md:top-6 md:right-6 text-white/50 text-4xl hover:text-red-500 transition-colors z-50 focus:outline-none"><i class="fas fa-times-circle"></i></button>
+        <img id="viewer-image" src="" class="max-w-[95vw] max-h-[95vh] object-contain rounded-2xl shadow-2xl transition-transform duration-300 scale-95" onclick="event.stopPropagation()">
+    </div>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     
     <script type="module">
@@ -1062,6 +1068,25 @@
             "อุบลราชธานี": {},
             "ยโสธร": {},
             "สุรินทร์": {}
+        };
+
+        // --- NEW: Image Viewer Modal Functions ---
+        window.viewImage = (src) => {
+            const modal = document.getElementById('image-viewer-modal');
+            const img = document.getElementById('viewer-image');
+            img.src = src;
+            modal.classList.remove('hidden');
+            setTimeout(() => img.classList.replace('scale-95', 'scale-100'), 10);
+        };
+
+        window.closeImageViewer = () => {
+            const modal = document.getElementById('image-viewer-modal');
+            const img = document.getElementById('viewer-image');
+            img.classList.replace('scale-100', 'scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                img.src = '';
+            }, 300); // Wait for transition
         };
 
         window.populateProvinces = () => {
@@ -1725,27 +1750,6 @@
             });
         };
 
-        const geojsonInput = document.getElementById('geojson-input');
-        const geojsonBtn = document.getElementById('map-geojson-btn');
-        let customBoundaryLayer = null;
-        if(geojsonBtn) {
-            geojsonBtn.onclick = () => geojsonInput.click();
-            geojsonInput.onchange = (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const geojson = JSON.parse(event.target.result);
-                        if (customBoundaryLayer) map.removeLayer(customBoundaryLayer);
-                        customBoundaryLayer = L.geoJSON(geojson, { style: { color: '#3b82f6', weight: 2, opacity: 0.8, fillOpacity: 0.1 } }).addTo(map);
-                        map.fitBounds(customBoundaryLayer.getBounds());
-                    } catch (err) { showAlert('ไฟล์ GeoJSON ไม่ถูกต้อง', 'error'); }
-                };
-                reader.readAsText(file);
-            };
-        }
-
         // FIREBASE SYNC & USER MANAGEMENT
         function initRealtime() {
             if (!currentUser) return;
@@ -2030,11 +2034,11 @@
                 // Display multiple vehicles if present
                 const vVehiclesList = item.vehicles && item.vehicles.length > 0 ? item.vehicles.map(v => v.type).join(', ') : (item.type || 'ไม่ระบุ');
 
-                // Display photos if present
+                // Display photos if present (WITH VIEW IMAGE ONCLICK NOW)
                 let photosHtml = '';
                 if (item.photos && item.photos.length > 0) {
                     photosHtml = `<div class="flex gap-2 mb-4 mt-1">` + 
-                        item.photos.map(p => `<div class="w-16 h-16 rounded-xl overflow-hidden border-2 border-slate-100 shadow-sm"><img src="${p}" class="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform duration-300" onclick="event.stopPropagation(); window.open('${p}', '_blank')"></div>`).join('') +
+                        item.photos.map(p => `<div class="w-16 h-16 rounded-xl overflow-hidden border-2 border-slate-100 shadow-sm"><img src="${p}" class="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform duration-300" onclick="event.stopPropagation(); window.viewImage('${p}')"></div>`).join('') +
                     `</div>`;
                 }
 
