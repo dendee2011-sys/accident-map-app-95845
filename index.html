@@ -160,7 +160,7 @@
                 <div class="w-20 h-20 bg-gradient-to-tr from-red-600 to-red-500 text-white rounded-full flex items-center justify-center mx-auto text-4xl mb-4 shadow-lg shadow-red-500/30 border-4 border-white">
                     <i class="fas fa-truck-medical"></i>
                 </div>
-                 <h2 class="text-2xl font-black text-slate-800 tracking-tight">ระบบรายงานอุบัติเหตุทางถนน</h2>
+                <h2 class="text-2xl font-black text-slate-800 tracking-tight">ระบบรายงานอุบัติเหตุทางถนน</h2>
                 <p class="text-sm text-slate-500 mt-1 font-bold">ศูนย์ปฏิบัติการความปลอดภัยทางถนน</p>
                 <p class="text-sm text-slate-500 mt-1 font-bold">อำเภอเมืองศรีสะเกษ</p>
             </div>
@@ -796,8 +796,12 @@
                         </div>
                         
                         <div class="relative z-10 flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full xl:w-auto mt-4 md:mt-0">
-                            <!-- Date Filter -->
-                            <input type="date" id="report-date-filter" style="color-scheme: dark;" class="w-full md:w-auto bg-white/10 border border-white/20 text-white backdrop-blur-md px-4 py-3 rounded-xl text-sm font-bold focus:ring-2 focus:ring-red-500 outline-none transition cursor-pointer" title="เลือกวันที่เกิดเหตุ">
+                            <!-- Date Range Filter -->
+                            <div class="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+                                <input type="date" id="report-date-start" style="color-scheme: dark;" class="w-full sm:w-auto bg-white/10 border border-white/20 text-white backdrop-blur-md px-3 py-3 rounded-xl text-sm font-bold focus:ring-2 focus:ring-red-500 outline-none transition cursor-pointer" title="ตั้งแต่วันที่">
+                                <span class="text-white/50 hidden sm:block">-</span>
+                                <input type="date" id="report-date-end" style="color-scheme: dark;" class="w-full sm:w-auto bg-white/10 border border-white/20 text-white backdrop-blur-md px-3 py-3 rounded-xl text-sm font-bold focus:ring-2 focus:ring-red-500 outline-none transition cursor-pointer" title="ถึงวันที่">
+                            </div>
                             
                             <!-- Tambon Filter -->
                             <div class="relative w-full md:w-auto flex-1 md:flex-none">
@@ -827,7 +831,7 @@
                             </div>
                             
                             <!-- Clear Filter Btn -->
-                            <button type="button" onclick="document.getElementById('report-date-filter').value=''; document.getElementById('report-tambon-filter').value=''; window.renderAnalytics();" class="w-full md:w-auto bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-xl text-sm font-bold transition border border-white/20 flex items-center justify-center gap-2" title="ล้างตัวกรอง">
+                            <button type="button" onclick="document.getElementById('report-date-start').value=''; document.getElementById('report-date-end').value=''; document.getElementById('report-tambon-filter').value=''; window.renderAnalytics();" class="w-full md:w-auto bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-xl text-sm font-bold transition border border-white/20 flex items-center justify-center gap-2" title="ล้างตัวกรอง">
                                 <i class="fas fa-sync-alt"></i>
                             </button>
 
@@ -1570,7 +1574,7 @@
             
             const appUsername = (localStorage.getItem('appUsername') || '').trim();
             const userRole = localStorage.getItem('userRole') || '';
-            const isSuperUser = userRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police'].includes(appUsername.toLowerCase());
+            const isSuperUser = userRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ'].includes(appUsername.toLowerCase());
             // สิทธิ์การเห็นข้อมูลส่วนตัว
             const canViewSensitive = isSuperUser || acc.recordedBy === appUsername || acc.recordedBy === localStorage.getItem('appUsername');
 
@@ -1582,7 +1586,12 @@
             
             const btn = document.getElementById('submit-paboa4-btn');
             if(btn) {
-                btn.innerHTML = existingPb4 ? '<i class="fas fa-sync"></i> อัปเดตข้อมูล ปภ.บอ.4' : '<i class="fas fa-save"></i> บันทึกข้อมูล ปภ.บอ.4';
+                if (!canViewSensitive) {
+                    btn.classList.add('hidden'); // ซ่อนปุ่มบันทึกถ้าไม่มีสิทธิ์ (ให้อ่านได้อย่างเดียว)
+                } else {
+                    btn.classList.remove('hidden');
+                    btn.innerHTML = existingPb4 ? '<i class="fas fa-sync"></i> อัปเดตข้อมูล ปภ.บอ.4' : '<i class="fas fa-save"></i> บันทึกข้อมูล ปภ.บอ.4';
+                }
             }
 
             // --- Auto Fill ข้อมูล ---
@@ -1655,7 +1664,7 @@
 
             if (window.currentAccidentPhotos.length > 0) {
                 if(photosSec) photosSec.classList.remove('hidden');
-                if(ocrBtn) ocrBtn.classList.remove('hidden');
+                if(ocrBtn && canViewSensitive) ocrBtn.classList.remove('hidden'); // ซ่อนปุ่ม AI ให้คนไม่มีสิทธิ์ด้วย
                 if(photosCont) {
                     photosCont.innerHTML = window.currentAccidentPhotos.map(p => 
                         `<img src="${p}" class="h-16 w-16 object-cover rounded-lg border border-slate-200 cursor-pointer shadow-sm hover:opacity-80 transition" onclick="window.viewImage('${p}')">`
@@ -1668,15 +1677,18 @@
 
             // 3. พาหนะ (ดึงคันแรกสุดมาใส่ก่อน)
             document.getElementById('pb_vehicle_seq').value = existingPb4?.vehicleSeq || '';
-            document.getElementById('pb_plate').value = existingPb4?.plate || '';
+            document.getElementById('pb_plate').value = canViewSensitive ? (existingPb4?.plate || '') : '*** (ปกปิดข้อมูล)';
             const primaryVehicle = existingPb4?.vehicleDetail || (acc.vehicles && acc.vehicles.length > 0 ? acc.vehicles[0].type : (acc.type || ''));
             document.getElementById('pb_vehicle_detail').value = primaryVehicle;
 
             // 4. ข้อมูลคนเจ็บ (ใช้กฎ Data Masking)
-            document.getElementById('pb_name').value = existingPb4?.name || (canViewSensitive ? (vic.name || '') : '*** (ปกปิดข้อมูล)');
+            const actualName = existingPb4?.name || vic.name || '';
+            document.getElementById('pb_name').value = canViewSensitive ? actualName : '*** (ปกปิดข้อมูล)';
+            
             document.getElementById('pb_age').value = existingPb4?.age || vic.age || '';
-            document.getElementById('pb_idcard').value = existingPb4?.idcard || '';
-            document.getElementById('pb_alien_id').value = existingPb4?.alienId || '';
+            
+            document.getElementById('pb_idcard').value = canViewSensitive ? (existingPb4?.idcard || '') : 'X-XXXX-XXXXX-XX-X';
+            document.getElementById('pb_alien_id').value = canViewSensitive ? (existingPb4?.alienId || '') : '***';
             document.getElementById('pb_nationality').value = existingPb4?.nationality || 'ไทย';
             document.getElementById('pb_domicile').value = existingPb4?.domicile || '';
             
@@ -2097,7 +2109,7 @@
             // ดึงข้อมูล User เพื่อจัดการสิทธิ์การแสดงปุ่มแก้ไข/ลบ และการมองเห็นข้อมูลส่วนตัว
             const currentAppUsername = (localStorage.getItem('appUsername') || '').trim();
             const currentUserRole = localStorage.getItem('userRole') || '';
-            const isSuperUser = currentUserRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police'].includes(currentAppUsername.toLowerCase());
+            const isSuperUser = currentUserRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ'].includes(currentAppUsername.toLowerCase());
 
             let lastDate = "";
             paginatedData.forEach(item => {
@@ -2332,7 +2344,7 @@
             // เช็คสิทธิ์ก่อนเข้าไปแก้ไข
             const appUsername = (localStorage.getItem('appUsername') || '').trim();
             const userRole = localStorage.getItem('userRole') || '';
-            const isSuperUser = userRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police'].includes(appUsername.toLowerCase());
+            const isSuperUser = userRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ'].includes(appUsername.toLowerCase());
             
             if (!isSuperUser && item.recordedBy !== appUsername && item.recordedBy !== localStorage.getItem('appUsername')) {
                 return showAlert('คุณไม่มีสิทธิ์แก้ไขข้อมูลนี้ (ไม่ใช่ผู้แจ้ง)', 'error');
@@ -2386,7 +2398,7 @@
             // เช็คสิทธิ์ก่อนลบ
             const appUsername = (localStorage.getItem('appUsername') || '').trim();
             const userRole = localStorage.getItem('userRole') || '';
-            const isSuperUser = userRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police'].includes(appUsername.toLowerCase());
+            const isSuperUser = userRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ'].includes(appUsername.toLowerCase());
             
             if (!isSuperUser && item.recordedBy !== appUsername && item.recordedBy !== localStorage.getItem('appUsername')) {
                 return showAlert('คุณไม่มีสิทธิ์ลบข้อมูลนี้ (ไม่ใช่ผู้แจ้ง)', 'error');
@@ -2408,7 +2420,8 @@
 
         // --- NEW: Add event listener to the report tambon filter ---
         document.getElementById('report-tambon-filter')?.addEventListener('change', window.renderAnalytics);
-        document.getElementById('report-date-filter')?.addEventListener('change', window.renderAnalytics);
+        document.getElementById('report-date-start')?.addEventListener('change', window.renderAnalytics);
+        document.getElementById('report-date-end')?.addEventListener('change', window.renderAnalytics);
 
         // Set default font for charts
         Chart.defaults.font.family = "'Sarabun', sans-serif";
@@ -2420,7 +2433,8 @@
             charts = {};
 
             const selectedTambon = document.getElementById('report-tambon-filter')?.value;
-            const selectedDate = document.getElementById('report-date-filter')?.value;
+            const startDate = document.getElementById('report-date-start')?.value;
+            const endDate = document.getElementById('report-date-end')?.value;
             
             let reportData = allData;
             
@@ -2428,8 +2442,12 @@
                 reportData = reportData.filter(item => item.address?.tambon === selectedTambon);
             }
             
-            if (selectedDate) {
-                reportData = reportData.filter(item => item.accidentDate === selectedDate);
+            if (startDate) {
+                reportData = reportData.filter(item => item.accidentDate >= startDate);
+            }
+
+            if (endDate) {
+                reportData = reportData.filter(item => item.accidentDate <= endDate);
             }
 
             // ถ้าไม่มีข้อมูล ให้รีเซ็ตตัวเลข KPI และซ่อนกราฟความรุนแรง
@@ -2824,6 +2842,18 @@
 
         window.setupUIForRole = (role) => {
             const tabUsers = document.getElementById('tab-users');
+            
+            const rawUsername = localStorage.getItem('appUsername') || '';
+            const appUsername = rawUsername.trim().toLowerCase();
+            const tambon = localStorage.getItem('userTambon') || '';
+            
+            // ระบบซ่อมแซมสิทธิ์อัตโนมัติ (เผื่อแคชเก่าค้าง)
+            const isSuperUser = ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ'].includes(appUsername);
+            if (isSuperUser) {
+                role = 'admin';
+                localStorage.setItem('userRole', 'admin');
+            }
+
             if (role === 'admin') {
                 if(tabUsers) tabUsers.classList.remove('hidden');
             } else {
@@ -2834,15 +2864,11 @@
             const nameDisplay = document.getElementById('user-name-display');
             
             if (orgDisplay) {
-                const rawUsername = localStorage.getItem('appUsername') || '';
-                const appUsername = rawUsername.trim().toLowerCase();
-                const tambon = localStorage.getItem('userTambon') || '';
-                
                 if (nameDisplay && rawUsername) {
                     let displayName = rawUsername;
                     if (appUsername === 'admin') displayName = 'ผู้ดูแลระบบ';
                     else if (['33020', 'ตำรวจ', 'police'].includes(appUsername)) displayName = 'สภ.เมืองศรีสะเกษ';
-                    else if (appUsername === '33024') displayName = 'ที่ว่าการอำเภอฯ';
+                    else if (['33024', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ'].includes(appUsername)) displayName = 'ที่ว่าการอำเภอฯ';
                     else if (tambon) displayName = tambon;
 
                     nameDisplay.innerHTML = `<i class="fas fa-user-circle text-white/70 mr-1"></i> ${displayName}`;
@@ -2853,7 +2879,7 @@
                     orgDisplay.innerHTML = `<i class="fas fa-shield-alt text-red-400 mr-1"></i> ศูนย์สั่งการส่วนกลาง (Admin)`;
                 } else if (['33020', 'ตำรวจ', 'police'].includes(appUsername)) {
                     orgDisplay.innerHTML = `<i class="fas fa-shield-alt text-blue-400 mr-1"></i> สภ.เมืองศรีสะเกษ`;
-                } else if (appUsername === '33024') {
+                } else if (['33024', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ'].includes(appUsername)) {
                     orgDisplay.innerHTML = `<i class="fas fa-shield-alt text-purple-500 mr-1"></i> ที่ว่าการอำเภอเมืองศรีสะเกษ`;
                 } else {
                     orgDisplay.innerHTML = `<i class="fas fa-map-marker-alt text-emerald-400 mr-1"></i> พื้นที่: ${tambon || 'ไม่ระบุ'}`;
@@ -2936,8 +2962,8 @@
                     
                     if (matchedUser) {
                         const unameLow = userVal.toLowerCase();
-                        // 33020, 33024 มีสิทธิ์เทียบเท่า admin
-                        const isSuperUser = ['admin', '33020', '33024', 'ตำรวจ', 'police'].includes(unameLow);
+                        // เพิ่ม ที่ว่าการอำเภอ ลงในรายการสิทธิ์เทียบเท่า admin
+                        const isSuperUser = ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ'].includes(unameLow);
                         
                         // ให้สิทธิ์ admin เพื่อให้มีสิทธิ์แก้ไขลบ แต่เฉพาะ user ที่ชื่อ admin แท้ๆ ถึงจะเห็นเมนูการจัดการ Users
                         // (แก้ไขเพิ่มเติม: จัดการที่ setupUIForRole ให้แสดง/ซ่อนเมนู Users)
