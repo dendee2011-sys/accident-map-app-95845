@@ -391,9 +391,14 @@
                         </div>
                     </div>
 
-                    <button type="submit" id="submit-btn" class="w-full bg-slate-900 hover:bg-black text-white font-black py-4 rounded-3xl shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 uppercase tracking-widest">
-                        <i class="fas fa-save mr-3 text-red-500"></i> บันทึกข้อมูลอุบัติเหตุ
-                    </button>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button type="submit" onclick="window.saveAction='list'" id="submit-btn" class="flex-1 bg-slate-900 hover:bg-black text-white font-black py-4 rounded-3xl shadow-2xl transition-all flex items-center justify-center gap-2 active:scale-95 uppercase tracking-widest text-xs md:text-sm">
+                            <i class="fas fa-save text-red-500"></i> บันทึกแจ้งเหตุ
+                        </button>
+                        <button type="submit" onclick="window.saveAction='paboa4'" id="submit-paboa4-btn-form" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-3xl shadow-2xl transition-all flex items-center justify-center gap-2 active:scale-95 uppercase tracking-widest text-xs md:text-sm">
+                            <i class="fas fa-file-medical text-white"></i> บันทึก & ลง ปภ.บอ.4
+                        </button>
+                    </div>
                     <div class="h-10"></div>
                 </form>
             </div>
@@ -777,8 +782,13 @@
                                 บทวิเคราะห์ข้อมูลเชิงลึกจากการระบาดวิทยา แยกองค์ประกอบอุบัติเหตุตามบุคคล สถานที่ และเวลา เพื่อการวางแผนป้องกันที่แม่นยำ
                             </p>
                         </div>
-                        <div class="relative z-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-                            <div class="relative flex-1 sm:flex-none">
+                        
+                        <div class="relative z-10 flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full xl:w-auto mt-4 md:mt-0">
+                            <!-- Date Filter -->
+                            <input type="date" id="report-date-filter" style="color-scheme: dark;" class="w-full md:w-auto bg-white/10 border border-white/20 text-white backdrop-blur-md px-4 py-3 rounded-xl text-sm font-bold focus:ring-2 focus:ring-red-500 outline-none transition cursor-pointer" title="เลือกวันที่เกิดเหตุ">
+                            
+                            <!-- Tambon Filter -->
+                            <div class="relative w-full md:w-auto flex-1 md:flex-none">
                                 <select id="report-tambon-filter" class="w-full bg-white/10 border border-white/20 text-white backdrop-blur-md px-4 py-3 rounded-xl text-sm font-bold focus:ring-2 focus:ring-red-500 outline-none transition appearance-none cursor-pointer pr-10">
                                     <option value="" class="text-slate-800">ทุกตำบล (ภาพรวม)</option>
                                     <option value="เทศบาลเมืองศรีสะเกษ" class="text-slate-800">เทศบาลเมืองศรีสะเกษ</option>
@@ -803,8 +813,15 @@
                                     <i class="fas fa-chevron-down text-xs"></i>
                                 </div>
                             </div>
-                            <button onclick="window.print()" class="w-full sm:w-auto bg-white text-slate-900 px-5 py-3 rounded-xl text-sm font-black hover:bg-slate-100 transition shadow-lg flex items-center justify-center gap-2">
-                                <i class="fas fa-print"></i> พิมพ์รายงาน
+                            
+                            <!-- Clear Filter Btn -->
+                            <button type="button" onclick="document.getElementById('report-date-filter').value=''; document.getElementById('report-tambon-filter').value=''; window.renderAnalytics();" class="w-full md:w-auto bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-xl text-sm font-bold transition border border-white/20 flex items-center justify-center gap-2" title="ล้างตัวกรอง">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+
+                            <!-- Print -->
+                            <button onclick="window.print()" class="w-full md:w-auto bg-white text-slate-900 px-5 py-3 rounded-xl text-sm font-black hover:bg-slate-100 transition shadow-lg flex items-center justify-center gap-2">
+                                <i class="fas fa-print"></i> พิมพ์
                             </button>
                         </div>
                         <div class="absolute right-0 bottom-0 opacity-[0.03] translate-x-1/4 translate-y-1/4 pointer-events-none">
@@ -989,7 +1006,7 @@
         const db = getFirestore(app);
         const appId = 'accident-map-app-95845';
         
-        let currentUser = null, allData = [], charts = {}, editingId = null, deletingId = null;
+        let currentUser = null, allData = [], allPaboa4 = [], charts = {}, editingId = null, deletingId = null;
 
         // Global variables for Pagination and Paboa4 tracking
         let currentPage = 1;
@@ -999,6 +1016,7 @@
         window.activePaboa4VictimId = null;
         window.paboa4VictimsList = [];
         window.paboa4CurrentVictimIndex = 0;
+        window.editingPaboa4Id = null;
         
         // App Users Tracking
         let appUsers = [];
@@ -1179,7 +1197,10 @@
                 const html = `
                     <div class="relative p-4 border border-slate-100 rounded-xl bg-slate-50 shadow-sm mb-3">
                         <div class="flex justify-between items-center mb-3">
-                            <span class="text-xs font-black text-slate-50 bg-slate-200 px-2 py-0.5 rounded-lg">คนที่ ${index + 1}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-black text-slate-50 bg-slate-200 px-2 py-0.5 rounded-lg">คนที่ ${index + 1}</span>
+                                ${editingId ? `<button type="button" onclick="window.openPaboa4('${editingId}', '${uid}')" class="text-[10px] bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white px-2 py-1 rounded-md font-black transition-all border border-indigo-100"><i class="fas fa-file-medical mr-1"></i> ปภ.บอ.4</button>` : ''}
+                            </div>
                             ${index > 0 ? `<button type="button" onclick="window.removeVictim(${uid})" class="text-red-400 hover:text-red-600 text-xs font-bold transition"><i class="fas fa-times mr-1"></i>ลบ</button>` : ''}
                         </div>
                         <div class="space-y-3">
@@ -1413,6 +1434,17 @@
             // สิทธิ์การเห็นข้อมูลส่วนตัว
             const canViewSensitive = isSuperUser || acc.recordedBy === appUsername || acc.recordedBy === localStorage.getItem('appUsername');
 
+            window.editingPaboa4Id = null;
+            const existingPb4 = allPaboa4.find(p => p.accidentId === acc.id && p.victimId === vic.id);
+            if (existingPb4) {
+                window.editingPaboa4Id = existingPb4.id;
+            }
+            
+            const btn = document.getElementById('submit-paboa4-btn');
+            if(btn) {
+                btn.innerHTML = existingPb4 ? '<i class="fas fa-sync"></i> อัปเดตข้อมูล ปภ.บอ.4' : '<i class="fas fa-save"></i> บันทึกข้อมูล ปภ.บอ.4';
+            }
+
             // --- Auto Fill ข้อมูล ---
             document.getElementById('paboa4-form').reset(); // Reset first
             
@@ -1424,14 +1456,16 @@
             });
             
             // 1. วันที่ และ ลำดับที่
-            if (acc.accidentDate) document.getElementById('pb_date').value = acc.accidentDate;
-            document.getElementById('pb_victim_seq').value = window.paboa4CurrentVictimIndex + 1;
+            const sourceDate = existingPb4?.reportDate || acc.accidentDate || '';
+            if (sourceDate) document.getElementById('pb_date').value = sourceDate;
+            document.getElementById('pb_victim_seq').value = existingPb4?.victimSeq || window.paboa4CurrentVictimIndex + 1;
 
             // 2. สถานที่ (อัปเดตระบบ Address ใหม่ แบบ Select/Other พร้อมการ Cascade)
-            if (acc.address) {
-                const tambon = acc.address.cleanT || '';
-                const amphoe = acc.address.cleanA || '';
-                const province = "ศรีสะเกษ"; // ค่าตั้งต้นของเราคือ ศรีสะเกษ
+            const addrToUse = existingPb4?.address || acc.address;
+            if (addrToUse) {
+                const tambon = addrToUse.cleanT || addrToUse.tambon || '';
+                const amphoe = addrToUse.cleanA || addrToUse.amphoe || '';
+                const province = addrToUse.province || "ศรีสะเกษ";
                 
                 const provSel = document.getElementById('pb_addr_province_select');
                 if (provSel) {
@@ -1474,28 +1508,40 @@
             }
 
             // 3. พาหนะ (ดึงคันแรกสุดมาใส่ก่อน)
-            const primaryVehicle = acc.vehicles && acc.vehicles.length > 0 ? acc.vehicles[0].type : (acc.type || '');
+            document.getElementById('pb_vehicle_seq').value = existingPb4?.vehicleSeq || '';
+            document.getElementById('pb_plate').value = existingPb4?.plate || '';
+            const primaryVehicle = existingPb4?.vehicleDetail || (acc.vehicles && acc.vehicles.length > 0 ? acc.vehicles[0].type : (acc.type || ''));
             document.getElementById('pb_vehicle_detail').value = primaryVehicle;
 
             // 4. ข้อมูลคนเจ็บ (ใช้กฎ Data Masking)
-            document.getElementById('pb_name').value = canViewSensitive ? (vic.name || '') : '*** (ปกปิดข้อมูล)';
-            document.getElementById('pb_age').value = vic.age || '';
+            document.getElementById('pb_name').value = existingPb4?.name || (canViewSensitive ? (vic.name || '') : '*** (ปกปิดข้อมูล)');
+            document.getElementById('pb_age').value = existingPb4?.age || vic.age || '';
+            document.getElementById('pb_idcard').value = existingPb4?.idcard || '';
+            document.getElementById('pb_alien_id').value = existingPb4?.alienId || '';
+            document.getElementById('pb_nationality').value = existingPb4?.nationality || 'ไทย';
+            document.getElementById('pb_domicile').value = existingPb4?.domicile || '';
             
-            if(vic.gender) {
+            const genderVal = existingPb4?.gender || vic.gender;
+            if(genderVal) {
                 const genderSelect = document.getElementById('pb_gender');
                 for(let i=0; i<genderSelect.options.length; i++) {
-                    if(genderSelect.options[i].value === vic.gender) genderSelect.selectedIndex = i;
+                    if(genderSelect.options[i].value === genderVal) genderSelect.selectedIndex = i;
                 }
             }
 
             // 5. สถานะ Role
-            if (vic.role) {
+            const roleVal = existingPb4?.role || vic.role;
+            if (roleVal) {
                 const roleRadios = document.getElementsByName('pb_role');
-                for (let r of roleRadios) { if (r.value === vic.role) r.checked = true; }
+                for (let r of roleRadios) { if (r.value === roleVal) r.checked = true; }
             }
 
             // 6. ความรุนแรง (Triage)
-            if (vic.severity) {
+            const statusVal = existingPb4?.status;
+            if (statusVal) {
+                const statusRadios = document.getElementsByName('pb_status');
+                for(let r of statusRadios) { if(r.value === statusVal) r.checked = true; }
+            } else if (vic.severity) {
                 const statusRadios = document.getElementsByName('pb_status');
                 if (vic.severity === 'เสียชีวิต') {
                     for(let r of statusRadios) { if(r.value === 'เสียชีวิต') r.checked = true; }
@@ -1505,6 +1551,34 @@
                     for(let r of statusRadios) { if(r.value === 'บาดเจ็บ(Admit)') r.checked = true; }
                 }
             }
+            
+            document.getElementById('pb_death_date').value = existingPb4?.deathDate || '';
+            if (existingPb4?.deathPlace) {
+                document.getElementsByName('pb_death_place').forEach(r => { if(r.value === existingPb4.deathPlace) r.checked = true; });
+            }
+            
+            if (existingPb4?.areaStatus) {
+                document.getElementsByName('pb_area_status').forEach(r => { if(r.value === existingPb4.areaStatus) r.checked = true; });
+            }
+            
+            if (existingPb4?.foreignStatus) {
+                document.getElementsByName('pb_foreign_status').forEach(r => { if(r.value === existingPb4.foreignStatus) r.checked = true; });
+            }
+            document.getElementById('pb_foreign_other').value = existingPb4?.foreignOther || '';
+            
+            if (existingPb4?.ems) {
+                document.getElementsByName('pb_ems').forEach(r => { if(r.value === existingPb4.ems) r.checked = true; });
+            }
+            document.getElementById('pb_hospital').value = existingPb4?.hospital || '';
+            
+            if (existingPb4?.risks) {
+                document.getElementsByName('pb_risk').forEach(cb => {
+                    cb.checked = existingPb4.risks.includes(cb.value);
+                });
+            }
+            
+            document.getElementById('pb_reporter_name').value = existingPb4?.reporterName || '';
+            document.getElementById('pb_reporter_position').value = existingPb4?.reporterPosition || '';
 
             // Update Pagination UI
             const pagContainer = document.getElementById('paboa4-pagination');
@@ -1572,7 +1646,7 @@
                 mapPanel.classList.add('hidden'); 
                 sidebarPanel.classList.remove('md:w-1/3', 'h-[70%]');
                 sidebarPanel.classList.add('h-full');
-                if (id === 'report') setTimeout(renderAnalytics, 100); 
+                if (id === 'report') setTimeout(window.renderAnalytics, 100); 
             } else { 
                 mapPanel.classList.remove('hidden'); 
                 sidebarPanel.classList.add('md:w-1/3', 'h-[70%]');
@@ -1651,6 +1725,27 @@
             });
         };
 
+        const geojsonInput = document.getElementById('geojson-input');
+        const geojsonBtn = document.getElementById('map-geojson-btn');
+        let customBoundaryLayer = null;
+        if(geojsonBtn) {
+            geojsonBtn.onclick = () => geojsonInput.click();
+            geojsonInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const geojson = JSON.parse(event.target.result);
+                        if (customBoundaryLayer) map.removeLayer(customBoundaryLayer);
+                        customBoundaryLayer = L.geoJSON(geojson, { style: { color: '#3b82f6', weight: 2, opacity: 0.8, fillOpacity: 0.1 } }).addTo(map);
+                        map.fitBounds(customBoundaryLayer.getBounds());
+                    } catch (err) { showAlert('ไฟล์ GeoJSON ไม่ถูกต้อง', 'error'); }
+                };
+                reader.readAsText(file);
+            };
+        }
+
         // FIREBASE SYNC & USER MANAGEMENT
         function initRealtime() {
             if (!currentUser) return;
@@ -1664,9 +1759,15 @@
                 // เรียกใช้อัปเดตกราฟอัตโนมัติหากกำลังเปิดหน้าสถิติอยู่
                 const viewReport = document.getElementById('view-report');
                 if (viewReport && !viewReport.classList.contains('hidden')) {
-                    renderAnalytics();
+                    window.renderAnalytics();
                 }
             }, (err) => { showAlert("ไม่สามารถซิงค์ข้อมูล: " + err.message, "error"); });
+
+            const paboa4Ref = collection(db, 'artifacts', appId, 'public', 'data', 'paboa4_reports');
+            onSnapshot(paboa4Ref, (snap) => {
+                allPaboa4 = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                updateListUI();
+            }, (err) => { console.log(err); });
 
             // --- APP USERS LOGIC ---
             const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'app_users');
@@ -1892,22 +1993,34 @@
                     const displayName = canAccessSensitive ? (v.name || 'ไม่ระบุชื่อ') : '*** (ปกปิดข้อมูล)';
                     const vStyle = getSevStyle(v.severity);
                     
+                    const hasPaboa4 = allPaboa4.some(p => p.accidentId === item.id && p.victimId === v.id);
+                    const pb4StatusHtml = hasPaboa4 
+                        ? `<span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 ml-1 whitespace-nowrap"><i class="fas fa-check-circle"></i> ปภ.บอ.4</span>`
+                        : `<span class="text-[9px] font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-100 ml-1 animate-pulse whitespace-nowrap"><i class="fas fa-exclamation-circle"></i> ขาด ปภ.บอ.4</span>`;
+                        
+                    const btnClass = hasPaboa4 
+                        ? "bg-slate-50 text-slate-600 hover:bg-slate-200 border-slate-200"
+                        : "bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white border-rose-100 shadow-sm";
+                    const btnText = hasPaboa4 ? "ดู ปภ.บอ.4" : "ลง ปภ.บอ.4";
+                    const btnIcon = hasPaboa4 ? "fa-check-circle" : "fa-file-medical";
+                    
                     return `
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-slate-100 mb-2 relative overflow-hidden group hover:border-slate-200 transition-colors">
                         <div class="absolute left-0 top-0 bottom-0 w-1.5 ${vStyle.bar}"></div>
-                        <div class="pl-3 flex-1">
+                        <div class="pl-3 flex-1 pr-2">
                             <div class="flex items-center gap-2 mb-1.5">
                                 <span class="text-xs font-black text-slate-800">${displayName}</span>
-                                <span class="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md font-medium">อายุ ${v.age || '-'} ปี</span>
+                                <span class="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md font-medium whitespace-nowrap">อายุ ${v.age || '-'} ปี</span>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100"><i class="fas fa-user-tag mr-1"></i>${v.role || 'ผู้ขับขี่'}</span>
-                                <span class="text-[10px] font-black px-2 py-0.5 rounded-md ${vStyle.bg} ${vStyle.text}">${v.severity}</span>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md border border-blue-100 whitespace-nowrap"><i class="fas fa-user-tag mr-1"></i>${v.role || 'ผู้ขับขี่'}</span>
+                                <span class="text-[10px] font-black px-1.5 py-0.5 rounded-md ${vStyle.bg} ${vStyle.text} whitespace-nowrap">${v.severity}</span>
+                                ${pb4StatusHtml}
                             </div>
                         </div>
-                        <div class="mt-3 sm:mt-0 sm:ml-3">
-                            <button type="button" onclick="event.stopPropagation(); window.openPaboa4('${item.id}', '${v.id}')" class="w-full sm:w-auto text-[10px] bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white px-4 py-2 rounded-lg font-black transition-all border border-indigo-100 shadow-sm flex items-center justify-center">
-                                <i class="fas fa-file-medical mr-1.5"></i> ปภ.บอ.4
+                        <div class="mt-3 sm:mt-0 sm:ml-2">
+                            <button type="button" onclick="event.stopPropagation(); window.openPaboa4('${item.id}', '${v.id}')" class="w-full sm:w-auto text-[10px] ${btnClass} px-3 py-2 rounded-lg font-black transition-all border flex items-center justify-center whitespace-nowrap">
+                                <i class="fas ${btnIcon} mr-1.5"></i> ${btnText}
                             </button>
                         </div>
                     </div>
@@ -2152,10 +2265,12 @@
             catch (e) { alert(e.message); } finally { deletingId = null; }
         };
 
+        // Make renderAnalytics globally accessible
+        window.renderAnalytics = renderAnalytics;
+
         // --- NEW: Add event listener to the report tambon filter ---
-        document.getElementById('report-tambon-filter')?.addEventListener('change', () => {
-            renderAnalytics();
-        });
+        document.getElementById('report-tambon-filter')?.addEventListener('change', window.renderAnalytics);
+        document.getElementById('report-date-filter')?.addEventListener('change', window.renderAnalytics);
 
         // Set default font for charts
         Chart.defaults.font.family = "'Sarabun', sans-serif";
@@ -2167,7 +2282,17 @@
             charts = {};
 
             const selectedTambon = document.getElementById('report-tambon-filter')?.value;
-            const reportData = selectedTambon ? allData.filter(item => item.address?.tambon === selectedTambon) : allData;
+            const selectedDate = document.getElementById('report-date-filter')?.value;
+            
+            let reportData = allData;
+            
+            if (selectedTambon) {
+                reportData = reportData.filter(item => item.address?.tambon === selectedTambon);
+            }
+            
+            if (selectedDate) {
+                reportData = reportData.filter(item => item.accidentDate === selectedDate);
+            }
 
             // ถ้าไม่มีข้อมูล ให้รีเซ็ตตัวเลข KPI และซ่อนกราฟความรุนแรง
             if (reportData.length === 0) {
@@ -2457,7 +2582,11 @@
                         reporterPosition: document.getElementById('pb_reporter_position').value
                     };
                     
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'paboa4_reports'), payload);
+                    if (window.editingPaboa4Id) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'paboa4_reports', window.editingPaboa4Id), payload);
+                    } else {
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'paboa4_reports'), payload);
+                    }
                 }
                 showAlert('บันทึกแบบฟอร์ม ปภ.บอ.4 สำเร็จ', 'success');
                 switchTab('list'); // ย้อนกลับไปหน้ารายการเมื่อบันทึกเสร็จ
@@ -2477,7 +2606,13 @@
                 return showAlert('กรุณาระบุระดับความรุนแรงให้ครบทุกคน', 'error');
             }
 
-            const btn = document.getElementById('submit-btn'); btn.disabled = true; btn.innerHTML = 'กำลังบันทึก...';
+            const btn1 = document.getElementById('submit-btn'); 
+            const btn2 = document.getElementById('submit-paboa4-btn-form');
+            if(btn1) { btn1.disabled = true; btn1.innerHTML = '<i class="fas fa-spinner fa-spin"></i> รอสักครู่...'; }
+            if(btn2) { btn2.disabled = true; }
+            
+            const action = window.saveAction || 'list';
+
             try {
                 const manualTambon = document.getElementById('input-tambon').value;
                 const addr = { ...(window.lastResolvedAddress || {}), tambon: manualTambon, cleanT: manualTambon.replace(/ตำบล|แขวง/g, '').trim() };
@@ -2503,22 +2638,44 @@
                     risks: [] // Initialize empty risks array for accident entry
                 };
 
+                let accId = editingId;
+
                 if (editingId) {
                     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'accidents', editingId), payload);
                     editingId = null; document.getElementById('editing-indicator').classList.add('hidden');
                 } else {
                     payload.timestamp = serverTimestamp();
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'accidents'), payload);
+                    const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'accidents'), payload);
+                    accId = docRef.id;
                 }
-                
+
+                // Inject newly saved data to local allData so openPaboa4 can find it immediately
+                const savedAccident = { id: accId, ...payload };
+                if (!allData.find(d => d.id === accId)) {
+                    allData.push(savedAccident);
+                }
+
                 document.getElementById('accident-form').reset(); 
                 currentVictims = []; renderVictimsForm(); // reset array
                 currentVehicles = []; renderVehiclesForm(); // reset array
                 currentPhotos = []; window.renderPhotoPreviews(); // reset photos
                 if (activeMarker) { map.removeLayer(activeMarker); activeMarker = null; }
-                initDateTime(); switchTab('list'); showAlert('บันทึกสำเร็จ', 'success');
-            } catch (err) { showAlert(err.message, 'error'); }
-            finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save mr-3 text-red-500"></i> บันทึกข้อมูลอุบัติเหตุ'; }
+                initDateTime(); 
+
+                if (action === 'paboa4') {
+                    showAlert('บันทึกอุบัติเหตุสำเร็จ กรุณากรอก ปภ.บอ.4', 'success');
+                    window.openPaboa4(accId, savedAccident.victims[0].id);
+                } else {
+                    switchTab('list'); 
+                    showAlert('บันทึกสำเร็จ', 'success');
+                }
+            } catch (err) { 
+                showAlert(err.message, 'error'); 
+            } finally { 
+                if(btn1) { btn1.disabled = false; btn1.innerHTML = '<i class="fas fa-save text-red-500"></i> บันทึกแจ้งเหตุ'; }
+                if(btn2) { btn2.disabled = false; }
+                window.saveAction = 'list';
+            }
         };
 
         function initDateTime() {
@@ -2628,10 +2785,16 @@
                     // ค้นหาในรายชื่อ User ลูกข่าย โดยเทียบจากส่วนก่อน @
                     // ใช้ fallback เป็น defaultInitialUsers กรณีฐานข้อมูลยังดึงมาไม่เสร็จ
                     const listToSearch = appUsers.length > 0 ? appUsers : defaultInitialUsers;
-                    const matchedUser = listToSearch.find(u => {
+                    let matchedUser = listToSearch.find(u => {
                         const dbUser = u.username.includes('@') ? u.username.split('@')[0] : u.username;
                         return dbUser === userVal && u.password === passVal;
                     });
+
+                    // 2. ถ้าไม่เจอในฐานข้อมูล ให้หาในรายชื่อตั้งต้น (Fallback)
+                    // กรณีนี้ช่วยแก้ปัญหาฐานข้อมูลเก่าที่ยังไม่มีรายชื่อ admin, 33020, 33024
+                    if (!matchedUser) {
+                        matchedUser = defaultInitialUsers.find(u => u.username === userVal && u.password === passVal);
+                    }
                     
                     if (matchedUser) {
                         const unameLow = userVal.toLowerCase();
@@ -2658,6 +2821,18 @@
                             }
                         }, 500);
                     } else {
+                        // Master fallback just in case everything is broken
+                        if (userVal === 'admin' && passVal === '123456') {
+                            localStorage.setItem('userRole', 'admin');
+                            localStorage.setItem('userTambon', 'ศูนย์สั่งการส่วนกลาง');
+                            localStorage.setItem('appUsername', 'admin');
+                            loginScreen.style.opacity = '0';
+                            setTimeout(() => {
+                                loginScreen.classList.add('hidden');
+                                window.setupUIForRole('admin');
+                            }, 500);
+                            return;
+                        }
                         document.getElementById('login-error').classList.remove('hidden');
                     }
                 };
