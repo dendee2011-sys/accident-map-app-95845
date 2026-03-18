@@ -406,12 +406,38 @@
             <!-- VIEW 2: Recent List -->
             <div id="view-list" class="absolute inset-0 overflow-y-auto custom-scrollbar p-5 bg-slate-50 hidden">
                 
-                <!-- ส่วนตัวกรองข้อมูลตามวันที่ -->
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-6">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">กรองข้อมูลตามวันที่เกิดเหตุ</label>
-                    <div class="flex gap-2">
-                        <input type="date" id="list-date-filter" class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                        <button type="button" id="btn-clear-filter" class="bg-slate-100 text-slate-600 px-4 rounded-xl text-xs font-bold hover:bg-slate-200 transition shadow-sm">ดูทั้งหมด</button>
+                <!-- ส่วนตัวกรองข้อมูล -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-6 space-y-3">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">กรองข้อมูลรายการอุบัติเหตุ</label>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <div class="flex items-center gap-2 flex-1">
+                            <input type="date" id="list-date-start" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none text-slate-600" title="ตั้งแต่วันที่">
+                            <span class="text-slate-400 text-xs font-bold">-</span>
+                            <input type="date" id="list-date-end" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none text-slate-600" title="ถึงวันที่">
+                        </div>
+                        <select id="list-tambon-filter" class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-600">
+                            <option value="">ทุกตำบล (ภาพรวม)</option>
+                            <option value="เทศบาลเมืองศรีสะเกษ">เทศบาลเมืองศรีสะเกษ</option>
+                            <option value="คูซอด">คูซอด</option>
+                            <option value="ซำ">ซำ</option>
+                            <option value="จาน">จาน</option>
+                            <option value="ตะดอบ">ตะดอบ</option>
+                            <option value="หนองครก">หนองครก</option>
+                            <option value="โพนข่า">โพนข่า</option>
+                            <option value="โพนค้อ">โพนค้อ</option>
+                            <option value="โพนเขวา">โพนเขวา</option>
+                            <option value="หญ้าปล้อง">หญ้าปล้อง</option>
+                            <option value="ทุ่ม">ทุ่ม</option>
+                            <option value="หนองไฮ">หนองไฮ</option>
+                            <option value="หนองแก้ว">หนองแก้ว</option>
+                            <option value="น้ำคำ">น้ำคำ</option>
+                            <option value="โพธิ์">โพธิ์</option>
+                            <option value="หมากเขียบ">หมากเขียบ</option>
+                            <option value="หนองไผ่">หนองไผ่</option>
+                        </select>
+                        <button type="button" id="btn-clear-list-filter" class="bg-slate-100 text-slate-600 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-200 transition shadow-sm whitespace-nowrap flex items-center justify-center gap-1">
+                            <i class="fas fa-sync-alt"></i> ล้าง
+                        </button>
                     </div>
                 </div>
 
@@ -2047,14 +2073,29 @@
 
         // --- NEW: Jump to list from Marker ---
         window.highlightInList = (accId) => {
-            const dateFilter = document.getElementById('list-date-filter').value;
-            let filteredData = dateFilter ? allData.filter(item => item.accidentDate === dateFilter) : allData;
+            const startDate = document.getElementById('list-date-start')?.value;
+            const endDate = document.getElementById('list-date-end')?.value;
+            const tambonFilter = document.getElementById('list-tambon-filter')?.value;
+            
+            let filteredData = allData;
+            
+            if (tambonFilter) {
+                filteredData = filteredData.filter(item => item.address?.tambon === tambonFilter);
+            }
+            if (startDate) {
+                filteredData = filteredData.filter(item => item.accidentDate >= startDate);
+            }
+            if (endDate) {
+                filteredData = filteredData.filter(item => item.accidentDate <= endDate);
+            }
             
             let itemIndex = filteredData.findIndex(d => d.id === accId);
             
             // ถ้าไม่เจอใน filter ปัจจุบัน ให้ล้าง filter แล้วหาใหม่
             if (itemIndex === -1) {
-                document.getElementById('list-date-filter').value = '';
+                if(document.getElementById('list-date-start')) document.getElementById('list-date-start').value = '';
+                if(document.getElementById('list-date-end')) document.getElementById('list-date-end').value = '';
+                if(document.getElementById('list-tambon-filter')) document.getElementById('list-tambon-filter').value = '';
                 filteredData = allData;
                 itemIndex = filteredData.findIndex(d => d.id === accId);
             }
@@ -2089,10 +2130,21 @@
 
         function updateListUI() {
             const cont = document.getElementById('accidents-container');
-            const dateFilter = document.getElementById('list-date-filter').value;
+            const startDate = document.getElementById('list-date-start')?.value;
+            const endDate = document.getElementById('list-date-end')?.value;
+            const tambonFilter = document.getElementById('list-tambon-filter')?.value;
             
-            // ใช้ตัวกรองวันที่ ถ้ามีการเลือกวันที่
-            let filteredData = dateFilter ? allData.filter(item => item.accidentDate === dateFilter) : allData;
+            let filteredData = allData;
+            
+            if (tambonFilter) {
+                filteredData = filteredData.filter(item => item.address?.tambon === tambonFilter);
+            }
+            if (startDate) {
+                filteredData = filteredData.filter(item => item.accidentDate >= startDate);
+            }
+            if (endDate) {
+                filteredData = filteredData.filter(item => item.accidentDate <= endDate);
+            }
             
             // Calculate pagination
             const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
@@ -2326,13 +2378,23 @@
             } 
         };
 
-        // Events สำหรับตัวกรองวันที่
-        document.getElementById('list-date-filter').addEventListener('change', () => {
+        // Events สำหรับตัวกรองรายการ
+        document.getElementById('list-date-start')?.addEventListener('change', () => {
             currentPage = 1;
             updateListUI();
         });
-        document.getElementById('btn-clear-filter').addEventListener('click', () => {
-            document.getElementById('list-date-filter').value = '';
+        document.getElementById('list-date-end')?.addEventListener('change', () => {
+            currentPage = 1;
+            updateListUI();
+        });
+        document.getElementById('list-tambon-filter')?.addEventListener('change', () => {
+            currentPage = 1;
+            updateListUI();
+        });
+        document.getElementById('btn-clear-list-filter')?.addEventListener('click', () => {
+            if(document.getElementById('list-date-start')) document.getElementById('list-date-start').value = '';
+            if(document.getElementById('list-date-end')) document.getElementById('list-date-end').value = '';
+            if(document.getElementById('list-tambon-filter')) document.getElementById('list-tambon-filter').value = '';
             currentPage = 1;
             updateListUI();
         });
@@ -2963,7 +3025,7 @@
                     
                     if (matchedUser) {
                         const unameLow = userVal.toLowerCase();
-                        // เพิ่ม ที่ว่าการอำเภอ ลงในรายการสิทธิ์เทียบเท่า admin
+                        // 33020, 33024 มีสิทธิ์เทียบเท่า admin
                         const isSuperUser = ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ'].includes(unameLow);
                         
                         // ให้สิทธิ์ admin เพื่อให้มีสิทธิ์แก้ไขลบ แต่เฉพาะ user ที่ชื่อ admin แท้ๆ ถึงจะเห็นเมนูการจัดการ Users
