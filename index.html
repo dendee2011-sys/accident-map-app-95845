@@ -160,7 +160,8 @@
                 <div class="w-20 h-20 bg-gradient-to-tr from-red-600 to-red-500 text-white rounded-full flex items-center justify-center mx-auto text-4xl mb-4 shadow-lg shadow-red-500/30 border-4 border-white">
                     <i class="fas fa-truck-medical"></i>
                 </div>
-                <h2 class="text-2xl font-black text-slate-800 tracking-tight">ระบบรายงานอุบัติเหตุ</h2>
+                <h2 class="text-2xl font-black text-slate-800 tracking-tight">ระบบรายงานอุบัติเหตุทางถนน</h2>
+                <p class="text-sm text-slate-500 mt-1 font-bold">ศูนย์ปฏิบัติการความปลอดภัยทางถนน</p>
                 <p class="text-sm text-slate-500 mt-1 font-bold">อำเภอเมืองศรีสะเกษ</p>
             </div>
 
@@ -193,7 +194,7 @@
                     *สงวนสิทธิ์การเข้าใช้งานเฉพาะเจ้าหน้าที่เท่านั้น
                 </p>
                 <p class="text-[9px] text-slate-300 mt-1">
-                    Powered by Provincial Safety Center
+                    Road accident reporting system, Mueang Si Sa Ket District
                 </p>
             </div>
         </div>
@@ -1035,10 +1036,11 @@
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // CONFIGURATION FOR YOUR SPECIFIC PROJECT
+        // --- HARDCODED FIREBASE CONFIGURATION ---
+        // บังคับเชื่อมต่อกับฐานข้อมูลจริงของคุณเสมอ ห้ามใช้ฐานข้อมูลจำลองเด็ดขาด
         const firebaseConfig = {
             apiKey: "AIzaSyCW-nGAuGGP-3c-I6gd52AOu_8zVlQrHPc",
             authDomain: "accident-map-app-95845.firebaseapp.com",
@@ -1047,13 +1049,68 @@
             messagingSenderId: "911206558980",
             appId: "1:911206558980:web:2370189ed17644dccf3451"
         };
+        const appId = 'accident-map-app-95845';
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = 'accident-map-app-95845';
         
         let currentUser = null, allData = [], allPaboa4 = [], charts = {}, editingId = null, deletingId = null;
+
+        // --- NEW: Helper for sending data to Google Sheets ---
+        const sendToGoogleSheet = (payload, type) => {
+            const gasUrl = "https://script.google.com/macros/s/AKfycbziaQcqGgZwXNKCwlhngNDeSMBdVo0OOaD7VSnGPMwMxE_3khuh-E2CGNWtyv01nwxv2w/exec";
+            try {
+                // จับคู่ข้อมูลให้ตรงกับฟอร์มระบบปลายทางเป๊ะๆ
+                const mappedData = {
+                    "วันที่บันทึก": payload.accidentDate || new Date().toISOString().split('T')[0],
+                    "ผู้บันทึก": payload.recordedBy || localStorage.getItem('appUsername') || "ระบบแผนที่",
+                    "ตำแหน่ง": payload.reporterPosition || "-",
+                    "หน่วยงาน": "ศูนย์รับแจ้งเหตุ",
+                    "ชื่อจุดเสี่ยง": payload.customIncidentType || "อุบัติเหตุทั่วไป",
+                    "จังหวัด": payload.address?.province || "ศรีสะเกษ",
+                    "อำเภอ": payload.address?.amphoe || "เมืองศรีสะเกษ",
+                    "ตำบล": payload.address?.tambon || "-",
+                    "ประเภทถนน": "อื่นๆ", // * ข้อมูลบังคับในฟอร์มปลายทาง ห้ามว่าง
+                    "พิกัด GPS": `${payload.lat},${payload.lng}`,
+                    "รายละเอียดสถานที่": payload.address?.full || "-"
+                };
+                
+                // ใช้เทคนิคสร้าง Form (ซ่อน) เพื่อยิงข้อมูลไป Google Apps Script ทะลุ CORS
+                const formName = 'hidden_iframe_' + Date.now();
+                const iframe = document.createElement('iframe');
+                iframe.name = formName;
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = gasUrl;
+                form.target = formName;
+                form.style.display = 'none';
+
+                for (const key in mappedData) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = mappedData[key];
+                    form.appendChild(input);
+                }
+
+                document.body.appendChild(form);
+                form.submit();
+
+                // ลบ Form และ Iframe ขยะออกหลังส่งเสร็จ
+                setTimeout(() => {
+                    document.body.removeChild(form);
+                    setTimeout(() => document.body.removeChild(iframe), 5000);
+                }, 100);
+
+                console.log(`ส่งข้อมูล ${type} ไปยังระบบปลายทางผ่าน Form Submit สำเร็จ`);
+            } catch (e) {
+                console.error("ไม่สามารถส่งข้อมูลไปได้:", e);
+            }
+        };
 
         // Global variables for Pagination and Paboa4 tracking
         let currentPage = 1;
@@ -1068,7 +1125,7 @@
         // App Users Tracking
         let appUsers = [];
         let isUsersSeeded = false;
-        let editingUserId = null; // NEW: ตัวแปรเก็บ ID ของ User ที่กำลังถูกแก้ไข
+        let editingUserId = null;
 
         const defaultInitialUsers = [
             { username: 'admin', password: 'admin_password', tambon: 'ศูนย์สั่งการส่วนกลาง' },
@@ -1098,7 +1155,6 @@
         ];
 
         // --- NEW: Address Cascading Data for Paboa4 ---
-        // ฐานข้อมูลพื้นที่: ศรีสะเกษ (อำเภอและตำบล)
         const addressData = {
             "ศรีสะเกษ": {
                 "เมืองศรีสะเกษ": ["เทศบาลเมืองศรีสะเกษ", "เมืองเหนือ", "เมืองใต้", "คูซอด", "ซำ", "จาน", "ตะดอบ", "หนองครก", "โพนข่า", "โพนค้อ", "โพนเขวา", "หญ้าปล้อง", "ทุ่ม", "หนองไฮ", "หนองแก้ว", "น้ำคำ", "โพธิ์", "หมากเขียบ", "หนองไผ่"],
@@ -1112,14 +1168,13 @@
             "สุรินทร์": {}
         };
 
-        // --- UPDATED: Client-side OCR using Gemini AI Vision (More Accurate for Thai Plates) ---
+        // --- UPDATED: Client-side OCR using Gemini AI Vision ---
         window.extractLicensePlate = async (base64Image) => {
             const statusEl = document.getElementById('pb_ocr_status');
             if (statusEl) {
                 statusEl.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>กำลังให้ AI วิเคราะห์ภาพ...`;
             }
 
-            // ใส่ API Key ของคุณที่นี่
             const apiKey = "AIzaSyDcTyq-jSbufWUtvBojveQpOikk9vWYN08"; 
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             const base64Data = base64Image.split(',')[1];
@@ -1135,7 +1190,6 @@
                 }]
             };
 
-            // ระบบ Retry เผื่อกรณี Network มีปัญหา
             const delays = [1000, 2000, 4000, 8000, 16000];
             
             for (let i = 0; i <= 5; i++) {
@@ -1196,7 +1250,6 @@
                 
                 status.classList.remove('text-blue-500');
                 if (result && result !== 'ไม่พบ' && !result.includes('ไม่พบ')) {
-                    // Remove markdown bold if AI adds it
                     result = result.replace(/\*/g, '');
                     input.value = result;
                     status.innerHTML = '<i class="fas fa-check-circle mr-1"></i>ดึงข้อมูลสำเร็จ';
@@ -2806,6 +2859,9 @@
                     } else {
                         await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'paboa4_reports'), payload);
                     }
+                    
+                    // ส่งข้อมูลไปบันทึกที่ Google Sheets แบบ Background
+                    sendToGoogleSheet(payload, 'Paboa4');
                 }
                 showAlert('บันทึกแบบฟอร์ม ปภ.บอ.4 สำเร็จ', 'success');
                 switchTab('list'); // ย้อนกลับไปหน้ารายการเมื่อบันทึกเสร็จ
@@ -2867,6 +2923,9 @@
                     const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'accidents'), payload);
                     accId = docRef.id;
                 }
+                
+                // ส่งข้อมูลไปบันทึกที่ Google Sheets แบบ Background
+                sendToGoogleSheet(payload, 'Accident_Report');
 
                 // Inject newly saved data to local allData so openPaboa4 can find it immediately
                 const savedAccident = { id: accId, ...payload };
@@ -2957,7 +3016,9 @@
             localStorage.removeItem('userRole');
             localStorage.removeItem('userTambon');
             localStorage.removeItem('appUsername');
-            location.reload();
+            signOut(auth).then(() => {
+                location.reload();
+            });
         };
 
         window.onload = async () => {
@@ -2965,108 +3026,78 @@
             const loginForm = document.getElementById('login-form');
             const loginBtn = loginForm.querySelector('button[type="submit"]');
 
-            // 1. โหลด UI พื้นฐานรอก่อนเลย
             window.populateProvinces(); 
             renderVehiclesForm(); 
             renderVictimsForm(); 
             initDateTime(); 
             setTimeout(() => map.invalidateSize(), 500);
 
-            // 2. ล็อกอิน Firebase แบบไม่ระบุตัวตนในพื้นหลังทันที เพื่อไปโหลดรายชื่อ User มาตรวจสอบ
-            if(loginBtn && !localStorage.getItem('userRole')) {
-                loginBtn.disabled = true;
-                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>กำลังเชื่อมต่อฐานข้อมูล...';
-            }
-
-            const initAuth = async () => {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
-                else await signInAnonymously(auth);
-            };
-            
-            await initAuth();
-            
+            // ตรวจสอบสถานะการเข้าสู่ระบบแบบ Real-time ผ่าน Firebase Auth ของจริง
             onAuthStateChanged(auth, (u) => { 
                 if (u) { 
                     currentUser = u; 
-                    initRealtime(); // ดึงข้อมูลทันที
+                    
+                    // ดึงชื่อผู้ใช้จากอีเมล (เช่น 33024@gmail.com -> 33024)
+                    const emailPrefix = u.email ? u.email.split('@')[0] : 'user';
+                    
+                    // จับคู่ข้อมูลเพื่อหาระดับสิทธิ์และตำบล
+                    const matchedUser = defaultInitialUsers.find(x => x.username.toLowerCase() === emailPrefix.toLowerCase());
+                    const isSuperUser = ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ', '33100'].includes(emailPrefix.toLowerCase());
+                    
+                    const role = isSuperUser ? 'admin' : 'user';
+                    const tambon = matchedUser ? matchedUser.tambon : 'ไม่ระบุ';
+                    
+                    localStorage.setItem('userRole', role);
+                    localStorage.setItem('userTambon', tambon);
+                    localStorage.setItem('appUsername', emailPrefix);
 
-                    // เปิดปุ่มให้ล็อกอินได้
-                    if(loginBtn && !localStorage.getItem('userRole')) {
-                        setTimeout(() => {
-                            loginBtn.disabled = false;
-                            loginBtn.innerHTML = 'เข้าสู่ระบบ <i class="fas fa-arrow-right text-xs"></i>';
-                        }, 1000);
+                    loginScreen.classList.add('hidden');
+                    window.setupUIForRole(role);
+                    
+                    initRealtime(); // ดึงข้อมูลเมื่อล็อกอินสำเร็จ
+                } else {
+                    // ถ้ายังไม่ล็อกอิน ให้แสดงหน้าจอเข้าสู่ระบบ
+                    loginScreen.classList.remove('hidden');
+                    loginScreen.style.opacity = '1';
+                    if(loginBtn) {
+                        loginBtn.disabled = false;
+                        loginBtn.innerHTML = 'เข้าสู่ระบบ <i class="fas fa-arrow-right text-xs"></i>';
                     }
                 } 
             });
 
-            // ตรวจสอบสถานะการเข้าสู่ระบบจาก LocalStorage
-            if (localStorage.getItem('userRole')) {
-                loginScreen.classList.add('hidden');
-                window.setupUIForRole(localStorage.getItem('userRole'));
-            } else {
-                loginForm.onsubmit = (e) => {
-                    e.preventDefault();
-                    // --- เพิ่มการตัดเอาเฉพาะชื่อก่อน @ มาใช้งาน ---
-                    const rawUserVal = document.getElementById('login-username').value.trim();
-                    const userVal = rawUserVal.includes('@') ? rawUserVal.split('@')[0] : rawUserVal;
-                    const passVal = document.getElementById('login-password').value;
+            // จัดการเมื่อกดปุ่มเข้าสู่ระบบ (เชื่อมต่อ Firebase Auth ของจริง)
+            loginForm.onsubmit = async (e) => {
+                e.preventDefault();
+                
+                const rawUserVal = document.getElementById('login-username').value.trim();
+                const passVal = document.getElementById('login-password').value;
+                
+                // เติม @gmail.com ให้โดยอัตโนมัติหากผู้ใช้พิมพ์แค่ตัวเลข (เช่น 33024 -> 33024@gmail.com)
+                const email = rawUserVal.includes('@') ? rawUserVal : `${rawUserVal}@gmail.com`;
 
-                    // ค้นหาในรายชื่อ User ลูกข่าย โดยเทียบจากส่วนก่อน @
-                    // ใช้ fallback เป็น defaultInitialUsers กรณีฐานข้อมูลยังดึงมาไม่เสร็จ
-                    const listToSearch = appUsers.length > 0 ? appUsers : defaultInitialUsers;
-                    let matchedUser = listToSearch.find(u => {
-                        const dbUser = u.username.includes('@') ? u.username.split('@')[0] : u.username;
-                        return dbUser === userVal && u.password === passVal;
-                    });
+                if(loginBtn) {
+                    loginBtn.disabled = true;
+                    loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>กำลังตรวจสอบข้อมูล...';
+                }
 
-                    // 2. ถ้าไม่เจอในฐานข้อมูล ให้หาในรายชื่อตั้งต้น (Fallback)
-                    // กรณีนี้ช่วยแก้ปัญหาฐานข้อมูลเก่าที่ยังไม่มีรายชื่อ admin, 33020, 33024
-                    if (!matchedUser) {
-                        matchedUser = defaultInitialUsers.find(u => u.username === userVal && u.password === passVal);
-                    }
+                try {
+                    // เชื่อมต่อระบบ Firebase Auth จริง (Email/Password)
+                    await signInWithEmailAndPassword(auth, email, passVal);
+                    // หากล็อกอินสำเร็จ onAuthStateChanged จะทำงานและเปลี่ยนหน้าให้เอง
+                    document.getElementById('login-error').classList.add('hidden');
+                } catch (err) {
+                    console.error("Firebase Login Error: ", err);
+                    const errorBox = document.getElementById('login-error');
+                    errorBox.classList.remove('hidden');
+                    errorBox.innerText = 'ชื่อผู้ใช้ หรือ รหัสผ่านไม่ถูกต้อง!';
                     
-                    if (matchedUser) {
-                        const unameLow = userVal.toLowerCase();
-                        // 33020, 33024, 33100 มีสิทธิ์เทียบเท่า admin
-                        const isSuperUser = ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ', '33100'].includes(unameLow);
-                        
-                        // ให้สิทธิ์ admin เพื่อให้มีสิทธิ์แก้ไขลบ แต่เฉพาะ user ที่ชื่อ admin แท้ๆ ถึงจะเห็นเมนูการจัดการ Users
-                        // (แก้ไขเพิ่มเติม: จัดการที่ setupUIForRole ให้แสดง/ซ่อนเมนู Users)
-                        localStorage.setItem('userRole', isSuperUser ? 'admin' : 'user');
-                        localStorage.setItem('userTambon', matchedUser.tambon || '');
-                        localStorage.setItem('appUsername', userVal); // เก็บชื่อไว้เซฟลง Firebase
-                        loginScreen.style.opacity = '0';
-                        setTimeout(() => {
-                            loginScreen.classList.add('hidden');
-                            window.setupUIForRole(isSuperUser ? 'admin' : 'user');
-                            // (ออปชันเสริม: ตั้งค่า Input ตำบลเริ่มต้นให้ตรงกับที่รับผิดชอบ)
-                            const tambonInput = document.getElementById('input-tambon');
-                            if(tambonInput) {
-                                for(let i=0; i<tambonInput.options.length; i++) {
-                                    if(matchedUser.tambon && matchedUser.tambon.includes(tambonInput.options[i].value)) {
-                                        tambonInput.selectedIndex = i; break;
-                                    }
-                                }
-                            }
-                        }, 500);
-                    } else {
-                        // Master fallback just in case everything is broken
-                        if (userVal === 'admin' && passVal === '123456') {
-                            localStorage.setItem('userRole', 'admin');
-                            localStorage.setItem('userTambon', 'ศูนย์สั่งการส่วนกลาง');
-                            localStorage.setItem('appUsername', 'admin');
-                            loginScreen.style.opacity = '0';
-                            setTimeout(() => {
-                                loginScreen.classList.add('hidden');
-                                window.setupUIForRole('admin');
-                            }, 500);
-                            return;
-                        }
-                        document.getElementById('login-error').classList.remove('hidden');
+                    if(loginBtn) {
+                        loginBtn.disabled = false;
+                        loginBtn.innerHTML = 'เข้าสู่ระบบ <i class="fas fa-arrow-right text-xs"></i>';
                     }
-                };
-            }
+                }
+            };
         };
     </script>
 </body>
