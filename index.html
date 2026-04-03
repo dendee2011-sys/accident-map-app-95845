@@ -160,8 +160,7 @@
                 <div class="w-20 h-20 bg-gradient-to-tr from-red-600 to-red-500 text-white rounded-full flex items-center justify-center mx-auto text-4xl mb-4 shadow-lg shadow-red-500/30 border-4 border-white">
                     <i class="fas fa-truck-medical"></i>
                 </div>
-                <h2 class="text-2xl font-black text-slate-800 tracking-tight">ระบบรายงานอุบัติเหตุทางถนน</h2>
-                <p class="text-sm text-slate-500 mt-1 font-bold">ศูนย์ปฏิบัติการความปลอดภัยทางถนน</p>
+                <h2 class="text-2xl font-black text-slate-800 tracking-tight">ระบบรายงานอุบัติเหตุ</h2>
                 <p class="text-sm text-slate-500 mt-1 font-bold">อำเภอเมืองศรีสะเกษ</p>
             </div>
 
@@ -194,7 +193,7 @@
                     *สงวนสิทธิ์การเข้าใช้งานเฉพาะเจ้าหน้าที่เท่านั้น
                 </p>
                 <p class="text-[9px] text-slate-300 mt-1">
-                    Road accident reporting system, Mueang Si Sa Ket District
+                    Powered by Provincial Safety Center
                 </p>
             </div>
         </div>
@@ -225,7 +224,7 @@
         
         <div class="p-4 md:p-5 bg-slate-900 text-white shadow-lg z-10 relative">
             <h1 class="text-lg md:text-xl font-black tracking-tight flex items-center">
-                <i class="fas fa-car-burst mr-2 md:mr-3 text-red-500 text-xl md:text-2xl"></i> <span class="truncate">ระบบรายงานอุบัติเหตุทางถนน</span>
+                <i class="fas fa-car-burst mr-2 md:mr-3 text-red-500 text-xl md:text-2xl"></i> <span class="truncate">ระบบรายงานอุบัติเหตุ</span>
             </h1>
             <div class="flex justify-between items-center mt-1.5 md:mt-1">
                 <p id="user-org-display" class="text-[9px] md:text-[10px] text-slate-300 uppercase font-bold tracking-widest opacity-90 truncate">
@@ -1094,7 +1093,8 @@
             { username: '33016', password: '033016', tambon: 'โพธิ์' },
             { username: '33017', password: '033017', tambon: 'โพนข่า' },
             { username: '33018', password: '033018', tambon: 'โพนค้อ' },
-            { username: '33019', password: '033019', tambon: 'โพนเขวา' }
+            { username: '33019', password: '033019', tambon: 'โพนเขวา' },
+            { username: '33100', password: '33100', tambon: 'ส่วนกลาง' }
         ];
 
         // --- NEW: Address Cascading Data for Paboa4 ---
@@ -1600,7 +1600,7 @@
             
             const appUsername = (localStorage.getItem('appUsername') || '').trim();
             const userRole = localStorage.getItem('userRole') || '';
-            const isSuperUser = userRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ'].includes(appUsername.toLowerCase());
+            const isSuperUser = userRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ', '33100'].includes(appUsername.toLowerCase());
             // สิทธิ์การเห็นข้อมูลส่วนตัว
             const canViewSensitive = isSuperUser || acc.recordedBy === appUsername || acc.recordedBy === localStorage.getItem('appUsername');
 
@@ -2161,7 +2161,7 @@
             // ดึงข้อมูล User เพื่อจัดการสิทธิ์การแสดงปุ่มแก้ไข/ลบ และการมองเห็นข้อมูลส่วนตัว
             const currentAppUsername = (localStorage.getItem('appUsername') || '').trim();
             const currentUserRole = localStorage.getItem('userRole') || '';
-            const isSuperUser = currentUserRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ'].includes(currentAppUsername.toLowerCase());
+            const isSuperUser = currentUserRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ', '33100'].includes(currentAppUsername.toLowerCase());
 
             let lastDate = "";
             paginatedData.forEach(item => {
@@ -2406,7 +2406,7 @@
             // เช็คสิทธิ์ก่อนเข้าไปแก้ไข
             const appUsername = (localStorage.getItem('appUsername') || '').trim();
             const userRole = localStorage.getItem('userRole') || '';
-            const isSuperUser = userRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ'].includes(appUsername.toLowerCase());
+            const isSuperUser = userRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ', '33100'].includes(appUsername.toLowerCase());
             
             if (!isSuperUser && item.recordedBy !== appUsername && item.recordedBy !== localStorage.getItem('appUsername')) {
                 return showAlert('คุณไม่มีสิทธิ์แก้ไขข้อมูลนี้ (ไม่ใช่ผู้แจ้ง)', 'error');
@@ -2460,7 +2460,7 @@
             // เช็คสิทธิ์ก่อนลบ
             const appUsername = (localStorage.getItem('appUsername') || '').trim();
             const userRole = localStorage.getItem('userRole') || '';
-            const isSuperUser = userRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ'].includes(appUsername.toLowerCase());
+            const isSuperUser = userRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ', '33100'].includes(appUsername.toLowerCase());
             
             if (!isSuperUser && item.recordedBy !== appUsername && item.recordedBy !== localStorage.getItem('appUsername')) {
                 return showAlert('คุณไม่มีสิทธิ์ลบข้อมูลนี้ (ไม่ใช่ผู้แจ้ง)', 'error');
@@ -2911,7 +2911,7 @@
             const tambon = localStorage.getItem('userTambon') || '';
             
             // ระบบซ่อมแซมสิทธิ์อัตโนมัติ (เผื่อแคชเก่าค้าง)
-            const isSuperUser = ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ'].includes(appUsername);
+            const isSuperUser = ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ', '33100'].includes(appUsername);
             if (isSuperUser) {
                 role = 'admin';
                 localStorage.setItem('userRole', 'admin');
@@ -2932,6 +2932,7 @@
                     if (appUsername === 'admin') displayName = 'ผู้ดูแลระบบ';
                     else if (['33020', 'ตำรวจ', 'police'].includes(appUsername)) displayName = 'สภ.เมืองศรีสะเกษ';
                     else if (['33024', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ'].includes(appUsername)) displayName = 'ที่ว่าการอำเภอฯ';
+                    else if (appUsername === '33100') displayName = 'ส่วนกลาง (33100)';
                     else if (tambon) displayName = tambon;
 
                     nameDisplay.innerHTML = `<i class="fas fa-user-circle text-white/70 mr-1"></i> ${displayName}`;
@@ -2944,6 +2945,8 @@
                     orgDisplay.innerHTML = `<i class="fas fa-shield-alt text-blue-400 mr-1"></i> สภ.เมืองศรีสะเกษ`;
                 } else if (['33024', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ'].includes(appUsername)) {
                     orgDisplay.innerHTML = `<i class="fas fa-shield-alt text-purple-500 mr-1"></i> ที่ว่าการอำเภอเมืองศรีสะเกษ`;
+                } else if (appUsername === '33100') {
+                    orgDisplay.innerHTML = `<i class="fas fa-shield-alt text-orange-500 mr-1"></i> ส่วนกลาง (33100)`;
                 } else {
                     orgDisplay.innerHTML = `<i class="fas fa-map-marker-alt text-emerald-400 mr-1"></i> พื้นที่: ${tambon || 'ไม่ระบุ'}`;
                 }
@@ -3025,8 +3028,8 @@
                     
                     if (matchedUser) {
                         const unameLow = userVal.toLowerCase();
-                        // 33020, 33024 มีสิทธิ์เทียบเท่า admin
-                        const isSuperUser = ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ'].includes(unameLow);
+                        // 33020, 33024, 33100 มีสิทธิ์เทียบเท่า admin
+                        const isSuperUser = ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ', '33100'].includes(unameLow);
                         
                         // ให้สิทธิ์ admin เพื่อให้มีสิทธิ์แก้ไขลบ แต่เฉพาะ user ที่ชื่อ admin แท้ๆ ถึงจะเห็นเมนูการจัดการ Users
                         // (แก้ไขเพิ่มเติม: จัดการที่ setupUIForRole ให้แสดง/ซ่อนเมนู Users)
