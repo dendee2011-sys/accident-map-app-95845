@@ -1057,61 +1057,6 @@
         
         let currentUser = null, allData = [], allPaboa4 = [], charts = {}, editingId = null, deletingId = null;
 
-        // --- NEW: Helper for sending data to Google Sheets ---
-        const sendToGoogleSheet = (payload, type) => {
-            const gasUrl = "https://script.google.com/macros/s/AKfycbziaQcqGgZwXNKCwlhngNDeSMBdVo0OOaD7VSnGPMwMxE_3khuh-E2CGNWtyv01nwxv2w/exec";
-            try {
-                // จับคู่ข้อมูลให้ตรงกับฟอร์มระบบปลายทางเป๊ะๆ
-                const mappedData = {
-                    "วันที่บันทึก": payload.accidentDate || new Date().toISOString().split('T')[0],
-                    "ผู้บันทึก": payload.recordedBy || localStorage.getItem('appUsername') || "ระบบแผนที่",
-                    "ตำแหน่ง": payload.reporterPosition || "-",
-                    "หน่วยงาน": "ศูนย์รับแจ้งเหตุ",
-                    "ชื่อจุดเสี่ยง": payload.customIncidentType || "อุบัติเหตุทั่วไป",
-                    "จังหวัด": payload.address?.province || "ศรีสะเกษ",
-                    "อำเภอ": payload.address?.amphoe || "เมืองศรีสะเกษ",
-                    "ตำบล": payload.address?.tambon || "-",
-                    "ประเภทถนน": "อื่นๆ", // * ข้อมูลบังคับในฟอร์มปลายทาง ห้ามว่าง
-                    "พิกัด GPS": `${payload.lat},${payload.lng}`,
-                    "รายละเอียดสถานที่": payload.address?.full || "-"
-                };
-                
-                // ใช้เทคนิคสร้าง Form (ซ่อน) เพื่อยิงข้อมูลไป Google Apps Script ทะลุ CORS
-                const formName = 'hidden_iframe_' + Date.now();
-                const iframe = document.createElement('iframe');
-                iframe.name = formName;
-                iframe.style.display = 'none';
-                document.body.appendChild(iframe);
-
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = gasUrl;
-                form.target = formName;
-                form.style.display = 'none';
-
-                for (const key in mappedData) {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = key;
-                    input.value = mappedData[key];
-                    form.appendChild(input);
-                }
-
-                document.body.appendChild(form);
-                form.submit();
-
-                // ลบ Form และ Iframe ขยะออกหลังส่งเสร็จ
-                setTimeout(() => {
-                    document.body.removeChild(form);
-                    setTimeout(() => document.body.removeChild(iframe), 5000);
-                }, 100);
-
-                console.log(`ส่งข้อมูล ${type} ไปยังระบบปลายทางผ่าน Form Submit สำเร็จ`);
-            } catch (e) {
-                console.error("ไม่สามารถส่งข้อมูลไปได้:", e);
-            }
-        };
-
         // Global variables for Pagination and Paboa4 tracking
         let currentPage = 1;
         const itemsPerPage = 15;
@@ -2367,12 +2312,37 @@
             }
         }
 
-        // --- UPDATED CLEAR MARKER UPDATER ---
+        // --- UPDATED CLEAR MARKER UPDATER (รองรับการกรองข้อมูล) ---
         function updateMapMarkers() {
-            const currentIds = allData.map(d => d.id);
-            Object.keys(dbMarkers).forEach(id => { if (!currentIds.includes(id)) { map.removeLayer(dbMarkers[id]); delete dbMarkers[id]; } });
+            // ดึงค่าจากตัวกรองในหน้ารายการ
+            const startDate = document.getElementById('list-date-start')?.value;
+            const endDate = document.getElementById('list-date-end')?.value;
+            const tambonFilter = document.getElementById('list-tambon-filter')?.value;
+            
+            let filteredData = allData;
+            
+            if (tambonFilter) {
+                filteredData = filteredData.filter(item => item.address?.tambon === tambonFilter);
+            }
+            if (startDate) {
+                filteredData = filteredData.filter(item => item.accidentDate >= startDate);
+            }
+            if (endDate) {
+                filteredData = filteredData.filter(item => item.accidentDate <= endDate);
+            }
 
-            allData.forEach(item => {
+            const currentIds = filteredData.map(d => d.id);
+            
+            // ลบหมุดที่ไม่อยู่ในเงื่อนไขการกรองออกไป
+            Object.keys(dbMarkers).forEach(id => { 
+                if (!currentIds.includes(id)) { 
+                    map.removeLayer(dbMarkers[id]); 
+                    delete dbMarkers[id]; 
+                } 
+            });
+
+            // วาดหมุดใหม่เฉพาะที่ตรงเงื่อนไข
+            filteredData.forEach(item => {
                 if (!dbMarkers[item.id]) {
                     // Fallback to old format or use new array logic
                     const vList = item.victims || [{ severity: item.severity }];
@@ -2435,14 +2405,17 @@
         document.getElementById('list-date-start')?.addEventListener('change', () => {
             currentPage = 1;
             updateListUI();
+            updateMapMarkers();
         });
         document.getElementById('list-date-end')?.addEventListener('change', () => {
             currentPage = 1;
             updateListUI();
+            updateMapMarkers();
         });
         document.getElementById('list-tambon-filter')?.addEventListener('change', () => {
             currentPage = 1;
             updateListUI();
+            updateMapMarkers();
         });
         document.getElementById('btn-clear-list-filter')?.addEventListener('click', () => {
             if(document.getElementById('list-date-start')) document.getElementById('list-date-start').value = '';
@@ -2450,6 +2423,7 @@
             if(document.getElementById('list-tambon-filter')) document.getElementById('list-tambon-filter').value = '';
             currentPage = 1;
             updateListUI();
+            updateMapMarkers();
         });
 
         window.editAccident = (id) => {
@@ -2859,9 +2833,6 @@
                     } else {
                         await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'paboa4_reports'), payload);
                     }
-                    
-                    // ส่งข้อมูลไปบันทึกที่ Google Sheets แบบ Background
-                    sendToGoogleSheet(payload, 'Paboa4');
                 }
                 showAlert('บันทึกแบบฟอร์ม ปภ.บอ.4 สำเร็จ', 'success');
                 switchTab('list'); // ย้อนกลับไปหน้ารายการเมื่อบันทึกเสร็จ
@@ -2923,9 +2894,6 @@
                     const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'accidents'), payload);
                     accId = docRef.id;
                 }
-                
-                // ส่งข้อมูลไปบันทึกที่ Google Sheets แบบ Background
-                sendToGoogleSheet(payload, 'Accident_Report');
 
                 // Inject newly saved data to local allData so openPaboa4 can find it immediately
                 const savedAccident = { id: accId, ...payload };
