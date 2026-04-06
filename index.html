@@ -2828,6 +2828,14 @@
                         reporterPosition: document.getElementById('pb_reporter_position').value
                     };
                     
+                    // ป้องกันการบันทึกข้อมูล ปภ.บอ.4 ซ้ำซ้อนของคนเจ็บคนเดียวกัน
+                    if (!window.editingPaboa4Id) {
+                        const duplicate = allPaboa4.find(p => p.accidentId === window.activePaboa4AccidentId && p.victimId === window.activePaboa4VictimId);
+                        if (duplicate) {
+                            window.editingPaboa4Id = duplicate.id; // เปลี่ยนเป็นการอัปเดตข้อมูลเดิมทับแทนการสร้างใหม่
+                        }
+                    }
+
                     if (window.editingPaboa4Id) {
                         await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'paboa4_reports', window.editingPaboa4Id), payload);
                     } else {
@@ -2883,6 +2891,23 @@
                     lastUpdated: serverTimestamp(),
                     risks: [] // Initialize empty risks array for accident entry
                 };
+
+                // --- ระบบป้องกันการบันทึกอุบัติเหตุซ้ำซ้อน ---
+                if (!editingId) {
+                    const isDuplicate = allData.some(item => 
+                        item.accidentDate === payload.accidentDate &&
+                        item.accidentTime === payload.accidentTime &&
+                        Math.abs(item.lat - payload.lat) < 0.001 && // พิกัดใกล้เคียงกัน (ประมาณ 100 เมตร)
+                        Math.abs(item.lng - payload.lng) < 0.001
+                    );
+                    
+                    if (isDuplicate) {
+                        if(btn1) { btn1.disabled = false; btn1.innerHTML = '<i class="fas fa-save text-red-500"></i> บันทึกแจ้งเหตุ'; }
+                        if(btn2) { btn2.disabled = false; }
+                        return showAlert('พบข้อมูลซ้ำ! มีการแจ้งอุบัติเหตุในวันเวลาและสถานที่นี้ไปแล้ว', 'error');
+                    }
+                }
+                // -----------------------------------------
 
                 let accId = editingId;
 
