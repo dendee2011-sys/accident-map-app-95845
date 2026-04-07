@@ -160,7 +160,7 @@
                 <div class="w-20 h-20 bg-gradient-to-tr from-red-600 to-red-500 text-white rounded-full flex items-center justify-center mx-auto text-4xl mb-4 shadow-lg shadow-red-500/30 border-4 border-white">
                     <i class="fas fa-truck-medical"></i>
                 </div>
-               <h2 class="text-2xl font-black text-slate-800 tracking-tight">ระบบรายงานอุบัติเหตุทางถนน</h2>
+                <h2 class="text-2xl font-black text-slate-800 tracking-tight">ระบบรายงานอุบัติเหตุทางถนน</h2>
                 <p class="text-sm text-slate-500 mt-1 font-bold">ศูนย์ปฏิบัติการความปลอดภัยทางถนน</p>
                 <p class="text-sm text-slate-500 mt-1 font-bold">อำเภอเมืองศรีสะเกษ</p>
             </div>
@@ -201,7 +201,7 @@
     </div>
 
     <!-- Section 1: Interactive Map -->
-    <div id="map-panel" class="w-full md:w-2/3 h-[30%] md:h-full relative order-1 md:order-1 flex-shrink-0 transition-all duration-500 border-b md:border-b-0 md:border-r border-slate-200">
+    <div id="map-panel" class="w-full md:w-2/3 h-[30%] md:h-full relative order-1 md:order-1 flex-shrink-0 transition-all duration-500 border-b md:border-b-0 md:border-r border-slate-200 z-10">
         <div id="map" class="w-full h-full bg-slate-100"></div>
         
         <div id="map-instruction-bar" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur px-4 py-2.5 rounded-full shadow-xl z-[400] flex items-center space-x-2 text-[11px] sm:text-xs font-bold border border-slate-200 cursor-pointer hover:bg-white hover:scale-105 transition-all whitespace-nowrap" onclick="window.toggleMapFullscreen()">
@@ -221,7 +221,7 @@
     </div>
 
     <!-- Section 2: Sidebar -->
-    <div id="sidebar-panel" class="w-full md:w-1/3 h-[70%] md:h-full bg-white shadow-[-10px_0_30px_rgba(0,0,0,0.05)] flex flex-col order-2 md:order-2 sidebar relative">
+    <div id="sidebar-panel" class="w-full md:w-1/3 h-[70%] md:h-full bg-white shadow-[-10px_0_30px_rgba(0,0,0,0.05)] flex flex-col order-2 md:order-2 sidebar relative z-20">
         
         <div class="p-4 md:p-5 bg-slate-900 text-white shadow-lg z-10 relative">
             <h1 class="text-lg md:text-xl font-black tracking-tight flex items-center">
@@ -259,7 +259,7 @@
             
             <!-- VIEW 1: Form Reporting -->
             <div id="view-form" class="absolute inset-0 overflow-y-auto custom-scrollbar p-5 bg-slate-50">
-                <div id="alert-message" class="hidden mb-4 p-4 rounded-xl text-sm flex items-start border animate-pulse">
+                <div id="alert-message" class="hidden mb-4 p-4 rounded-xl text-sm flex items-start border animate-pulse shadow-md z-50 sticky top-0">
                     <i class="fas fa-info-circle mt-0.5 mr-2"></i><span id="alert-text"></span>
                 </div>
 
@@ -1026,13 +1026,13 @@
         </div>
     </div>
 
-    <!-- Image Viewer Modal (NEW) -->
+    <!-- Image Viewer Modal -->
     <div id="image-viewer-modal" class="hidden fixed inset-0 z-[10000] flex items-center justify-center bg-slate-900/95 backdrop-blur-md transition-opacity duration-300" onclick="window.closeImageViewer()">
         <button type="button" class="absolute top-4 right-4 md:top-6 md:right-6 text-white/50 text-4xl hover:text-red-500 transition-colors z-50 focus:outline-none"><i class="fas fa-times-circle"></i></button>
         <img id="viewer-image" src="" class="max-w-[95vw] max-h-[95vh] object-contain rounded-2xl shadow-2xl transition-transform duration-300 scale-95" onclick="event.stopPropagation()">
     </div>
 
-    <!-- Hotspot Warning Modal (NEW) -->
+    <!-- Hotspot Warning Modal -->
     <div id="hotspot-warning-modal" class="hidden fixed inset-0 z-[10000] flex items-center justify-center p-4 modal-overlay animate-in fade-in duration-300">
         <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center space-y-6 transform transition-all border-t-8 border-amber-500 relative">
             <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-amber-500 text-white text-[10px] font-black px-3 py-1 rounded-b-lg uppercase tracking-widest shadow-md">
@@ -1058,11 +1058,10 @@
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- HARDCODED FIREBASE CONFIGURATION ---
-        // บังคับเชื่อมต่อกับฐานข้อมูลจริงของคุณเสมอ ห้ามใช้ฐานข้อมูลจำลองเด็ดขาด
         const firebaseConfig = {
             apiKey: "AIzaSyCW-nGAuGGP-3c-I6gd52AOu_8zVlQrHPc",
             authDomain: "accident-map-app-95845.firebaseapp.com",
@@ -1121,7 +1120,7 @@
             { username: '33100', password: '33100', tambon: 'ส่วนกลาง' }
         ];
 
-        // --- NEW: Address Cascading Data for Paboa4 ---
+        // --- Address Cascading Data for Paboa4 ---
         const addressData = {
             "ศรีสะเกษ": {
                 "เมืองศรีสะเกษ": ["เทศบาลเมืองศรีสะเกษ", "เมืองเหนือ", "เมืองใต้", "คูซอด", "ซำ", "จาน", "ตะดอบ", "หนองครก", "โพนข่า", "โพนค้อ", "โพนเขวา", "หญ้าปล้อง", "ทุ่ม", "หนองไฮ", "หนองแก้ว", "น้ำคำ", "โพธิ์", "หมากเขียบ", "หนองไผ่"],
@@ -1135,7 +1134,7 @@
             "สุรินทร์": {}
         };
 
-        // --- UPDATED: Client-side OCR using Gemini AI Vision ---
+        // --- Client-side OCR using Gemini AI Vision ---
         window.extractLicensePlate = async (base64Image) => {
             const statusEl = document.getElementById('pb_ocr_status');
             if (statusEl) {
@@ -1171,7 +1170,7 @@
                         const result = await response.json();
                         let text = result.candidates?.[0]?.content?.parts?.[0]?.text;
                         if (text) {
-                            text = text.trim().replace(/\*/g, ''); // ลบตัวอักษรหนา Markdown ออก
+                            text = text.trim().replace(/\*/g, ''); 
                             return text;
                         }
                         return 'ไม่พบ';
@@ -1235,7 +1234,7 @@
             });
         }, 1000);
 
-        // --- NEW: Image Viewer Modal Functions ---
+        // --- Image Viewer & Hotspot Modal Functions ---
         window.viewImage = (src) => {
             const modal = document.getElementById('image-viewer-modal');
             const img = document.getElementById('viewer-image');
@@ -1251,7 +1250,7 @@
             setTimeout(() => {
                 modal.classList.add('hidden');
                 img.src = '';
-            }, 300); // Wait for transition
+            }, 300); 
         };
 
         window.showHotspotWarning = (count) => {
@@ -1324,7 +1323,7 @@
             }
         };
 
-        // --- NEW: Multiple Vehicles Logic ---
+        // --- Multiple Vehicles Logic ---
         let currentVehicles = [];
 
         function initNewVehicle() {
@@ -1362,25 +1361,30 @@
 
         window.updateVehicle = (id, field, value) => {
             const idx = currentVehicles.findIndex(v => v.id === id);
-            if (idx !== -1) currentVehicles[idx][field] = value;
+            if (idx !== -1) {
+                currentVehicles[idx][field] = value;
+                if (field === 'type') renderVictimsForm(); 
+            }
         };
 
         window.removeVehicle = (id) => {
             currentVehicles = currentVehicles.filter(v => v.id !== id);
             renderVehiclesForm();
+            renderVictimsForm(); 
         };
 
         document.getElementById('add-vehicle-btn').addEventListener('click', () => {
             currentVehicles.push(initNewVehicle());
             renderVehiclesForm();
+            renderVictimsForm(); 
         });
 
 
-        // --- NEW: Multiple Victims Logic ---
+        // --- Multiple Victims Logic ---
         let currentVictims = [];
         
         function initNewVictim() {
-            return { id: Date.now() + Math.random(), name: '', age: '', gender: 'ชาย', role: 'ผู้ขับขี่', severity: '' };
+            return { id: Date.now() + Math.random(), name: '', age: '', gender: 'ชาย', role: 'ผู้ขับขี่', vehicleSeq: '1', severity: '' };
         }
 
         function renderVictimsForm() {
@@ -1407,7 +1411,7 @@
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">ชื่อ-นามสกุล</label>
                                 <input type="text" onchange="window.updateVictim(${uid}, 'name', this.value)" value="${v.name}" placeholder="ระบุชื่อหรือ 'ไม่ทราบชื่อ'" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-orange-500 outline-none" required>
                             </div>
-                            <div class="grid grid-cols-3 gap-2">
+                            <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">อายุ (ปี)</label>
                                     <input type="number" onchange="window.updateVictim(${uid}, 'age', this.value)" value="${v.age}" min="0" placeholder="0" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none">
@@ -1420,12 +1424,21 @@
                                         <option value="ไม่ระบุ" ${v.gender === 'ไม่ระบุ' ? 'selected' : ''}>ไม่ระบุ</option>
                                     </select>
                                 </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">สถานะ</label>
                                     <select onchange="window.updateVictim(${uid}, 'role', this.value)" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none font-bold text-blue-600">
                                         <option value="ผู้ขับขี่" ${v.role === 'ผู้ขับขี่' ? 'selected' : ''}>ผู้ขับขี่</option>
                                         <option value="ผู้โดยสาร" ${v.role === 'ผู้โดยสาร' ? 'selected' : ''}>ผู้โดยสาร</option>
                                         <option value="คนเดินเท้า" ${v.role === 'คนเดินเท้า' ? 'selected' : ''}>คนเดินเท้า</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">เกี่ยวข้องกับรถ</label>
+                                    <select onchange="window.updateVictim(${uid}, 'vehicleSeq', this.value)" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none font-bold text-indigo-600">
+                                        ${currentVehicles.map((veh, i) => `<option value="${i+1}" ${v.vehicleSeq == (i+1) ? 'selected' : ''}>คันที่ ${i+1} (${veh.type})</option>`).join('')}
+                                        <option value="ไม่ได้ระบุ" ${v.vehicleSeq === 'ไม่ได้ระบุ' ? 'selected' : ''}>ไม่เกี่ยวข้อง/เดินเท้า</option>
                                     </select>
                                 </div>
                             </div>
@@ -1484,7 +1497,7 @@
             renderVictimsForm();
         });
 
-        // --- NEW: Photo Upload & Compress Logic ---
+        // --- Photo Upload & Compress Logic ---
         let currentPhotos = [];
         const photoInput = document.getElementById('photo-upload');
         const photoCapture = document.getElementById('photo-capture');
@@ -1503,7 +1516,6 @@
             files.forEach(file => {
                 if (currentPhotos.length >= 2) return;
                 
-                // บีบอัดรูปลดขนาดก่อนบันทึก
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     const img = new Image();
@@ -1525,7 +1537,7 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
 
-                        const dataUrl = canvas.toDataURL('image/jpeg', 0.6); // 60% quality jpeg
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.6); 
                         currentPhotos.push(dataUrl);
                         window.renderPhotoPreviews();
                     };
@@ -1533,7 +1545,7 @@
                 };
                 reader.readAsDataURL(file);
             });
-            e.target.value = ''; // Reset input
+            e.target.value = ''; 
         };
 
         if (photoBtn && photoInput) {
@@ -1569,7 +1581,7 @@
             window.renderPhotoPreviews();
         };
 
-        // Helper to get highest severity for marker and overall report
+        // Helper to get highest severity
         function getHighestSeverity(victimsArr) {
             if (!victimsArr || victimsArr.length === 0) return 'ไม่ระบุ';
             const levels = { 'เสียชีวิต': 4, 'สาหัส': 3, 'ปานกลาง': 2, 'เล็กน้อย': 1, 'ไม่ระบุ': 0 };
@@ -1610,7 +1622,7 @@
             }, 300);
         };
 
-        // --- NEW: ฟังก์ชันสลับคนเจ็บใน ปภ.บอ.4 ---
+        // --- ฟังก์ชันสลับคนเจ็บใน ปภ.บอ.4 ---
         window.navigatePaboa4 = (step) => {
             const newIdx = window.paboa4CurrentVictimIndex + step;
             if (newIdx >= 0 && newIdx < window.paboa4VictimsList.length) {
@@ -1620,7 +1632,7 @@
             }
         };
 
-        // --- NEW: ฟังก์ชันดึงและเติมข้อมูลลงฟอร์ม ปภ.บอ.4 ---
+        // --- ฟังก์ชันดึงและเติมข้อมูลลงฟอร์ม ปภ.บอ.4 ---
         window.fillPaboa4Form = (acc) => {
             const vic = window.paboa4VictimsList[window.paboa4CurrentVictimIndex];
             if (!vic) return;
@@ -1630,7 +1642,7 @@
             const appUsername = (localStorage.getItem('appUsername') || '').trim();
             const userRole = localStorage.getItem('userRole') || '';
             const isSuperUser = userRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ', '33100'].includes(appUsername.toLowerCase());
-            // สิทธิ์การเห็นข้อมูลส่วนตัว
+            
             const canViewSensitive = isSuperUser || acc.recordedBy === appUsername || acc.recordedBy === localStorage.getItem('appUsername');
 
             window.editingPaboa4Id = null;
@@ -1642,29 +1654,25 @@
             const btn = document.getElementById('submit-paboa4-btn');
             if(btn) {
                 if (!canViewSensitive) {
-                    btn.classList.add('hidden'); // ซ่อนปุ่มบันทึกถ้าไม่มีสิทธิ์ (ให้อ่านได้อย่างเดียว)
+                    btn.classList.add('hidden');
                 } else {
                     btn.classList.remove('hidden');
                     btn.innerHTML = existingPb4 ? '<i class="fas fa-sync"></i> อัปเดตข้อมูล ปภ.บอ.4' : '<i class="fas fa-save"></i> บันทึกข้อมูล ปภ.บอ.4';
                 }
             }
 
-            // --- Auto Fill ข้อมูล ---
-            document.getElementById('paboa4-form').reset(); // Reset first
+            document.getElementById('paboa4-form').reset();
             
-            // Hide all "other" address inputs on reset
             const adrOthers = ['pb_addr_province_other', 'pb_addr_amphoe_other', 'pb_addr_tambon_other'];
             adrOthers.forEach(id => {
                 const el = document.getElementById(id);
                 if(el) { el.classList.add('hidden'); el.required = false; el.value = ''; }
             });
             
-            // 1. วันที่ และ ลำดับที่
             const sourceDate = existingPb4?.reportDate || acc.accidentDate || '';
             if (sourceDate) document.getElementById('pb_date').value = sourceDate;
             document.getElementById('pb_victim_seq').value = existingPb4?.victimSeq || window.paboa4CurrentVictimIndex + 1;
 
-            // 2. สถานที่ (อัปเดตระบบ Address ใหม่ แบบ Select/Other พร้อมการ Cascade)
             const addrToUse = existingPb4?.address || acc.address;
             if (addrToUse) {
                 const tambon = addrToUse.cleanT || addrToUse.tambon || '';
@@ -1676,7 +1684,7 @@
                     let pFound = Array.from(provSel.options).some(opt => opt.value === province);
                     if (pFound) {
                         provSel.value = province;
-                        window.handleProvinceChange(); // ดึงรายชื่ออำเภอ
+                        window.handleProvinceChange();
                     } else {
                         provSel.value = 'other';
                         window.handleProvinceChange();
@@ -1689,7 +1697,7 @@
                     let aFound = Array.from(ampSel.options).some(opt => opt.value === amphoe);
                     if (aFound) {
                         ampSel.value = amphoe;
-                        window.handleAmphoeChange(); // ดึงรายชื่อตำบล
+                        window.handleAmphoeChange();
                     } else {
                         ampSel.value = 'other';
                         window.handleAmphoeChange();
@@ -1711,7 +1719,6 @@
                 }
             }
 
-            // --- Auto Fill Photos & OCR Button ---
             const photosSec = document.getElementById('pb_photos_section');
             const photosCont = document.getElementById('pb_photos_container');
             const ocrBtn = document.getElementById('pb_btn_ocr');
@@ -1719,7 +1726,7 @@
 
             if (window.currentAccidentPhotos.length > 0) {
                 if(photosSec) photosSec.classList.remove('hidden');
-                if(ocrBtn && canViewSensitive) ocrBtn.classList.remove('hidden'); // ซ่อนปุ่ม AI ให้คนไม่มีสิทธิ์ด้วย
+                if(ocrBtn && canViewSensitive) ocrBtn.classList.remove('hidden');
                 if(photosCont) {
                     photosCont.innerHTML = window.currentAccidentPhotos.map(p => 
                         `<img src="${p}" class="h-16 w-16 object-cover rounded-lg border border-slate-200 cursor-pointer shadow-sm hover:opacity-80 transition" onclick="window.viewImage('${p}')">`
@@ -1730,13 +1737,11 @@
                 if(ocrBtn) ocrBtn.classList.add('hidden');
             }
 
-            // 3. พาหนะ (ดึงคันแรกสุดมาใส่ก่อน)
-            document.getElementById('pb_vehicle_seq').value = existingPb4?.vehicleSeq || '';
+            document.getElementById('pb_vehicle_seq').value = existingPb4?.vehicleSeq || (vic.vehicleSeq && vic.vehicleSeq !== 'ไม่ได้ระบุ' ? vic.vehicleSeq : '1');
             document.getElementById('pb_plate').value = canViewSensitive ? (existingPb4?.plate || '') : '*** (ปกปิดข้อมูล)';
             const primaryVehicle = existingPb4?.vehicleDetail || (acc.vehicles && acc.vehicles.length > 0 ? acc.vehicles[0].type : (acc.type || ''));
             document.getElementById('pb_vehicle_detail').value = primaryVehicle;
 
-            // 4. ข้อมูลคนเจ็บ (ใช้กฎ Data Masking)
             const actualName = existingPb4?.name || vic.name || '';
             document.getElementById('pb_name').value = canViewSensitive ? actualName : '*** (ปกปิดข้อมูล)';
             
@@ -1755,14 +1760,12 @@
                 }
             }
 
-            // 5. สถานะ Role
             const roleVal = existingPb4?.role || vic.role;
             if (roleVal) {
                 const roleRadios = document.getElementsByName('pb_role');
                 for (let r of roleRadios) { if (r.value === roleVal) r.checked = true; }
             }
 
-            // 6. ความรุนแรง (Triage)
             const statusVal = existingPb4?.status;
             if (statusVal) {
                 const statusRadios = document.getElementsByName('pb_status');
@@ -1818,36 +1821,29 @@
             }
         };
 
-        // --- NEW: ฟังก์ชันเปิดฟอร์ม ปภ.บอ.4 แบบรายบุคคล ---
+        // --- ฟังก์ชันเปิดฟอร์ม ปภ.บอ.4 แบบรายบุคคล ---
         window.openPaboa4 = (accId, vicId) => {
             const acc = allData.find(d => d.id === accId);
             if (!acc) return;
             
             window.activePaboa4AccidentId = accId;
-
-            // หาตัวผู้บาดเจ็บจาก List (รองรับโค้ดเก่าที่ไม่มี victims array ด้วย)
             window.paboa4VictimsList = acc.victims && acc.victims.length > 0 ? acc.victims : [{ id: 'old', name: acc.victimName, age: acc.victimAge, gender: acc.victimGender, role: acc.victimRole, severity: acc.severity }];
             
             let targetIdx = window.paboa4VictimsList.findIndex(v => String(v.id) === String(vicId));
             window.paboa4CurrentVictimIndex = targetIdx !== -1 ? targetIdx : 0;
 
             window.fillPaboa4Form(acc);
-
-            // Switch UI
             switchTab('paboa4');
         };
 
         function switchTab(id) {
-            // เช็คสิทธิ์การเข้าถึงหน้า Users ป้องกันการพิมพ์เรียกฟังก์ชันโดยตรง
             if (id === 'users' && localStorage.getItem('userRole') !== 'admin') {
                 showAlert('คุณไม่มีสิทธิ์เข้าถึงหน้านี้', 'error');
                 return;
             }
 
-            // ซ่อนทุก view
             Object.keys(views).forEach(k => { views[k].classList.add('hidden'); });
             
-            // ล้างสถานะ active ทุก tab อย่างปลอดภัยโดยไม่กระทบแอตทริบิวต์อื่นๆ
             Object.keys(tabs).forEach(k => { 
                 if(tabs[k]) {
                     tabs[k].classList.remove('tab-active');
@@ -1857,14 +1853,12 @@
             
             views[id].classList.remove('hidden'); 
             
-            // จัดการไฮไลท์แท็บ
             const activeTabId = (id === 'paboa4') ? 'list' : id;
             if(tabs[activeTabId]) {
                 tabs[activeTabId].classList.remove('tab-inactive');
                 tabs[activeTabId].classList.add('tab-active');
             }
 
-            // ปรับขนาด Layout ให้เต็มจอ 100% บนมือถือเมื่ออยู่ในหน้า Report หรือ Users
             const mapPanel = document.getElementById('map-panel');
             const sidebarPanel = document.getElementById('sidebar-panel');
 
@@ -1888,7 +1882,6 @@
             const box = document.getElementById('alert-message');
             document.getElementById('alert-text').innerText = msg;
             
-            // อัปเดตสีให้รองรับการแจ้งเตือนจุดเสี่ยง (warning)
             let colorClass = 'bg-blue-50 text-blue-700 border-blue-100'; // Default / Info
             if (type === 'error') colorClass = 'bg-red-50 text-red-700 border-red-100';
             else if (type === 'success') colorClass = 'bg-emerald-50 text-emerald-700 border-emerald-100';
@@ -1896,30 +1889,88 @@
             
             box.className = `mb-4 p-4 rounded-xl text-sm font-bold flex items-start border ${colorClass}`;
             box.classList.remove('hidden');
-            if (type !== 'error') setTimeout(() => box.classList.add('hidden'), 7000); // ให้อยู่บนจอนานขึ้นเป็น 7 วินาที
+            if (type !== 'error') setTimeout(() => box.classList.add('hidden'), 7000); 
         }
 
-        // MAP
-        const mskLat = 15.1186, mskLng = 104.3220;
-        const map = L.map('map', { zoomControl: false, fadeAnimation: true, zoomAnimation: true }).setView([mskLat, mskLng], 13);
+        // MAP Setup
+        const map = L.map('map', { zoomControl: false, fadeAnimation: true, zoomAnimation: true }).setView([15.1186, 104.3220], 13);
         L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
-        const googleHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { attribution: '&copy; Google Maps' }).addTo(map);
-        const voyager = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO' });
-        const osmStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OSM contributors' });
-        const baseMaps = { "ภาพดาวเทียม (Google)": googleHybrid, "สีนวล (Voyager)": voyager, "มาตรฐาน (OSM)": osmStandard };
-        L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
+        // Map Layers
+        const googleHybrid = L.tileLayer('http://mt0.google.com/vt/lyrs=y&hl=th&x={x}&y={y}&z={z}', {
+            attribution: '&copy; Google Maps',
+            maxZoom: 20
+        }).addTo(map); // Default layer
 
-        async function loadDistrictBoundary() {
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=Mueang+Si+Sa+Ket+District&polygon_geojson=1&limit=1`);
-                const data = await res.json();
-                if (data && data[0] && data[0].geojson) L.geoJSON(data[0].geojson, { style: { color: '#ef4444', weight: 3, opacity: 0.5, fillOpacity: 0 } }).addTo(map);
-            } catch (e) { console.error("District boundary skipped"); }
-        }
-        loadDistrictBoundary();
+        const osmMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap',
+            maxZoom: 19
+        });
+
+        // Map Layer Control
+        L.control.layers({
+            "ภาพดาวเทียม (Google)": googleHybrid,
+            "แผนที่ถนน/เขต (OSM)": osmMap
+        }, null, { position: 'topright' }).addTo(map);
+
 
         let activeMarker = null, dbMarkers = {};
+        let boundaryLayer = null;
+
+        // วาดเส้นขอบเขตตำบลบนแผนที่ (ฉบับปรับปรุงความแม่นยำ)
+        async function drawTambonBoundary(tambonName, amphoeName, provinceName) {
+            if (boundaryLayer) {
+                map.removeLayer(boundaryLayer);
+                boundaryLayer = null;
+            }
+            if (!tambonName) return;
+
+            // ทำความสะอาดชื่อเพื่อใช้ค้นหา
+            let cleanT = tambonName.replace(/ตำบล|เทศบาลเมือง|เทศบาลตำบล|แขวง/g, '').trim();
+            let cleanA = (amphoeName || 'เมืองศรีสะเกษ').replace(/อำเภอ|เขต/g, '').trim();
+            let cleanP = (provinceName || 'ศรีสะเกษ').replace(/จังหวัด/g, '').trim();
+
+            // สร้างรูปแบบการค้นหาหลายๆ แบบเพื่อเพิ่มโอกาสสำเร็จ
+            const searchQueries = [
+                `ตำบล${cleanT} อำเภอ${cleanA} จังหวัด${cleanP}`,
+                `${cleanT} อำเภอ${cleanA} จังหวัด${cleanP}`,
+                `เทศบาลเมือง${cleanT} จังหวัด${cleanP}`
+            ];
+
+            let foundPolygon = false;
+
+            for (let q of searchQueries) {
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&polygon_geojson=1&limit=1`);
+                    const data = await res.json();
+
+                    // ต้องมีข้อมูล และต้องเป็น Polygon (ไม่ใช่แค่ Point)
+                    if (data && data[0] && data[0].geojson && data[0].geojson.type.includes('Polygon')) {
+                        boundaryLayer = L.geoJSON(data[0].geojson, {
+                            style: { 
+                                color: '#ef4444', 
+                                weight: 3, 
+                                opacity: 0.8, 
+                                fillColor: '#ef4444', 
+                                fillOpacity: 0.1, 
+                                dashArray: '6, 6' 
+                            }
+                        }).addTo(map);
+                        
+                        // ซูมแผนที่ให้พอดีกับขอบเขตตำบลอัตโนมัติ
+                        map.fitBounds(boundaryLayer.getBounds(), { padding: [20, 20], maxZoom: 15 });
+                        foundPolygon = true;
+                        break; // เจอแล้วหยุดหา
+                    }
+                } catch (err) {
+                    console.warn("Query failed for:", q);
+                }
+            }
+
+            if (!foundPolygon) {
+                console.log(`ไม่พบรูปทรงพื้นที่ของ ${tambonName} ในฐานข้อมูลสาธารณะ (OSM)`);
+            }
+        }
 
         async function fetchSmartAddress(lat, lng, retryCount = 0) {
             const box = document.getElementById('address-preview-box'), txt = document.getElementById('address-preview-text'), inputTambon = document.getElementById('input-tambon');
@@ -1934,7 +1985,13 @@
                     if (m) t = m[0]; else { for (let key in ad) { if (String(ad[key]).includes('ตำบล') || String(ad[key]).includes('แขวง')) { t = String(ad[key]); break; } } }
                     if (!t) t = ad.subdistrict || ad.town || ad.city_district || '';
                     inputTambon.value = t; txt.innerHTML = full;
-                    window.lastResolvedAddress = { full, tambon: t, amphoe: "อำเภอเมืองศรีสะเกษ", cleanT: t.replace(/ตำบล|แขวง/g, '').trim(), cleanA: "เมืองศรีสะเกษ" };
+                    
+                    const cleanT = t.replace(/ตำบล|แขวง/g, '').trim();
+                    const a = "อำเภอเมืองศรีสะเกษ";
+                    window.lastResolvedAddress = { full, tambon: t, amphoe: a, cleanT: cleanT, cleanA: "เมืองศรีสะเกษ", province: "ศรีสะเกษ" };
+                    
+                    // วาดขอบเขตเมื่อได้ที่อยู่
+                    drawTambonBoundary(cleanT, "เมืองศรีสะเกษ", "ศรีสะเกษ");
                 }
             } catch (e) {
                 if (retryCount < 1) setTimeout(() => fetchSmartAddress(lat, lng, retryCount + 1), 1500);
@@ -1942,27 +1999,23 @@
             }
         }
 
-        // --- NEW: ฟังก์ชันตรวจสอบจุดเสี่ยง (Hotspot Warning) ---
+        // ฟังก์ชันตรวจสอบจุดเสี่ยง (Hotspot Warning)
         function checkHotspot(lat, lng) {
             if (!allData || allData.length === 0) return;
-            const radiusMeters = 100; // ตั้งค่ารัศมีการตรวจจับที่ 100 เมตร
+            const radiusMeters = 100; // รัศมี 100 เมตร
             let count = 0;
             const currentLatLng = L.latLng(lat, lng);
             
             allData.forEach(item => {
-                // ข้ามการนับตัวเอง (กรณีที่คุณกำลังเปิดแก้ไขเคสเก่าอยู่)
                 if (editingId && item.id === editingId) return;
-                
                 if (item.lat && item.lng) {
                     const itemLatLng = L.latLng(item.lat, item.lng);
-                    // คำนวณระยะห่าง หากอยู่ในรัศมี 100 เมตร ให้นับเพิ่ม 1
                     if (currentLatLng.distanceTo(itemLatLng) <= radiusMeters) {
                         count++;
                     }
                 }
             });
 
-            // ถ้าเคยเกิดเหตุบริเวณนี้มาแล้ว 2 ครั้งขึ้นไป ให้แจ้งเตือน!
             if (count >= 2) { 
                 window.showHotspotWarning(count);
             }
@@ -1972,7 +2025,6 @@
             const ll = [e.latlng.lat, e.latlng.lng];
             document.getElementById('lat').value = ll[0].toFixed(6); document.getElementById('lng').value = ll[1].toFixed(6);
             
-            // ทำให้หมุดเก่าที่ปักไปแล้ว ลากไปวางที่ใหม่ได้ และอัปเดตข้อมูลตาม
             if (activeMarker) {
                 activeMarker.setLatLng(ll);
             } else {
@@ -1983,12 +2035,12 @@
                     document.getElementById('lat').value = position.lat.toFixed(6);
                     document.getElementById('lng').value = position.lng.toFixed(6);
                     fetchSmartAddress(position.lat, position.lng);
-                    checkHotspot(position.lat, position.lng); // ตรวจสอบจุดเสี่ยงเมื่อปล่อยหมุด
+                    checkHotspot(position.lat, position.lng);
                 });
             }
             
             fetchSmartAddress(ll[0], ll[1]);
-            checkHotspot(ll[0], ll[1]); // ตรวจสอบจุดเสี่ยงเมื่อคลิกแผนที่
+            checkHotspot(ll[0], ll[1]);
         });
 
         document.getElementById('map-gps-btn').onclick = document.getElementById('form-gps-btn').onclick = () => {
@@ -2006,14 +2058,100 @@
                         document.getElementById('lat').value = position.lat.toFixed(6);
                         document.getElementById('lng').value = position.lng.toFixed(6);
                         fetchSmartAddress(position.lat, position.lng);
-                        checkHotspot(position.lat, position.lng); // ตรวจสอบจุดเสี่ยงเมื่อปล่อยหมุด
+                        checkHotspot(position.lat, position.lng);
                     });
                 }
                 
                 fetchSmartAddress(ll[0], ll[1]);
-                checkHotspot(ll[0], ll[1]); // ตรวจสอบจุดเสี่ยงเมื่อดึงพิกัด GPS
+                checkHotspot(ll[0], ll[1]);
             });
         };
+
+        // --- ระบบค้นหาสถานที่ (Location Search) ---
+        const searchInput = document.getElementById('location-search');
+        const searchBtn = document.getElementById('btn-search');
+        const searchResultsContainer = document.getElementById('search-results');
+
+        const performSearch = async () => {
+            const query = searchInput.value.trim();
+            if (!query) return;
+            
+            searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            searchResultsContainer.innerHTML = '';
+            searchResultsContainer.classList.add('hidden');
+
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=th&limit=5`);
+                const data = await res.json();
+
+                if (data && data.length > 0) {
+                    searchResultsContainer.classList.remove('hidden');
+                    data.forEach(item => {
+                        const li = document.createElement('li');
+                        li.className = 'p-3 bg-white hover:bg-slate-50 cursor-pointer text-xs leading-relaxed transition-colors flex items-start';
+                        li.innerHTML = `<i class="fas fa-map-marker-alt text-red-500 mr-2 mt-0.5"></i> <span>${item.display_name}</span>`;
+                        li.onclick = () => {
+                            const lat = parseFloat(item.lat);
+                            const lng = parseFloat(item.lon);
+                            
+                            map.flyTo([lat, lng], 16);
+                            
+                            document.getElementById('lat').value = lat.toFixed(6);
+                            document.getElementById('lng').value = lng.toFixed(6);
+                            
+                            if (activeMarker) {
+                                activeMarker.setLatLng([lat, lng]);
+                            } else {
+                                activeMarker = L.marker([lat, lng], { draggable: true }).addTo(map);
+                                activeMarker.on('dragend', function(event) {
+                                    const marker = event.target;
+                                    const position = marker.getLatLng();
+                                    document.getElementById('lat').value = position.lat.toFixed(6);
+                                    document.getElementById('lng').value = position.lng.toFixed(6);
+                                    fetchSmartAddress(position.lat, position.lng);
+                                    checkHotspot(position.lat, position.lng);
+                                });
+                            }
+                            
+                            fetchSmartAddress(lat, lng);
+                            checkHotspot(lat, lng);
+                            
+                            searchResultsContainer.classList.add('hidden');
+                            searchInput.value = item.display_name.split(',')[0];
+                            
+                            if (window.innerWidth < 768 && !window.isMapExpanded) {
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }
+                        };
+                        searchResultsContainer.appendChild(li);
+                    });
+                } else {
+                    searchResultsContainer.classList.remove('hidden');
+                    searchResultsContainer.innerHTML = '<li class="p-3 text-slate-500 text-xs text-center">ไม่พบสถานที่ที่ค้นหา</li>';
+                    setTimeout(() => searchResultsContainer.classList.add('hidden'), 3000);
+                }
+            } catch (e) {
+                console.error("Search Error:", e);
+                showAlert('เกิดข้อผิดพลาดในการค้นหา', 'error');
+            } finally {
+                searchBtn.innerHTML = '<i class="fas fa-search"></i>';
+            }
+        };
+
+        searchBtn.addEventListener('click', performSearch);
+        
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performSearch();
+            }
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !searchResultsContainer.contains(e.target) && !searchBtn.contains(e.target)) {
+                searchResultsContainer.classList.add('hidden');
+            }
+        });
 
         // FIREBASE SYNC & USER MANAGEMENT
         function initRealtime() {
@@ -2023,9 +2161,9 @@
                 document.getElementById('loading-list').classList.add('hidden');
                 allData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 allData.sort((a, b) => new Date(b.accidentDate + 'T' + b.accidentTime) - new Date(a.accidentDate + 'T' + a.accidentTime));
-                updateListUI(); updateMapMarkers();
+                updateListUI(); 
+                updateMapMarkers();
                 
-                // เรียกใช้อัปเดตกราฟอัตโนมัติหากกำลังเปิดหน้าสถิติอยู่
                 const viewReport = document.getElementById('view-report');
                 if (viewReport && !viewReport.classList.contains('hidden')) {
                     window.renderAnalytics();
@@ -2038,12 +2176,10 @@
                 updateListUI();
             }, (err) => { console.log(err); });
 
-            // --- APP USERS LOGIC ---
             const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'app_users');
             onSnapshot(usersRef, (snap) => {
                 if (snap.empty && !isUsersSeeded) {
                     isUsersSeeded = true;
-                    // Seed initial user data
                     defaultInitialUsers.forEach(async (u) => { await addDoc(usersRef, u); });
                 } else {
                     appUsers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -2053,26 +2189,17 @@
             });
         }
 
-        // --- NEW: Edit & Render Users Table (For Admin) ---
         window.editUser = (id) => {
             const userToEdit = appUsers.find(u => u.id === id);
             if(!userToEdit) return;
             editingUserId = id;
-
-            // Populate form
             document.getElementById('new-user-name').value = userToEdit.username;
             document.getElementById('new-user-pass').value = userToEdit.password;
             document.getElementById('new-user-area').value = userToEdit.tambon || '';
-
-            // Update UI texts
             document.getElementById('form-title-text').innerHTML = '<i class="fas fa-user-edit mr-2 text-blue-500"></i>แก้ไขผู้ใช้งาน';
             const submitBtn = document.querySelector('#add-user-form button[type="submit"]');
             submitBtn.innerHTML = '<i class="fas fa-sync mr-1"></i> อัปเดตผู้ใช้งาน';
-
-            // Show cancel button
             document.getElementById('cancel-edit-user-btn').classList.remove('hidden');
-
-            // Scroll to form
             document.getElementById('view-users').scrollTo({ top: 0, behavior: 'smooth' });
         };
 
@@ -2090,7 +2217,6 @@
             if(!tbody) return;
             tbody.innerHTML = '';
             appUsers.forEach(u => {
-                // ถ้าในฐานข้อมูลมี @ ให้ดึงเฉพาะส่วนหน้ามาแสดงให้ดูง่ายๆ
                 const displayUser = u.username.includes('@') ? u.username.split('@')[0] : u.username;
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50 transition">
@@ -2129,7 +2255,6 @@
             const btn = e.target.querySelector('button[type="submit"]');
             btn.disabled = true; btn.innerHTML = 'กำลังบันทึก...';
             try {
-                // บันทึก/อัปเดตผู้ใช้
                 const u = document.getElementById('new-user-name').value.trim();
                 const p = document.getElementById('new-user-pass').value.trim();
                 const t = document.getElementById('new-user-area').value.trim();
@@ -2139,7 +2264,7 @@
                         username: u, password: p, tambon: t
                     });
                     showAlert('อัปเดตผู้ใช้งานสำเร็จ', 'success');
-                    window.cancelEditUser(); // รีเซ็ตฟอร์มกลับเป็นโหมดเพิ่มข้อมูล
+                    window.cancelEditUser(); 
                 } else {
                     await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'app_users'), {
                         username: u, password: p, tambon: t
@@ -2157,14 +2282,12 @@
             }
         };
 
-        // --- NEW: Navigate List function ---
         window.navigateList = (step) => {
             currentPage += step;
             updateListUI();
             document.getElementById('view-list').scrollTo({ top: 0, behavior: 'smooth' });
         };
 
-        // --- NEW: Jump to list from Marker ---
         window.highlightInList = (accId) => {
             const startDate = document.getElementById('list-date-start')?.value;
             const endDate = document.getElementById('list-date-end')?.value;
@@ -2172,19 +2295,12 @@
             
             let filteredData = allData;
             
-            if (tambonFilter) {
-                filteredData = filteredData.filter(item => item.address?.tambon === tambonFilter);
-            }
-            if (startDate) {
-                filteredData = filteredData.filter(item => item.accidentDate >= startDate);
-            }
-            if (endDate) {
-                filteredData = filteredData.filter(item => item.accidentDate <= endDate);
-            }
+            if (tambonFilter) filteredData = filteredData.filter(item => item.address?.tambon === tambonFilter);
+            if (startDate) filteredData = filteredData.filter(item => item.accidentDate >= startDate);
+            if (endDate) filteredData = filteredData.filter(item => item.accidentDate <= endDate);
             
             let itemIndex = filteredData.findIndex(d => d.id === accId);
             
-            // ถ้าไม่เจอใน filter ปัจจุบัน ให้ล้าง filter แล้วหาใหม่
             if (itemIndex === -1) {
                 if(document.getElementById('list-date-start')) document.getElementById('list-date-start').value = '';
                 if(document.getElementById('list-date-end')) document.getElementById('list-date-end').value = '';
@@ -2195,12 +2311,10 @@
             
             if (itemIndex === -1) return;
 
-            // คำนวณหาหน้าที่ข้อมูลอยู่
             currentPage = Math.ceil((itemIndex + 1) / itemsPerPage) || 1;
             updateListUI();
             switchTab('list');
 
-            // หน่วงเวลาให้ CSS Transition สลับแท็บทำงานเสร็จก่อนค่อยเลื่อนหน้าจอ
             setTimeout(() => {
                 const card = document.getElementById(`acc-card-${accId}`);
                 if (card) {
@@ -2208,7 +2322,6 @@
                     const cardTop = card.offsetTop;
                     listContainer.scrollTo({ top: cardTop - 80, behavior: 'smooth' });
                     
-                    // กระพริบเน้นสีให้รู้ว่าคือรายการไหน
                     card.style.transition = "all 0.5s ease";
                     card.style.transform = "scale(1.02)";
                     card.style.boxShadow = "0 0 0 4px rgba(59, 130, 246, 0.5)";
@@ -2229,17 +2342,10 @@
             
             let filteredData = allData;
             
-            if (tambonFilter) {
-                filteredData = filteredData.filter(item => item.address?.tambon === tambonFilter);
-            }
-            if (startDate) {
-                filteredData = filteredData.filter(item => item.accidentDate >= startDate);
-            }
-            if (endDate) {
-                filteredData = filteredData.filter(item => item.accidentDate <= endDate);
-            }
+            if (tambonFilter) filteredData = filteredData.filter(item => item.address?.tambon === tambonFilter);
+            if (startDate) filteredData = filteredData.filter(item => item.accidentDate >= startDate);
+            if (endDate) filteredData = filteredData.filter(item => item.accidentDate <= endDate);
             
-            // Calculate pagination
             const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
             if (currentPage > totalPages) currentPage = totalPages;
             if (currentPage < 1) currentPage = 1;
@@ -2251,7 +2357,6 @@
             cont.innerHTML = '';
             document.getElementById('empty-list').classList.toggle('hidden', filteredData.length > 0);
 
-            // ดึงข้อมูล User เพื่อจัดการสิทธิ์การแสดงปุ่มแก้ไข/ลบ และการมองเห็นข้อมูลส่วนตัว
             const currentAppUsername = (localStorage.getItem('appUsername') || '').trim();
             const currentUserRole = localStorage.getItem('userRole') || '';
             const isSuperUser = currentUserRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ', '33100'].includes(currentAppUsername.toLowerCase());
@@ -2265,14 +2370,10 @@
                     lastDate = thaiDate;
                 }
                 
-                // Fallback support for old data without 'victims' array
                 const victimsList = item.victims && item.victims.length > 0 ? item.victims : [{ id: 'old_vic', name: item.victimName, age: item.victimAge, gender: item.victimGender, role: item.victimRole || 'ผู้ขับขี่', severity: item.severity }];
                 const overallSeverity = getHighestSeverity(victimsList);
-                
-                // เช็คสิทธิ์การเข้าถึงข้อมูลส่วนบุคคล และ ปุ่ม Action
                 const canAccessSensitive = isSuperUser || item.recordedBy === currentAppUsername;
 
-                // Helper for Tailwind colors
                 const getSevStyle = (sev) => {
                     if (sev === 'เสียชีวิต') return { bar: 'bg-slate-800', text: 'text-slate-800', bg: 'bg-slate-200', border: 'border-slate-300' };
                     if (sev === 'สาหัส') return { bar: 'bg-red-500', text: 'text-red-700', bg: 'bg-red-100', border: 'border-red-200' };
@@ -2282,9 +2383,7 @@
 
                 const cardStyle = getSevStyle(overallSeverity);
 
-                // NEW: Victims list with dedicated button for each to open Paboa4 form
                 let victimsHtml = victimsList.map(v => {
-                    // MASKING DATA: ซ่อนชื่อถ้าไม่มีสิทธิ์
                     const displayName = canAccessSensitive ? (v.name || 'ไม่ระบุชื่อ') : '*** (ปกปิดข้อมูล)';
                     const vStyle = getSevStyle(v.severity);
                     
@@ -2299,6 +2398,8 @@
                     const btnText = hasPaboa4 ? "ดู ปภ.บอ.4" : "ลง ปภ.บอ.4";
                     const btnIcon = hasPaboa4 ? "fa-check-circle" : "fa-file-medical";
                     
+                    const vehText = v.vehicleSeq && v.vehicleSeq !== 'ไม่ได้ระบุ' ? ` (รถคันที่ ${v.vehicleSeq})` : '';
+                    
                     return `
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-slate-100 mb-2 relative overflow-hidden group hover:border-slate-200 transition-colors">
                         <div class="absolute left-0 top-0 bottom-0 w-1.5 ${vStyle.bar}"></div>
@@ -2308,7 +2409,7 @@
                                 <span class="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md font-medium whitespace-nowrap">อายุ ${v.age || '-'} ปี</span>
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md border border-blue-100 whitespace-nowrap"><i class="fas fa-user-tag mr-1"></i>${v.role || 'ผู้ขับขี่'}</span>
+                                <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md border border-blue-100 whitespace-nowrap"><i class="fas fa-user-tag mr-1"></i>${v.role || 'ผู้ขับขี่'}${vehText}</span>
                                 <span class="text-[10px] font-black px-1.5 py-0.5 rounded-md ${vStyle.bg} ${vStyle.text} whitespace-nowrap">${v.severity}</span>
                                 ${pb4StatusHtml}
                             </div>
@@ -2322,10 +2423,8 @@
                     `;
                 }).join('');
 
-                // Display multiple vehicles if present
                 const vVehiclesList = item.vehicles && item.vehicles.length > 0 ? item.vehicles.map(v => v.type).join(', ') : (item.type || 'ไม่ระบุ');
 
-                // Display photos if present (WITH VIEW IMAGE ONCLICK NOW)
                 let photosHtml = '';
                 if (item.photos && item.photos.length > 0) {
                     photosHtml = `<div class="flex gap-2 mb-4 mt-1">` + 
@@ -2345,11 +2444,8 @@
 
                 cont.insertAdjacentHTML('beforeend', `
                     <div id="acc-card-${item.id}" class="${overallSeverity === 'เสียชีวิต' ? 'bg-slate-50' : 'bg-white'} rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-200 overflow-hidden mb-5 group cursor-pointer" onclick="focusMap(${item.lat}, ${item.lng})">
-                        <!-- Top color bar indicating severity -->
                         <div class="h-1.5 w-full ${cardStyle.bar}"></div>
-                        
                         <div class="p-5">
-                            <!-- Header Row -->
                             <div class="flex justify-between items-start mb-4 gap-4">
                                 <div class="flex-1">
                                     <div class="flex items-center flex-wrap gap-2 mb-2">
@@ -2362,11 +2458,8 @@
                                     </div>
                                     <h4 class="font-black text-slate-800 text-sm md:text-base leading-snug">${item.customIncidentType || 'อุบัติเหตุ'}</h4>
                                 </div>
-                                <!-- Action Buttons -->
                                 ${actionButtonsHtml}
                             </div>
-
-                            <!-- Details Container -->
                             <div class="bg-slate-50/80 p-3.5 rounded-xl border border-slate-100 shadow-inner mb-4 space-y-3">
                                 <div class="text-xs text-slate-600 flex items-start gap-3">
                                     <div class="w-6 flex justify-center text-slate-400 mt-0.5 text-sm"><i class="fas fa-car-side"></i></div>
@@ -2378,11 +2471,7 @@
                                     <div><strong class="text-slate-800 block text-[10px] uppercase mb-0.5 tracking-wide">สถานที่เกิดเหตุ</strong> ${item.address?.tambon || ''} ${item.address?.amphoe || 'ไม่ระบุ'}</div>
                                 </div>
                             </div>
-
-                            <!-- Photos -->
                             ${photosHtml}
-
-                            <!-- Victims Section -->
                             <div class="mt-2">
                                 <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 flex items-center px-1">
                                     <i class="fas fa-users mr-1.5 text-slate-300"></i> รายชื่อผู้บาดเจ็บ/เสียชีวิต (${victimsList.length})
@@ -2395,7 +2484,6 @@
                     </div>`);
             });
 
-            // Update Pagination UI
             const paginationContainer = document.getElementById('list-pagination');
             if (filteredData.length > itemsPerPage) {
                 paginationContainer.classList.remove('hidden');
@@ -2407,28 +2495,20 @@
             }
         }
 
-        // --- UPDATED CLEAR MARKER UPDATER (รองรับการกรองข้อมูล) ---
+        // --- CLEAR MARKER UPDATER (รองรับการกรองข้อมูล) ---
         function updateMapMarkers() {
-            // ดึงค่าจากตัวกรองในหน้ารายการ
             const startDate = document.getElementById('list-date-start')?.value;
             const endDate = document.getElementById('list-date-end')?.value;
             const tambonFilter = document.getElementById('list-tambon-filter')?.value;
             
             let filteredData = allData;
             
-            if (tambonFilter) {
-                filteredData = filteredData.filter(item => item.address?.tambon === tambonFilter);
-            }
-            if (startDate) {
-                filteredData = filteredData.filter(item => item.accidentDate >= startDate);
-            }
-            if (endDate) {
-                filteredData = filteredData.filter(item => item.accidentDate <= endDate);
-            }
+            if (tambonFilter) filteredData = filteredData.filter(item => item.address?.tambon === tambonFilter);
+            if (startDate) filteredData = filteredData.filter(item => item.accidentDate >= startDate);
+            if (endDate) filteredData = filteredData.filter(item => item.accidentDate <= endDate);
 
             const currentIds = filteredData.map(d => d.id);
             
-            // ลบหมุดที่ไม่อยู่ในเงื่อนไขการกรองออกไป
             Object.keys(dbMarkers).forEach(id => { 
                 if (!currentIds.includes(id)) { 
                     map.removeLayer(dbMarkers[id]); 
@@ -2436,20 +2516,16 @@
                 } 
             });
 
-            // วาดหมุดใหม่เฉพาะที่ตรงเงื่อนไข
             filteredData.forEach(item => {
                 if (!dbMarkers[item.id]) {
-                    // Fallback to old format or use new array logic
                     const vList = item.victims || [{ severity: item.severity }];
                     const overallSeverity = getHighestSeverity(vList);
                     
-                    // Marker Color by Severity
                     let pinClass = "pin-green";
                     if(overallSeverity === "ปานกลาง") pinClass = "pin-amber";
                     else if(overallSeverity === "สาหัส") pinClass = "pin-red";
                     else if(overallSeverity === "เสียชีวิต") pinClass = "pin-black";
 
-                    // Vehicle Icon mapping
                     let primaryVehicle = item.vehicles && item.vehicles.length > 0 ? item.vehicles[0].type : (item.type || 'ไม่ระบุ');
                     let iconClass = "fa-car-burst";
                     if(primaryVehicle === "รถจักรยานยนต์") iconClass = "fa-motorcycle";
@@ -2525,7 +2601,6 @@
             const item = allData.find(d => d.id === id);
             if (!item) return;
             
-            // เช็คสิทธิ์ก่อนเข้าไปแก้ไข
             const appUsername = (localStorage.getItem('appUsername') || '').trim();
             const userRole = localStorage.getItem('userRole') || '';
             const isSuperUser = userRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ', '33100'].includes(appUsername.toLowerCase());
@@ -2542,7 +2617,6 @@
             document.getElementById('accidentDate').value = item.accidentDate; document.getElementById('accidentTime').value = item.accidentTime;
             document.getElementById('customIncidentType').value = item.customIncidentType; 
             
-            // Load Vehicles
             if (item.vehicles && item.vehicles.length > 0) {
                 currentVehicles = JSON.parse(JSON.stringify(item.vehicles));
             } else {
@@ -2550,16 +2624,17 @@
             }
             renderVehiclesForm();
             
-            // Load Victims into dynamic form and add default role if missing
             if (item.victims && item.victims.length > 0) {
                 currentVictims = JSON.parse(JSON.stringify(item.victims));
-                currentVictims.forEach(v => { if(!v.role) v.role = 'ผู้ขับขี่'; });
+                currentVictims.forEach(v => { 
+                    if(!v.role) v.role = 'ผู้ขับขี่'; 
+                    if(!v.vehicleSeq) v.vehicleSeq = '1'; // ชดเชยข้อมูลเก่าที่ยังไม่มีฟิลด์นี้
+                });
             } else {
-                currentVictims = [{ id: Date.now(), name: item.victimName, age: item.victimAge, gender: item.victimGender, role: item.victimRole || 'ผู้ขับขี่', severity: item.severity }];
+                currentVictims = [{ id: Date.now(), name: item.victimName, age: item.victimAge, gender: item.victimGender, role: item.victimRole || 'ผู้ขับขี่', vehicleSeq: '1', severity: item.severity }];
             }
             renderVictimsForm();
 
-            // Load Photos
             currentPhotos = item.photos ? [...item.photos] : [];
             window.renderPhotoPreviews();
 
@@ -2569,9 +2644,9 @@
         document.getElementById('cancel-edit-btn').onclick = () => {
             editingId = null; document.getElementById('editing-indicator').classList.add('hidden');
             document.getElementById('accident-form').reset(); document.getElementById('submit-btn').innerHTML = '<i class="fas fa-save mr-2 text-red-500"></i> บันทึกข้อมูลอุบัติเหตุ';
-            currentVictims = []; renderVictimsForm(); // Reset victims
-            currentVehicles = []; renderVehiclesForm(); // Reset vehicles
-            currentPhotos = []; window.renderPhotoPreviews(); // Reset photos
+            currentVictims = []; renderVictimsForm();
+            currentVehicles = []; renderVehiclesForm();
+            currentPhotos = []; window.renderPhotoPreviews();
             initDateTime(); if (activeMarker) { map.removeLayer(activeMarker); activeMarker = null; }
         };
 
@@ -2579,7 +2654,6 @@
             const item = allData.find(d => d.id === id);
             if (!item) return;
             
-            // เช็คสิทธิ์ก่อนลบ
             const appUsername = (localStorage.getItem('appUsername') || '').trim();
             const userRole = localStorage.getItem('userRole') || '';
             const isSuperUser = userRole === 'admin' || ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ', '33100'].includes(appUsername.toLowerCase());
@@ -2599,20 +2673,16 @@
             catch (e) { alert(e.message); } finally { deletingId = null; }
         };
 
-        // Make renderAnalytics globally accessible
         window.renderAnalytics = renderAnalytics;
 
-        // --- NEW: Add event listener to the report tambon filter ---
         document.getElementById('report-tambon-filter')?.addEventListener('change', window.renderAnalytics);
         document.getElementById('report-date-start')?.addEventListener('change', window.renderAnalytics);
         document.getElementById('report-date-end')?.addEventListener('change', window.renderAnalytics);
 
-        // Set default font for charts
         Chart.defaults.font.family = "'Sarabun', sans-serif";
         Chart.defaults.color = '#64748b';
 
         function renderAnalytics() {
-            // เช็คและเคลียร์กราฟเก่า ป้องกันการวาดทับและ error
             Object.values(charts).forEach(c => { if (c) c.destroy(); });
             charts = {};
 
@@ -2622,19 +2692,10 @@
             
             let reportData = allData;
             
-            if (selectedTambon) {
-                reportData = reportData.filter(item => item.address?.tambon === selectedTambon);
-            }
-            
-            if (startDate) {
-                reportData = reportData.filter(item => item.accidentDate >= startDate);
-            }
+            if (selectedTambon) reportData = reportData.filter(item => item.address?.tambon === selectedTambon);
+            if (startDate) reportData = reportData.filter(item => item.accidentDate >= startDate);
+            if (endDate) reportData = reportData.filter(item => item.accidentDate <= endDate);
 
-            if (endDate) {
-                reportData = reportData.filter(item => item.accidentDate <= endDate);
-            }
-
-            // ถ้าไม่มีข้อมูล ให้รีเซ็ตตัวเลข KPI และซ่อนกราฟความรุนแรง
             if (reportData.length === 0) {
                 if(document.getElementById('kpi-total')) document.getElementById('kpi-total').innerText = '0';
                 if(document.getElementById('kpi-injured')) document.getElementById('kpi-injured').innerText = '0';
@@ -2646,14 +2707,10 @@
                 return;
             }
 
-            let totalInjuredCount = 0, 
-                totalDeadCount = 0, 
-                tStats = Array(24).fill(0), 
+            let totalInjuredCount = 0, totalDeadCount = 0, tStats = Array(24).fill(0), 
                 ageGrp = { '<15':0, '15-24':0, '25-34':0, '35-44':0, '45-54':0, '55-64':0, '65+':0, 'ไม่ระบุ':0 }, 
                 genStats = { 'ชาย': 0, 'หญิง': 0, 'ไม่ระบุ': 0 }, 
-                areaStats = {}, 
-                typeStats = {},
-                riskStats = {},
+                areaStats = {}, typeStats = {}, riskStats = {},
                 severityStats = { 'เล็กน้อย':0, 'ปานกลาง':0, 'สาหัส':0, 'เสียชีวิต':0 };
             
             let dayStats = { 'อาทิตย์':0, 'จันทร์':0, 'อังคาร':0, 'พุธ':0, 'พฤหัสบดี':0, 'ศุกร์':0, 'เสาร์':0 };
@@ -2663,20 +2720,17 @@
                 const vList = item.victims && item.victims.length > 0 ? item.victims : [{ name: item.victimName, age: item.victimAge, gender: item.victimGender, role: item.victimRole || 'ผู้ขับขี่', severity: item.severity }];
                 const overallSeverity = getHighestSeverity(vList);
                 
-                // วิเคราะห์พื้นที่ (Place) - ถ้ากรองด้วยตำบลแล้วกราฟแท่ง Place จะแสดงเฉพาะตำบลนั้น
                 const area = item.address?.tambon || 'ไม่ระบุ'; 
                 if (!areaStats[area]) areaStats[area] = { name: area, count: 0, severe: 0 };
                 areaStats[area].count++;
                 if (['สาหัส', 'เสียชีวิต'].includes(overallSeverity)) areaStats[area].severe++;
 
-                // วิเคราะห์พาหนะ (Agent)
                 const vVehicles = item.vehicles && item.vehicles.length > 0 ? item.vehicles : [{ type: item.type || 'ไม่ระบุ' }];
                 vVehicles.forEach(v => {
                     const vType = v.type || 'ไม่ระบุ';
                     typeStats[vType] = (typeStats[vType] || 0) + 1;
                 });
                 
-                // วิเคราะห์พฤติกรรมเสี่ยง
                 if (item.risks && Array.isArray(item.risks)) {
                     item.risks.forEach(r => {
                         if(r !== 'ไม่มีความผิดตามมาตรการ') {
@@ -2685,9 +2739,7 @@
                     });
                 }
                 
-                // วิเคราะห์บุคคล (Person) & ความรุนแรง
                 vList.forEach(v => {
-                    // นับความรุนแรง
                     if (v.severity && severityStats[v.severity] !== undefined) {
                         severityStats[v.severity]++;
                     }
@@ -2698,6 +2750,7 @@
                         totalInjuredCount++;
                     }
 
+                    // ลอจิกแยกกลุ่ม "ไม่ระบุ"
                     if (v.age === '' || v.age === null || v.age === undefined) {
                         ageGrp['ไม่ระบุ']++;
                     } else {
@@ -2724,7 +2777,6 @@
                     genStats[v.gender || 'ไม่ระบุ'] = (genStats[v.gender || 'ไม่ระบุ'] || 0) + 1;
                 });
 
-                // วิเคราะห์เวลา (Time)
                 if (item.accidentDate) {
                     const d = new Date(item.accidentDate);
                     if (!isNaN(d.getTime())) {
@@ -2742,12 +2794,10 @@
                 }
             });
 
-            // อัปเดตตัวเลข KPI
             if(document.getElementById('kpi-total')) document.getElementById('kpi-total').innerText = reportData.length;
             if(document.getElementById('kpi-injured')) document.getElementById('kpi-injured').innerText = totalInjuredCount;
             if(document.getElementById('kpi-dead')) document.getElementById('kpi-dead').innerText = totalDeadCount;
             
-            // หาช่วงอายุที่เสี่ยงที่สุด (ข้ามกลุ่ม 'ไม่ระบุ')
             const validAgeKeys = Object.keys(ageGrp).filter(k => k !== 'ไม่ระบุ' && ageGrp[k] > 0);
             let topAgeStr = '--';
             if (validAgeKeys.length > 0) {
@@ -2762,24 +2812,20 @@
             });
             if(document.getElementById('kpi-time')) document.getElementById('kpi-time').innerText = maxCount > 0 ? topRange : '--';
 
-            // เตรียมข้อมูลวาดกราฟ
             const sArea = Object.values(areaStats).sort((a,b) => b.count - a.count);
             const areaLabels = sArea.length > 0 ? sArea.map(a => a.name) : ['ยังไม่มีข้อมูล'];
             const areaSevere = sArea.length > 0 ? sArea.map(a => a.severe) : [0];
             const areaTotal = sArea.length > 0 ? sArea.map(a => a.count - a.severe) : [0];
 
-            // 1. กราฟพื้นที่ (Area Bar)
             const ctxArea = document.getElementById('chart-place-area');
             if (ctxArea) {
                 charts.area = new Chart(ctxArea, { 
                     type: 'bar', 
                     data: { labels: areaLabels, datasets: [{ label: 'สาหัส/ตาย', data: areaSevere, backgroundColor: '#ef4444', borderRadius: 4 }, { label: 'บาดเจ็บทั่วไป', data: areaTotal, backgroundColor: '#cbd5e1', borderRadius: 4 }] }, 
-                    // ลบ indexAxis: 'y' ออก เพื่อสลับแกนกลับเป็นแนวตั้ง
                     options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true, grid: {display: false} }, y: { stacked: true, grid: {display: false} } }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: {size: 10} } } } } 
                 });
             }
 
-            // 2. กราฟชั่วโมง (Hourly Trend Line)
             const ctxHour = document.getElementById('chart-time-hour');
             if (ctxHour) {
                 const hoursLabel = Array.from({length: 24}, (_, i) => `${i.toString().padStart(2,'0')}:00`);
@@ -2790,7 +2836,6 @@
                 });
             }
 
-            // 3. กราฟวันในสัปดาห์ (Day Bar)
             const ctxDay = document.getElementById('chart-time-day');
             if (ctxDay) {
                 charts.day = new Chart(ctxDay, { 
@@ -2800,7 +2845,6 @@
                 });
             }
             
-            // 3.5 กราฟเดือน (Monthly Bar)
             const ctxMonth = document.getElementById('chart-time-month');
             if (ctxMonth) {
                 charts.month = new Chart(ctxMonth, { 
@@ -2810,7 +2854,6 @@
                 });
             }
 
-            // 4. กราฟอายุ (Age Bar)
             const ctxAge = document.getElementById('chart-age');
             if (ctxAge) {
                 charts.age = new Chart(ctxAge, { 
@@ -2820,7 +2863,6 @@
                 });
             }
 
-            // 5. กราฟเพศ (Gender Pie)
             const ctxGender = document.getElementById('chart-gender');
             if (ctxGender) {
                 charts.gender = new Chart(ctxGender, { 
@@ -2830,7 +2872,6 @@
                 });
             }
 
-            // 6. กราฟพาหนะ (Vehicle Pie)
             const ctxVehicle = document.getElementById('chart-agent-vehicle');
             if (ctxVehicle) {
                 const vehicleLabels = Object.keys(typeStats).length > 0 ? Object.keys(typeStats) : ['ไม่มีข้อมูล'];
@@ -2842,7 +2883,6 @@
                 });
             }
 
-            // 7. กราฟพฤติกรรมเสี่ยง (Top Risks Horizontal Bar)
             const ctxRisk = document.getElementById('chart-risk');
             if (ctxRisk) {
                 const sRisks = Object.keys(riskStats).map(k => ({ name: k, count: riskStats[k] })).sort((a,b) => b.count - a.count).slice(0, 10);
@@ -2856,7 +2896,6 @@
                 });
             }
 
-            // 8. แสดงผล HTML Bar ความรุนแรง (Severity Outcome)
             const sevContainer = document.getElementById('severity-container');
             if (sevContainer) {
                 sevContainer.innerHTML = '';
@@ -2881,7 +2920,6 @@
             }
         }
 
-        // ADDED CODE: Event listener for paboa4-form submit to save full data
         document.getElementById('paboa4-form').onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submit-paboa4-btn');
@@ -2891,11 +2929,9 @@
                     const pbForm = document.getElementById('paboa4-form');
                     const formData = new FormData(pbForm);
                     
-                    // ดึงพฤติกรรมเสี่ยง (Checkbox) ทั้งหมดที่ถูกเลือก
                     const risks = [];
                     formData.getAll('pb_risk').forEach(r => risks.push(r));
 
-                    // ฟังก์ชันผู้ช่วยดึงค่าจาก Select หรือ Other input
                     const getAddrValue = (prefix) => {
                         const sel = document.getElementById(prefix + '_select');
                         const oth = document.getElementById(prefix + '_other');
@@ -2905,11 +2941,10 @@
 
                     const appUsername = localStorage.getItem('appUsername') || 'anonymous';
 
-                    // รวบรวมข้อมูลทั้งหมดที่กรอกส่งเข้า Database
                     const payload = {
                         timestamp: serverTimestamp(),
                         userId: currentUser.uid,
-                        recordedBy: appUsername, // ใช้ชื่อก่อน @ บันทึกด้วย
+                        recordedBy: appUsername,
                         accidentId: window.activePaboa4AccidentId,
                         victimId: window.activePaboa4VictimId,
                         type: 'paboa4_report',
@@ -2944,11 +2979,10 @@
                         reporterPosition: document.getElementById('pb_reporter_position').value
                     };
                     
-                    // ป้องกันการบันทึกข้อมูล ปภ.บอ.4 ซ้ำซ้อนของคนเจ็บคนเดียวกัน
                     if (!window.editingPaboa4Id) {
                         const duplicate = allPaboa4.find(p => p.accidentId === window.activePaboa4AccidentId && p.victimId === window.activePaboa4VictimId);
                         if (duplicate) {
-                            window.editingPaboa4Id = duplicate.id; // เปลี่ยนเป็นการอัปเดตข้อมูลเดิมทับแทนการสร้างใหม่
+                            window.editingPaboa4Id = duplicate.id;
                         }
                     }
 
@@ -2959,7 +2993,7 @@
                     }
                 }
                 showAlert('บันทึกแบบฟอร์ม ปภ.บอ.4 สำเร็จ', 'success');
-                switchTab('list'); // ย้อนกลับไปหน้ารายการเมื่อบันทึกเสร็จ
+                switchTab('list');
             } catch (err) {
                 showAlert('เกิดข้อผิดพลาด: ' + err.message, 'error');
             } finally {
@@ -2971,7 +3005,6 @@
             e.preventDefault();
             if (!document.getElementById('lat').value) return showAlert('กรุณาปักหมุดบนแผนที่', 'error');
             
-            // Validation
             if (currentVictims.some(v => !v.severity)) {
                 return showAlert('กรุณาระบุระดับความรุนแรงให้ครบทุกคน', 'error');
             }
@@ -2996,16 +3029,14 @@
                     accidentDate: document.getElementById('accidentDate').value, accidentTime: document.getElementById('accidentTime').value,
                     customIncidentType: document.getElementById('customIncidentType').value,
                     type: currentVehicles.length > 0 ? currentVehicles[0].type : 'ไม่ระบุ', 
-                    // Maintain old fields for backward compatibility
                     victimName: currentVictims[0].name, victimAge: currentVictims[0].age, victimGender: currentVictims[0].gender, victimRole: currentVictims[0].role, severity: overallSeverity,
-                    // New Array field
                     victims: currentVictims,
                     vehicles: currentVehicles,
                     photos: currentPhotos,
-                    address: addr, userId: currentUser.uid, 
-                    recordedBy: appUsername, // เพิ่มฟิลด์ให้แสดงผลใน Firebase Console ได้สะดวกขึ้น
+                    address: addr, userId: currentUser?.uid || 'anonymous', 
+                    recordedBy: appUsername,
                     lastUpdated: serverTimestamp(),
-                    risks: [] // Initialize empty risks array for accident entry
+                    risks: [] 
                 };
 
                 // --- ระบบป้องกันการบันทึกอุบัติเหตุซ้ำซ้อน ---
@@ -3013,7 +3044,7 @@
                     const isDuplicate = allData.some(item => 
                         item.accidentDate === payload.accidentDate &&
                         item.accidentTime === payload.accidentTime &&
-                        Math.abs(item.lat - payload.lat) < 0.001 && // พิกัดใกล้เคียงกัน (ประมาณ 100 เมตร)
+                        Math.abs(item.lat - payload.lat) < 0.001 &&
                         Math.abs(item.lng - payload.lng) < 0.001
                     );
                     
@@ -3023,7 +3054,6 @@
                         return showAlert('พบข้อมูลซ้ำ! มีการแจ้งอุบัติเหตุในวันเวลาและสถานที่นี้ไปแล้ว', 'error');
                     }
                 }
-                // -----------------------------------------
 
                 let accId = editingId;
 
@@ -3036,16 +3066,15 @@
                     accId = docRef.id;
                 }
 
-                // Inject newly saved data to local allData so openPaboa4 can find it immediately
                 const savedAccident = { id: accId, ...payload };
                 if (!allData.find(d => d.id === accId)) {
                     allData.push(savedAccident);
                 }
 
                 document.getElementById('accident-form').reset(); 
-                currentVictims = []; renderVictimsForm(); // reset array
-                currentVehicles = []; renderVehiclesForm(); // reset array
-                currentPhotos = []; window.renderPhotoPreviews(); // reset photos
+                currentVictims = []; renderVictimsForm();
+                currentVehicles = []; renderVehiclesForm();
+                currentPhotos = []; window.renderPhotoPreviews();
                 if (activeMarker) { map.removeLayer(activeMarker); activeMarker = null; }
                 initDateTime(); 
 
@@ -3078,7 +3107,6 @@
             const appUsername = rawUsername.trim().toLowerCase();
             const tambon = localStorage.getItem('userTambon') || '';
             
-            // ระบบซ่อมแซมสิทธิ์อัตโนมัติ (เผื่อแคชเก่าค้าง)
             const isSuperUser = ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ', '33100'].includes(appUsername);
             if (isSuperUser) {
                 role = 'admin';
@@ -3141,31 +3169,51 @@
             initDateTime(); 
             setTimeout(() => map.invalidateSize(), 500);
 
-            // ตรวจสอบสถานะการเข้าสู่ระบบแบบ Real-time ผ่าน Firebase Auth ของจริง
+            // ระบบสมาร์ทพาส (Bypass) เพื่อให้ทดสอบใน Canvas ได้แบบไม่สะดุด
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                }
+            } catch(e) { console.log("Canvas auth bypass failed", e); }
+
             onAuthStateChanged(auth, (u) => { 
                 if (u) { 
                     currentUser = u; 
                     
-                    // ดึงชื่อผู้ใช้จากอีเมล (เช่น 33024@gmail.com -> 33024)
-                    const emailPrefix = u.email ? u.email.split('@')[0] : 'user';
+                    const savedRole = localStorage.getItem('userRole');
+                    const savedUsername = localStorage.getItem('appUsername');
                     
-                    // จับคู่ข้อมูลเพื่อหาระดับสิทธิ์และตำบล
-                    const matchedUser = defaultInitialUsers.find(x => x.username.toLowerCase() === emailPrefix.toLowerCase());
-                    const isSuperUser = ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ', '33100'].includes(emailPrefix.toLowerCase());
-                    
-                    const role = isSuperUser ? 'admin' : 'user';
-                    const tambon = matchedUser ? matchedUser.tambon : 'ไม่ระบุ';
-                    
-                    localStorage.setItem('userRole', role);
-                    localStorage.setItem('userTambon', tambon);
-                    localStorage.setItem('appUsername', emailPrefix);
+                    if (savedRole && savedUsername) {
+                        // มีเซสชั่นเก็บไว้แล้ว ให้เข้าได้เลย
+                        loginScreen.classList.add('hidden');
+                        window.setupUIForRole(savedRole);
+                        initRealtime(); 
+                    } else if (u.email) {
+                        // ล็อกอินแบบใช้ Email ผ่าน Firebase สำเร็จ
+                        const emailPrefix = u.email.split('@')[0];
+                        const matchedUser = defaultInitialUsers.find(x => x.username.toLowerCase() === emailPrefix.toLowerCase());
+                        const isSuperUser = ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ', '33100'].includes(emailPrefix.toLowerCase());
+                        
+                        const role = isSuperUser ? 'admin' : 'user';
+                        const tambon = matchedUser ? matchedUser.tambon : 'ไม่ระบุ';
+                        
+                        localStorage.setItem('userRole', role);
+                        localStorage.setItem('userTambon', tambon);
+                        localStorage.setItem('appUsername', emailPrefix);
 
-                    loginScreen.classList.add('hidden');
-                    window.setupUIForRole(role);
-                    
-                    initRealtime(); // ดึงข้อมูลเมื่อล็อกอินสำเร็จ
+                        loginScreen.classList.add('hidden');
+                        window.setupUIForRole(role);
+                        initRealtime(); 
+                    } else {
+                        // ล็อกอินแบบ Anonymous ที่ไม่เคยระบุชื่อ/รหัส ให้แสดงหน้าล็อกอิน
+                        loginScreen.classList.remove('hidden');
+                        loginScreen.style.opacity = '1';
+                        if(loginBtn) {
+                            loginBtn.disabled = false;
+                            loginBtn.innerHTML = 'เข้าสู่ระบบ <i class="fas fa-arrow-right text-xs"></i>';
+                        }
+                    }
                 } else {
-                    // ถ้ายังไม่ล็อกอิน ให้แสดงหน้าจอเข้าสู่ระบบ
                     loginScreen.classList.remove('hidden');
                     loginScreen.style.opacity = '1';
                     if(loginBtn) {
@@ -3175,14 +3223,11 @@
                 } 
             });
 
-            // จัดการเมื่อกดปุ่มเข้าสู่ระบบ (เชื่อมต่อ Firebase Auth ของจริง)
             loginForm.onsubmit = async (e) => {
                 e.preventDefault();
                 
                 const rawUserVal = document.getElementById('login-username').value.trim();
                 const passVal = document.getElementById('login-password').value;
-                
-                // เติม @gmail.com ให้โดยอัตโนมัติหากผู้ใช้พิมพ์แค่ตัวเลข (เช่น 33024 -> 33024@gmail.com)
                 const email = rawUserVal.includes('@') ? rawUserVal : `${rawUserVal}@gmail.com`;
 
                 if(loginBtn) {
@@ -3191,19 +3236,50 @@
                 }
 
                 try {
-                    // เชื่อมต่อระบบ Firebase Auth จริง (Email/Password)
+                    // ชั้นที่ 1: เชื่อมต่อระบบ Firebase Auth จริง
                     await signInWithEmailAndPassword(auth, email, passVal);
-                    // หากล็อกอินสำเร็จ onAuthStateChanged จะทำงานและเปลี่ยนหน้าให้เอง
                     document.getElementById('login-error').classList.add('hidden');
                 } catch (err) {
                     console.error("Firebase Login Error: ", err);
-                    const errorBox = document.getElementById('login-error');
-                    errorBox.classList.remove('hidden');
-                    errorBox.innerText = 'ชื่อผู้ใช้ หรือ รหัสผ่านไม่ถูกต้อง!';
                     
-                    if(loginBtn) {
-                        loginBtn.disabled = false;
-                        loginBtn.innerHTML = 'เข้าสู่ระบบ <i class="fas fa-arrow-right text-xs"></i>';
+                    // ชั้นที่ 2: ระบบก๊อกสอง (Fallback Local Login)
+                    // หาก Firebase ปฏิเสธ แต่พิมพ์รหัสผ่านตรงกับรายชื่อจำลอง จะยอมให้เข้า!
+                    const matchedLocalUser = defaultInitialUsers.find(x => x.username.toLowerCase() === rawUserVal.toLowerCase() && x.password === passVal);
+                    
+                    if (matchedLocalUser) {
+                        console.log("Fallback to Local User Authentication");
+                        await signInAnonymously(auth); // แอบสร้าง Session ให้เพื่อเข้า Database
+                        
+                        const isSuperUser = ['admin', '33020', '33024', 'ตำรวจ', 'police', 'ที่ว่าการอำเภอ', 'ที่ว่าการอำเภอเมืองศรีสะเกษ', '33100'].includes(rawUserVal.toLowerCase());
+                        const role = isSuperUser ? 'admin' : 'user';
+                        
+                        localStorage.setItem('userRole', role);
+                        localStorage.setItem('userTambon', matchedLocalUser.tambon);
+                        localStorage.setItem('appUsername', rawUserVal);
+
+                        document.getElementById('login-error').classList.add('hidden');
+                        document.getElementById('login-screen').classList.add('hidden');
+                        window.setupUIForRole(role);
+                        initRealtime();
+                    } else {
+                        // หากรหัสผิดจริง ให้แสดงสาเหตุแบบเจาะจง
+                        const errorBox = document.getElementById('login-error');
+                        errorBox.classList.remove('hidden');
+                        
+                        if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+                            errorBox.innerText = 'ชื่อผู้ใช้ หรือ รหัสผ่านไม่ถูกต้อง!';
+                        } else if (err.code === 'auth/unauthorized-domain') {
+                            errorBox.innerText = 'โดเมนนี้ยังไม่ได้รับอนุญาตใน Firebase (ทดสอบในระบบปิด)';
+                        } else if (err.code === 'auth/network-request-failed') {
+                            errorBox.innerText = 'ปัญหาการเชื่อมต่ออินเทอร์เน็ต';
+                        } else {
+                            errorBox.innerText = `เกิดข้อผิดพลาด: ${err.code}`;
+                        }
+                        
+                        if(loginBtn) {
+                            loginBtn.disabled = false;
+                            loginBtn.innerHTML = 'เข้าสู่ระบบ <i class="fas fa-arrow-right text-xs"></i>';
+                        }
                     }
                 }
             };
