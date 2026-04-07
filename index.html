@@ -11,6 +11,10 @@
     <!-- Leaflet CSS for Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     
+    <!-- MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
@@ -132,6 +136,17 @@
             bottom: -2px;
             left: -7px;
             filter: blur(1px);
+        }
+
+        /* Cluster Styling Override */
+        .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
+            background-color: rgba(239, 68, 68, 0.6); /* Red-500 with opacity */
+        }
+        .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div {
+            background-color: rgba(220, 38, 38, 0.9); /* Red-600 */
+            color: white;
+            font-family: 'Sarabun', sans-serif;
+            font-weight: bold;
         }
 
         /* --- MAP FULLSCREEN CLASS --- */
@@ -1054,7 +1069,9 @@
         </div>
     </div>
 
+    <!-- MarkerCluster JS ต้องโหลดหลัง Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -1900,12 +1917,24 @@
         const googleHybrid = L.tileLayer('http://mt0.google.com/vt/lyrs=y&hl=th&x={x}&y={y}&z={z}', {
             attribution: '&copy; Google Maps',
             maxZoom: 20
-        }).addTo(map); // Default layer
+        });
 
         const osmMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap',
             maxZoom: 19
         });
+
+        // --- NEW: สร้าง Group สำหรับจัดกลุ่มหมุด (Marker Cluster) ---
+        const markersCluster = L.markerClusterGroup({
+            maxClusterRadius: 40, // ระยะห่างที่จะรวบหมุด (พิกเซล)
+            spiderfyOnMaxZoom: true, // เมื่อซูมสุด หรือคลิก ให้กระจายตัวออก
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true
+        });
+        
+        // เพิ่ม Cluster Group ลงในแผนที่พร้อมกับ Layer พื้นหลังเริ่มต้น
+        map.addLayer(googleHybrid);
+        map.addLayer(markersCluster);
 
         // Map Layer Control
         L.control.layers({
@@ -2374,6 +2403,18 @@
                 const overallSeverity = getHighestSeverity(victimsList);
                 const canAccessSensitive = isSuperUser || item.recordedBy === currentAppUsername;
 
+                let injuredCount = 0;
+                let deadCount = 0;
+                victimsList.forEach(v => {
+                    if (v.severity === 'เสียชีวิต') deadCount++;
+                    else if (v.severity && v.severity !== 'ไม่ระบุ') injuredCount++;
+                });
+
+                let victimSummaryHtml = '';
+                if (injuredCount > 0) victimSummaryHtml += `<span class="text-orange-500">บาดเจ็บ ${injuredCount}</span>`;
+                if (deadCount > 0) victimSummaryHtml += `<span class="text-slate-700">เสียชีวิต ${deadCount}</span>`;
+                if (injuredCount === 0 && deadCount === 0) victimSummaryHtml = `<span>รวม ${victimsList.length} ราย</span>`;
+
                 const getSevStyle = (sev) => {
                     if (sev === 'เสียชีวิต') return { bar: 'bg-slate-800', text: 'text-slate-800', bg: 'bg-slate-200', border: 'border-slate-300' };
                     if (sev === 'สาหัส') return { bar: 'bg-red-500', text: 'text-red-700', bg: 'bg-red-100', border: 'border-red-200' };
@@ -2473,8 +2514,8 @@
                             </div>
                             ${photosHtml}
                             <div class="mt-2">
-                                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 flex items-center px-1">
-                                    <i class="fas fa-users mr-1.5 text-slate-300"></i> รายชื่อผู้บาดเจ็บ/เสียชีวิต (${victimsList.length})
+                                <div class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2.5 flex items-center px-2 py-1.5 bg-slate-50 rounded-lg border border-slate-100">
+                                    <i class="fas fa-users mr-2 text-slate-400"></i> ผู้ประสบเหตุ: <span class="ml-2 flex gap-3">${victimSummaryHtml}</span>
                                 </div>
                                 <div class="space-y-0">
                                     ${victimsHtml}
@@ -2511,7 +2552,7 @@
             
             Object.keys(dbMarkers).forEach(id => { 
                 if (!currentIds.includes(id)) { 
-                    map.removeLayer(dbMarkers[id]); 
+                    markersCluster.removeLayer(dbMarkers[id]); // เอาออกจาก Cluster
                     delete dbMarkers[id]; 
                 } 
             });
@@ -2520,6 +2561,17 @@
                 if (!dbMarkers[item.id]) {
                     const vList = item.victims || [{ severity: item.severity }];
                     const overallSeverity = getHighestSeverity(vList);
+                    
+                    let injuredCount = 0;
+                    let deadCount = 0;
+                    vList.forEach(v => {
+                        if (v.severity === 'เสียชีวิต') deadCount++;
+                        else if (v.severity && v.severity !== 'ไม่ระบุ') injuredCount++;
+                    });
+                    let summaryText = [];
+                    if (injuredCount > 0) summaryText.push(`บาดเจ็บ ${injuredCount}`);
+                    if (deadCount > 0) summaryText.push(`เสียชีวิต ${deadCount}`);
+                    let summaryString = summaryText.length > 0 ? summaryText.join(' | ') : `รวม ${vList.length}`;
                     
                     let pinClass = "pin-green";
                     if(overallSeverity === "ปานกลาง") pinClass = "pin-amber";
@@ -2553,9 +2605,11 @@
                         popupAnchor: [0, -42]
                     });
 
-                    const m = L.marker([item.lat, item.lng], { icon }).addTo(map);
-                    m.bindTooltip(`<div class="text-xs font-black">${item.customIncidentType || 'อุบัติเหตุ'}</div><div class="text-[10px] text-slate-500 mt-1">เจ็บ/ตาย: ${vList.length} คน</div>`, { direction: 'top', offset: [0, -30] });
+                    const m = L.marker([item.lat, item.lng], { icon });
+                    m.bindTooltip(`<div class="text-xs font-black">${item.customIncidentType || 'อุบัติเหตุ'}</div><div class="text-[10px] text-slate-500 mt-1">${summaryString}</div>`, { direction: 'top', offset: [0, -30] });
                     m.on('click', () => { window.highlightInList(item.id); });
+                    
+                    markersCluster.addLayer(m); // นำหมุดใส่ใน Cluster แทน map โดยตรง
                     dbMarkers[item.id] = m;
                 }
             });
